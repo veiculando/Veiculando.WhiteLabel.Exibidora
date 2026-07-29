@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-footer',
@@ -7,7 +8,7 @@ import { CommonModule } from '@angular/common';
   imports: [CommonModule],
   template: `
     <footer class="footer-container">
-      <span>&copy; {{ currentYear }} Veiculando WhiteLabel Exibidora. Todos os direitos reservados.</span>
+      <span>&copy; {{ currentYear }} {{ footerText }}. Todos os direitos reservados.</span>
     </footer>
   `,
   styles: [`
@@ -16,4 +17,5 @@ import { CommonModule } from '@angular/common';
 })
 export class FooterComponent {
   currentYear = new Date().getFullYear();
+  footerText = environment.branding.footerText;
 }

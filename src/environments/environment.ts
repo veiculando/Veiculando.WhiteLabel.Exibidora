@@ -8,5 +8,6 @@ export const environment = {
     primaryColor: '#8a0009', // Aurum default
     secondaryColor: '#d9b442',
     logoUrl: '/assets/images/logo.png', // Fallback URL
+    footerText: 'Veiculando WhiteLabel Exibidora',
   }
 };

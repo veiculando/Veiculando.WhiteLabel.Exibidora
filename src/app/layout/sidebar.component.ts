@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { PermissionService } from '../core/auth/permission.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -43,8 +44,9 @@ import { RouterModule } from '@angular/router';
   `]
 })
 export class SidebarComponent {
+  private permissionService = inject(PermissionService);
+
   hasPermission(perm: string): boolean {
-    const raw = localStorage.getItem('veiculando-wl-op.perm') || '';
-    return raw.includes(perm) || raw.includes('*');
+    return this.permissionService.has(perm);
   }
 }

@@ -7,11 +7,12 @@ import { authGuard } from './core/auth/auth.guard';
  * Permissões granulares são configuradas via `data.permission` em cada rota protegida.
  * O `authGuard` lê essa propriedade e valida contra as claims do JWT (ADR-WL-007).
  * 
- * Permissões disponíveis (espelham as colunas de WL_Usuario):
+ * Whitelist de permissões válidas (espelham WlPermissoesValidas do domínio):
  *  - 'PecaGerenciar'
+ *  - 'Checking'
  *  - 'PedidoReservaGerenciar'
- *  - 'FinanceiroVisualizar'
- *  - 'ClienteGerenciar'
+ *  - 'PedidoInsercaoGerenciar'
+ *  - 'UsuarioAfiliadaGerenciar'
  */
 export const routes: Routes = [
   // Rota pública: login
@@ -41,50 +42,43 @@ export const routes: Routes = [
           import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent),
       },
 
-      // --- Inventário ---
+      // --- Inventário & Operação ---
       {
         path: 'locais',
-        data: { permission: 'PecaGerenciar' }, // Gerenciar locais implica permissão de Peça
-        canActivate: [authGuard],
+        data: { permission: 'PecaGerenciar' },
         loadComponent: () =>
           import('./pages/locais/locais.component').then(m => m.LocaisComponent),
+      },
+      {
+        path: 'programacao',
+        loadComponent: () =>
+          import('./pages/programacao/programacao.component').then(m => m.ProgramacaoComponent),
+      },
+      {
+        path: 'checking',
+        data: { permission: 'Checking' },
+        loadComponent: () =>
+          import('./pages/checking/checking.component').then(m => m.CheckingComponent),
       },
 
       // --- Comercial ---
       {
         path: 'pedidos-reserva',
         data: { permission: 'PedidoReservaGerenciar' },
-        canActivate: [authGuard],
         loadComponent: () =>
           import('./pages/pedidos-reserva/pedidos-reserva.component').then(m => m.PedidosReservaComponent),
       },
       {
-        path: 'campanhas',
-        canActivate: [authGuard],
+        path: 'pedidos-insercao',
+        data: { permission: 'PedidoInsercaoGerenciar' },
         loadComponent: () =>
-          import('./pages/campanhas/campanhas.component').then(m => m.CampanhasComponent),
-      },
-      {
-        path: 'clientes',
-        data: { permission: 'ClienteGerenciar' },
-        canActivate: [authGuard],
-        loadComponent: () =>
-          import('./pages/clientes/clientes.component').then(m => m.ClientesComponent),
-      },
-
-      // --- Financeiro (permissão restrita) ---
-      {
-        path: 'financeiro',
-        data: { permission: 'FinanceiroVisualizar' },
-        canActivate: [authGuard],
-        loadComponent: () =>
-          import('./pages/financeiro/financeiro.component').then(m => m.FinanceiroComponent),
+          import('./pages/pedidos-insercao/pedidos-insercao.component').then(m => m.PedidosInsercaoComponent),
       },
 
       // --- Administração ---
       {
         path: 'usuarios',
-        canActivate: [authGuard],
+        data: { permission: 'UsuarioAfiliadaGerenciar' },
         loadComponent: () =>
           import('./pages/usuarios/usuarios.component').then(m => m.UsuariosComponent),
       },

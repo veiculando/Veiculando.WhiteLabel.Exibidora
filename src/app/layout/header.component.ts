@@ -1,7 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { environment } from '../../environments/environment';
+import { SecureStorage } from '../core/auth/secure-storage';
+import { PermissionService } from '../core/auth/permission.service';
 
 @Component({
   selector: 'app-header',
@@ -10,11 +12,11 @@ import { environment } from '../../environments/environment';
   template: `
     <header class="header-container" [style.borderBottomColor]="primaryColor">
       <div class="header-brand">
-        <img [src]="logoUrl" alt="Logo" class="header-logo" *ngIf="logoUrl" />
+        <img [src]="logoUrl" alt="Logo" class="header-logo" *ngIf="logoUrl && !hasLogoError" (error)="onLogoError()" />
         <span class="header-title">Painel Exibidora WL</span>
       </div>
       <div class="header-user">
-        <span class="user-name">Operador WL</span>
+        <span class="user-name">{{ operatorName }}</span>
         <button (click)="logout()" class="btn-logout">Sair</button>
       </div>
     </header>
@@ -32,11 +34,21 @@ import { environment } from '../../environments/environment';
 export class HeaderComponent {
   primaryColor = environment.branding.primaryColor;
   logoUrl = environment.branding.logoUrl;
+  hasLogoError = false;
 
-  constructor(private router: Router) {}
+  private permissionService = inject(PermissionService);
+  private router = inject(Router);
+
+  get operatorName(): string {
+    return this.permissionService.getOperatorName();
+  }
+
+  onLogoError() {
+    this.hasLogoError = true;
+  }
 
   logout() {
-    localStorage.removeItem(environment.tokenKey);
-    this.router.navigate(['/auth/login']);
+    SecureStorage.clear(environment.tokenKey);
+    this.router.navigate(['/login']);
   }
 }
