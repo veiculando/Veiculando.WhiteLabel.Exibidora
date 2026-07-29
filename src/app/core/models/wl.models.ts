@@ -1,0 +1,263 @@
+/**
+ * Contratos de dados do BFF (`Veiculando.WhiteLabel.Api`).
+ *
+ * Cada interface aqui foi derivada LENDO o controller correspondente, nao o PRD
+ * (diretriz 7 do TP-R4). Onde o payload do BFF divergir do que os planos
+ * descrevem, o comentario registra a divergencia.
+ */
+
+// ---------------------------------------------------------------- Auth
+
+export interface LoginRequest {
+  email: string;
+  senha: string;
+}
+
+export interface LoginResponse {
+  token: string;
+  expiresInMinutes: number;
+  nome: string;
+  email: string;
+  permissoes: string[];
+}
+
+export interface OperadorLogado {
+  id: number;
+  nome: string;
+  email: string;
+  cargo: string | null;
+  departamento: string | null;
+  telefoneComercial: string | null;
+  dataUltimoLogin: string | null;
+  permissoes: string[];
+}
+
+/**
+ * Whitelist de permissoes — espelha `WlPermissoesValidas` no dominio.
+ * Sao os 5 identificadores exatos aceitos pelo BFF em `POST/PUT /api/wl/usuarios`;
+ * qualquer outro valor volta como 400.
+ */
+export const PERMISSOES_WL = [
+  'PecaGerenciar',
+  'Checking',
+  'PedidoReservaGerenciar',
+  'PedidoInsercaoGerenciar',
+  'UsuarioAfiliadaGerenciar',
+] as const;
+
+export type PermissaoWl = (typeof PERMISSOES_WL)[number];
+
+export const PERMISSOES_WL_ROTULOS: Record<PermissaoWl, string> = {
+  PecaGerenciar: 'Gerenciar locais e peças',
+  Checking: 'Enviar checking',
+  PedidoReservaGerenciar: 'Gerenciar pedidos de reserva',
+  PedidoInsercaoGerenciar: 'Consultar pedidos de inserção',
+  UsuarioAfiliadaGerenciar: 'Gerenciar operadores',
+};
+
+// ---------------------------------------------------------------- Dashboard
+
+/**
+ * `GET /api/wl/dashboard/kpis`.
+ *
+ * ATENCAO ao nome `alertasAprovaçãoPendente`: o `DashboardController` declara a
+ * propriedade anonima como `AlertasAprovaçãoPendente` (com cedilha e til) e o
+ * `AddControllers()` do BFF usa a policy camelCase padrao do System.Text.Json,
+ * que apenas minuscula a primeira letra. O acento portanto CHEGA no JSON.
+ * Nao "corrigir" para `alertasAprovacaoPendente` — o campo viria undefined.
+ */
+export interface DashboardKpis {
+  locaisAtivos: number;
+  pecasEmExibicao: number;
+  pedidosPendentes: number;
+  /** Mockada em 0 pelo BFF na V1 — comportamento esperado, nao um bug. */
+  receitaMensal: number;
+  'alertasAprovaçãoPendente': number;
+}
+
+// ---------------------------------------------------------------- Locais e pecas
+
+/**
+ * `StatusExibicao` do core. O BFF nao devolve esse campo nas listagens de local
+ * hoje; ver `LocalListItem.statusExibicao`.
+ */
+export enum StatusExibicao {
+  Deletado = -1,
+  Inativo = 0,
+  Ativo = 1,
+  AprovacaoPendente = 2,
+}
+
+export const STATUS_EXIBICAO_ROTULOS: Record<number, string> = {
+  [StatusExibicao.Deletado]: 'Excluído',
+  [StatusExibicao.Inativo]: 'Inativo',
+  [StatusExibicao.Ativo]: 'Ativo',
+  [StatusExibicao.AprovacaoPendente]: 'Aguardando aprovação',
+};
+
+export interface LocalListItem {
+  id: number;
+  codigo: string;
+  descricao: string;
+  cidade: string | null;
+  uf: string | null;
+  fonteOrigem: number | null;
+  fonteTimestamp: string | null;
+  /**
+   * Opcional porque depende da versao do BFF: o `GetAll` original projetava
+   * apenas locais Ativos e nao expunha o status. A UI trata `undefined` como
+   * Ativo para nao rotular errado contra um BFF antigo.
+   */
+  statusExibicao?: number;
+}
+
+export interface LocalDetalhe extends LocalListItem {
+  idCidade: number | null;
+}
+
+export interface PecaListItem {
+  id: number;
+  codigo: string;
+  idLocal: number;
+  localCodigo: string | null;
+  formatoDimensao: string | null;
+  valorPadrao: number | null;
+  fonteOrigem: number | null;
+}
+
+// ---------------------------------------------------------------- Lookups
+
+export interface CidadeLookup {
+  id: number;
+  nome: string;
+  sigla: string;
+}
+
+export interface PeriodoLookup {
+  id: number;
+  nome: string;
+  dataInicio: string;
+  dataFim: string;
+}
+
+export interface NomeadoLookup {
+  id: number;
+  nome: string;
+}
+
+// ---------------------------------------------------------------- Programacao
+
+export interface ProgramacaoFiltro {
+  idPeriodo?: number | null;
+  idLocal?: number | null;
+}
+
+export interface ProgramacaoItem {
+  pecaId: number;
+  pecaCodigo: string;
+  localId: number;
+  localCodigo: string;
+  periodoId: number;
+  periodoNome: string;
+  status: string;
+}
+
+// ---------------------------------------------------------------- Checking
+
+export interface PiAutorizada {
+  id: number;
+  codigo: string;
+  dataCadastro: string;
+  valorLiquidoVeiculacao: number | null;
+}
+
+export interface PiChecking extends PiAutorizada {
+  itensCount: number;
+}
+
+export interface ItemChecking {
+  idPedidoItem: number;
+  idPedidoInsercao: number;
+  status: string;
+  pecaCodigo?: string | null;
+  localCodigo?: string | null;
+  localDescricao?: string | null;
+  statusChecking?: string | null;
+}
+
+// ---------------------------------------------------------------- Pedidos
+
+export interface PedidoReservaListItem {
+  id: number;
+  codigo: string;
+  status: string;
+  dataCadastro: string;
+  agencia: string | null;
+  cliente: string | null;
+  itensCount: number;
+}
+
+export interface PedidoReservaItemDetalhe {
+  id: number;
+  pecaCodigo: string | null;
+  localCodigo: string | null;
+  status: string;
+}
+
+export interface PedidoReservaDetalhe {
+  id: number;
+  codigo: string;
+  status: string;
+  dataCadastro: string;
+  agencia: string | null;
+  cliente: string | null;
+  valorTotalBruto: number | null;
+  itens: PedidoReservaItemDetalhe[];
+}
+
+export interface PedidoInsercaoListItem {
+  id: number;
+  codigo: string;
+  dataCadastro: string;
+  status: string;
+  agencia: string | null;
+  anunciante: string | null;
+  valorLiquidoVeiculacao: number | null;
+  /** Montado pelo BFF a partir de `FILE_SERVER_URL`; abrir em nova aba. */
+  pdfUrl: string;
+}
+
+// ---------------------------------------------------------------- Usuarios
+
+export interface UsuarioWl {
+  id: number;
+  nome: string;
+  email: string;
+  cargo: string | null;
+  departamento: string | null;
+  telefoneComercial: string | null;
+  dataUltimoLogin: string | null;
+  permissoes: string[];
+}
+
+export interface UsuarioWlCreate {
+  nome: string;
+  email: string;
+  senha: string;
+  cargo?: string | null;
+  departamento?: string | null;
+  telefoneComercial?: string | null;
+  permissoes: string[];
+}
+
+/**
+ * `PUT /api/wl/usuarios/{id}`.
+ *
+ * O DTO do BFF aceita nome/senha/cargo/departamento/telefone, mas o corpo do
+ * `Update` chama SOMENTE `usuario.AtualizarPermissoes(dto.Permissoes)` — os
+ * outros campos sao silenciosamente descartados. Ver o relatorio do TP-R4:
+ * a UI de edicao expoe apenas permissoes para nao mentir para o operador.
+ */
+export interface UsuarioWlUpdate {
+  permissoes: string[];
+}

@@ -1,18 +1,153 @@
-import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { mensagemDeErro } from '../../core/http/api-error';
+import { DashboardKpis } from '../../core/models/wl.models';
+import { DashboardService } from '../../core/services/dashboard.service';
 
+/**
+ * KPIs operacionais da exibidora — `GET /api/wl/dashboard/kpis`.
+ *
+ * Card `e2f22c9c`. Todos os números vêm do BFF já escopados pela afiliada da
+ * instância; o frontend não recalcula nada.
+ */
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   template: `
-    <div class="page-container">
-      <h1>Dashboard Operacional</h1>
-      <p>Visão geral de operações e métricas da exibidora.</p>
+    <div class="wl-page">
+      <h1 class="wl-page__titulo">Dashboard operacional</h1>
+      <p class="wl-page__descricao">Visão geral do inventário e da operação da exibidora.</p>
+
+      <div class="wl-estado wl-estado--carregando" *ngIf="carregando">Carregando indicadores…</div>
+
+      <div class="wl-estado wl-estado--erro" *ngIf="erro">
+        {{ erro }}
+        <button class="wl-btn wl-btn--link" type="button" (click)="carregar()">Tentar novamente</button>
+      </div>
+
+      <ng-container *ngIf="kpis as k">
+        <!-- Alerta de aprovação pendente: locais criados pela Exibidora entram
+             como StatusExibicao = AprovacaoPendente e são liberados no Admin. -->
+        <div class="alerta" *ngIf="aprovacaoPendente(k) > 0">
+          <strong>{{ aprovacaoPendente(k) }}</strong>
+          {{ aprovacaoPendente(k) === 1 ? 'local aguarda aprovação' : 'locais aguardam aprovação' }}.
+          A liberação é feita pela equipe Veiculando no painel Admin.
+          <a routerLink="/locais">Ver locais</a>
+        </div>
+
+        <div class="kpis">
+          <div class="kpi">
+            <span class="kpi__rotulo">Locais ativos</span>
+            <span class="kpi__valor">{{ k.locaisAtivos }}</span>
+          </div>
+          <div class="kpi">
+            <span class="kpi__rotulo">Peças em exibição</span>
+            <span class="kpi__valor">{{ k.pecasEmExibicao }}</span>
+          </div>
+          <div class="kpi">
+            <span class="kpi__rotulo">Pedidos pendentes</span>
+            <span class="kpi__valor">{{ k.pedidosPendentes }}</span>
+          </div>
+          <div class="kpi kpi--mock">
+            <span class="kpi__rotulo">Receita mensal</span>
+            <span class="kpi__valor">{{ k.receitaMensal | currency: 'BRL' : 'symbol' : '1.2-2' }}</span>
+            <!-- O BFF devolve 0 fixo. É o comportamento definido para a V1, não
+                 um defeito: a rotulagem existe para o operador não ler o zero
+                 como "nenhuma receita neste mês". -->
+            <span class="kpi__nota">Valor ainda não integrado (previsto para versão futura)</span>
+          </div>
+        </div>
+      </ng-container>
     </div>
   `,
-  styles: [`
-    .page-container { padding: 24px; color: #fff; }
-  `]
+  styles: [
+    `
+      .kpis {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+      }
+      .kpi {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 18px;
+        background: var(--white);
+        border: 1px solid #e1e3ea;
+        border-radius: var(--radius-sm);
+      }
+      .kpi__rotulo {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        color: var(--on-surface);
+      }
+      .kpi__valor {
+        font-family: var(--font-display);
+        font-size: 1.8rem;
+        color: var(--primary-dark);
+      }
+      .kpi__nota {
+        font-size: 0.72rem;
+        font-style: italic;
+        color: var(--on-surface);
+      }
+      .kpi--mock {
+        border-style: dashed;
+      }
+      .alerta {
+        padding: 12px 16px;
+        margin-bottom: 16px;
+        background: #fff4d6;
+        border: 1px solid #f0d79a;
+        border-radius: var(--radius-sm);
+        font-size: 0.875rem;
+        color: #6b4b00;
+      }
+      .alerta a {
+        color: var(--primary-color);
+        margin-left: 6px;
+      }
+    `,
+  ],
 })
-export class DashboardComponent {}
+export class DashboardComponent implements OnInit {
+  private service = inject(DashboardService);
+
+  kpis: DashboardKpis | null = null;
+  carregando = false;
+  erro: string | null = null;
+
+  ngOnInit(): void {
+    this.carregar();
+  }
+
+  carregar(): void {
+    this.carregando = true;
+    this.erro = null;
+
+    this.service.kpis().subscribe({
+      next: (kpis) => {
+        this.kpis = kpis;
+        this.carregando = false;
+      },
+      error: (erro: unknown) => {
+        this.carregando = false;
+        this.erro = mensagemDeErro(erro, 'Não foi possível carregar os indicadores.');
+      },
+    });
+  }
+
+  /**
+   * O BFF serializa a propriedade como `alertasAprovaçãoPendente` — com cedilha
+   * e til, porque a propriedade anônima no `DashboardController` foi declarada
+   * acentuada e a policy camelCase só rebaixa a primeira letra. Isolado aqui
+   * para o template não carregar a estranheza.
+   */
+  aprovacaoPendente(kpis: DashboardKpis): number {
+    return kpis['alertasAprovaçãoPendente'] ?? 0;
+  }
+}
