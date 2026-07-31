@@ -111,8 +111,56 @@ export interface LocalListItem {
   statusExibicao?: number;
 }
 
+/**
+ * `GET /api/wl/locais/{id}` — inclui todos os campos editáveis.
+ *
+ * Precisa trazer endereço e geolocalização porque o ramo de edição do core
+ * sobrescreve esses campos com o que o command enviar, sem mesclar: preencher o
+ * formulário a partir de um payload incompleto apagaria os dados ao salvar.
+ */
 export interface LocalDetalhe extends LocalListItem {
   idCidade: number | null;
+  codigoInterno: string | null;
+  palavrasChave: string | null;
+  endereco: {
+    logradouro: string | null;
+    numero: string | null;
+    bairro: string | null;
+    complemento: string | null;
+    referencia: string | null;
+    cep: { numero: string | null } | null;
+  } | null;
+  geolocalizacao: { latitude: number; longitude: number } | null;
+  /** `WlUsuario.Id` do operador que originou o registro (ADR-WL-003). */
+  fonteUsuarioId: number | null;
+}
+
+/**
+ * Payload de `POST /api/wl/locais` e `PUT /api/wl/locais/{id}`.
+ *
+ * Espelha o `LocalCadastroCommand` do core, com uma diferença importante: os
+ * campos que o servidor controla — `idAfiliada`, `idUsuario` e toda a trilha de
+ * origem (`fonteOrigem`, `fonteAgenciaId`, `fonteUsuarioId`) — **não** entram
+ * aqui. O BFF os preenche a partir do tenant e do JWT e ignora o que vier do
+ * cliente; enviá-los daria a falsa impressão de que a UI os escolhe.
+ */
+export interface LocalFormPayload {
+  idCidade: number;
+  descricao: string;
+  codigoInterno: string;
+  palavrasChave: string;
+  endereco: {
+    logradouro: string;
+    numero: string;
+    bairro: string;
+    complemento: string;
+    referencia: string;
+    cep: { numero: string };
+  };
+  geolocalizacao: {
+    latitude: number;
+    longitude: number;
+  };
 }
 
 export interface PecaListItem {

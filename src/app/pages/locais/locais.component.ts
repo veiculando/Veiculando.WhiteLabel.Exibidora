@@ -2,12 +2,14 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { mensagemDeErro } from '../../core/http/api-error';
 import {
+  LocalDetalhe,
   LocalListItem,
   PecaListItem,
   STATUS_EXIBICAO_ROTULOS,
   StatusExibicao,
 } from '../../core/models/wl.models';
 import { LocaisService } from '../../core/services/locais.service';
+import { LocalFormComponent } from './local-form.component';
 
 /** Limite deste endpoint no BFF: `maxBytes = 10 * 1024 * 1024`. */
 const LIMITE_FOTO_PECA_BYTES = 10 * 1024 * 1024;
@@ -23,25 +25,18 @@ const LIMITE_FOTO_PECA_BYTES = 10 * 1024 * 1024;
  *  - **Peças por local** (`GET /api/wl/pecas`), agrupadas no cliente.
  *  - **Foto da peça** (`POST .../foto`), com validação de tamanho antes de subir.
  *  - **Exclusão** (`DELETE /api/wl/locais/{id}`), que é soft delete no core.
- *
- * ⚠️ **Cadastro e edição de local/peça não estão nesta entrega.** O BFF não
- * expõe POST nem PUT para `locais` ou `pecas` — só listagem, detalhe, exclusão e
- * upload de foto. E o bloqueio é mais fundo que "falta escrever o endpoint": o
- * construtor de `Local` no core exige um `Usuario usuarioCadastro` (o `Usuario`
- * legado), que o operador WL não é. Atribuir a criação depende da service
- * account da **Tarefa 8 do TP-R2**, que ainda não existe em produção (blocker
- * B6). Construir o formulário agora produziria uma tela que não salva — o mesmo
- * padrão de artefato-fantasma que causou o B1. A UI declara a indisponibilidade
- * em vez de simulá-la.
+ *  - **Cadastro e edição**, delegados ao `LocalFormComponent`.
  *
  * O fluxo de aprovação é transparente aqui: quem cria um local pela Exibidora o
  * recebe em `StatusExibicao = AprovacaoPendente` e a liberação acontece no
- * Admin (ADR-WL-004 revisada). Esta tela apenas **reflete** o estado.
+ * Admin (ADR-WL-004 revisada). Esta tela apenas **reflete** o estado — a
+ * transição é aplicada pelo `LocalCadastroHandler` do core, que reconhece a
+ * conta de serviço da instância como usuário de afiliada.
  */
 @Component({
   selector: 'app-locais',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, LocalFormComponent],
   template: `
     <div class="wl-page">
       <h1 class="wl-page__titulo">Locais e peças</h1>
@@ -49,12 +44,16 @@ const LIMITE_FOTO_PECA_BYTES = 10 * 1024 * 1024;
         Pontos de exibição desta exibidora e as peças vinculadas a cada um.
       </p>
 
-      <div class="wl-estado aviso" *ngIf="cadastroIndisponivel">
-        <strong>Cadastro e edição indisponíveis nesta versão.</strong>
-        O BFF ainda não expõe criação/alteração de local e peça — depende da conta
-        de serviço prevista na Tarefa 8 do TP-R2. Consulta, envio de foto e
-        exclusão já operam normalmente.
+      <div class="wl-toolbar" *ngIf="!formAberto">
+        <button class="wl-btn" type="button" (click)="abrirCriacao()">Novo local</button>
       </div>
+
+      <app-local-form
+        *ngIf="formAberto"
+        [local]="localEmEdicao"
+        (salvo)="aoSalvar($event)"
+        (cancelar)="fecharForm()"
+      />
 
       <div class="wl-estado wl-estado--carregando" *ngIf="carregando">Carregando locais…</div>
 
@@ -99,6 +98,9 @@ const LIMITE_FOTO_PECA_BYTES = 10 * 1024 * 1024;
                 <td class="acoes">
                   <button class="wl-btn wl-btn--link" type="button" (click)="alternar(local.id)">
                     {{ expandido === local.id ? 'Ocultar peças' : 'Ver peças' }}
+                  </button>
+                  <button class="wl-btn wl-btn--link" type="button" (click)="abrirEdicao(local)">
+                    Editar
                   </button>
                   <button class="wl-btn wl-btn--link excluir" type="button" (click)="excluir(local)">
                     Excluir
@@ -148,12 +150,6 @@ const LIMITE_FOTO_PECA_BYTES = 10 * 1024 * 1024;
   `,
   styles: [
     `
-      .aviso {
-        margin-bottom: 16px;
-        background: #fff4d6;
-        border-color: #f0d79a;
-        color: #6b4b00;
-      }
       .acoes {
         display: flex;
         gap: 12px;
@@ -176,12 +172,6 @@ const LIMITE_FOTO_PECA_BYTES = 10 * 1024 * 1024;
 export class LocaisComponent implements OnInit {
   private service = inject(LocaisService);
 
-  /**
-   * Sinaliza a ausência de POST/PUT no BFF. Vira `false` na sprint em que os
-   * endpoints de cadastro entrarem — e é o único lugar a mudar aqui.
-   */
-  readonly cadastroIndisponivel = true;
-
   locais: LocalListItem[] = [];
   pecas: PecaListItem[] = [];
   carregando = false;
@@ -189,6 +179,48 @@ export class LocaisComponent implements OnInit {
   aviso: string | null = null;
   expandido: number | null = null;
   enviandoFotoDe: number | null = null;
+
+  formAberto = false;
+  /** `null` com o formulário aberto significa criação. */
+  localEmEdicao: LocalDetalhe | null = null;
+
+  abrirCriacao(): void {
+    this.localEmEdicao = null;
+    this.formAberto = true;
+    this.erro = null;
+    this.aviso = null;
+  }
+
+  /**
+   * Busca o detalhe antes de abrir a edição em vez de reaproveitar a linha da
+   * listagem: o item de lista não traz endereço nem geolocalização, e o core
+   * sobrescreve esses campos com o que o formulário enviar.
+   */
+  abrirEdicao(local: LocalListItem): void {
+    this.erro = null;
+    this.aviso = null;
+
+    this.service.obter(local.id).subscribe({
+      next: (detalhe) => {
+        this.localEmEdicao = detalhe;
+        this.formAberto = true;
+      },
+      error: (erro: unknown) => {
+        this.erro = mensagemDeErro(erro, 'Não foi possível abrir o local para edição.');
+      },
+    });
+  }
+
+  fecharForm(): void {
+    this.formAberto = false;
+    this.localEmEdicao = null;
+  }
+
+  aoSalvar(mensagem: string): void {
+    this.fecharForm();
+    this.aviso = mensagem;
+    this.carregar();
+  }
 
   ngOnInit(): void {
     this.carregar();

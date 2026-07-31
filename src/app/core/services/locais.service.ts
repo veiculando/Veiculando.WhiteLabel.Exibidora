@@ -2,7 +2,12 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { LocalDetalhe, LocalListItem, PecaListItem } from '../models/wl.models';
+import {
+  LocalDetalhe,
+  LocalFormPayload,
+  LocalListItem,
+  PecaListItem,
+} from '../models/wl.models';
 
 @Injectable({ providedIn: 'root' })
 export class LocaisService {
@@ -22,6 +27,23 @@ export class LocaisService {
 
   obter(id: number): Observable<LocalDetalhe> {
     return this.http.get<LocalDetalhe>(`${this.base}/${id}`);
+  }
+
+  /**
+   * `POST /api/wl/locais`.
+   *
+   * O local nasce **aguardando aprovação** — a liberação é feita pela equipe
+   * Veiculando no Admin. Isso não é decidido pelo frontend nem pelo BFF: o
+   * handler do core aplica a transição ao ver que quem cadastrou é um usuário
+   * de afiliada (ADR-WL-004).
+   */
+  criar(payload: LocalFormPayload): Observable<unknown> {
+    return this.http.post(this.base, payload);
+  }
+
+  /** `PUT /api/wl/locais/{id}` — o BFF valida a propriedade antes de repassar. */
+  atualizar(id: number, payload: LocalFormPayload): Observable<unknown> {
+    return this.http.put(`${this.base}/${id}`, payload);
   }
 
   /** `DELETE /api/wl/locais/{id}` — soft delete no core, valida tenant (anti-IDOR). */
