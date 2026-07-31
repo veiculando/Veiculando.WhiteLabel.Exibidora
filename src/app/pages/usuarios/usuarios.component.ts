@@ -140,7 +140,7 @@ import { UsuariosService } from '../../core/services/usuarios.service';
                 </td>
                 <td class="acoes">
                   <button class="wl-btn wl-btn--link" type="button" (click)="abrirEdicao(usuario)">
-                    {{ editando === usuario.id ? 'Fechar' : 'Permissões' }}
+                    {{ editando === usuario.id ? 'Fechar' : 'Editar' }}
                   </button>
                   <button class="wl-btn wl-btn--link excluir" type="button" (click)="excluir(usuario)">
                     Excluir
@@ -150,10 +150,46 @@ import { UsuariosService } from '../../core/services/usuarios.service';
 
               <tr *ngIf="editando === usuario.id">
                 <td colspan="6" class="edicao">
+                  <form [formGroup]="formEdicao">
+                    <div class="grade">
+                      <div class="wl-campo">
+                        <label [attr.for]="'nome-' + usuario.id">Nome *</label>
+                        <input [id]="'nome-' + usuario.id" type="text" formControlName="nome" />
+                        <span class="wl-campo__erro" *ngIf="invalidoEdicao('nome')">Informe o nome.</span>
+                      </div>
+                      <div class="wl-campo">
+                        <label [attr.for]="'cargo-' + usuario.id">Cargo</label>
+                        <input [id]="'cargo-' + usuario.id" type="text" formControlName="cargo" />
+                      </div>
+                      <div class="wl-campo">
+                        <label [attr.for]="'depto-' + usuario.id">Departamento</label>
+                        <input [id]="'depto-' + usuario.id" type="text" formControlName="departamento" />
+                      </div>
+                      <div class="wl-campo">
+                        <label [attr.for]="'tel-' + usuario.id">Telefone comercial</label>
+                        <input [id]="'tel-' + usuario.id" type="text" formControlName="telefoneComercial" />
+                      </div>
+                      <div class="wl-campo">
+                        <label [attr.for]="'senha-' + usuario.id">Nova senha</label>
+                        <input
+                          [id]="'senha-' + usuario.id"
+                          type="password"
+                          formControlName="senha"
+                          autocomplete="new-password"
+                          placeholder="deixe em branco para manter"
+                        />
+                        <span class="wl-campo__erro" *ngIf="invalidoEdicao('senha')">
+                          Mínimo de 8 caracteres.
+                        </span>
+                      </div>
+                    </div>
+                  </form>
+
                   <p class="edicao__nota">
-                    Somente as permissões são alteráveis. Os dados cadastrais são
-                    definidos no momento da criação.
+                    O e-mail não é alterável — ele identifica o operador na
+                    instância. Para trocá-lo, exclua e cadastre novamente.
                   </p>
+
                   <fieldset class="permissoes">
                     <legend>Permissões de {{ usuario.nome }}</legend>
                     <label class="permissao" *ngFor="let permissao of permissoes">
@@ -167,8 +203,8 @@ import { UsuariosService } from '../../core/services/usuarios.service';
                     </label>
                   </fieldset>
                   <div class="acoes-form">
-                    <button class="wl-btn" type="button" [disabled]="salvando" (click)="salvarPermissoes(usuario)">
-                      {{ salvando ? 'Salvando…' : 'Salvar permissões' }}
+                    <button class="wl-btn" type="button" [disabled]="salvando" (click)="salvarEdicao(usuario)">
+                      {{ salvando ? 'Salvando…' : 'Salvar alterações' }}
                     </button>
                   </div>
                 </td>
@@ -275,6 +311,18 @@ export class UsuariosComponent implements OnInit {
     telefoneComercial: [''],
   });
 
+  /**
+   * Edição. A senha é opcional — sem `Validators.required` — mas, se preenchida,
+   * respeita o mesmo mínimo do cadastro, que o BFF também valida.
+   */
+  formEdicao = this.fb.nonNullable.group({
+    nome: ['', [Validators.required]],
+    cargo: [''],
+    departamento: [''],
+    telefoneComercial: [''],
+    senha: ['', [Validators.minLength(8)]],
+  });
+
   ngOnInit(): void {
     this.carregar();
   }
@@ -375,29 +423,62 @@ export class UsuariosComponent implements OnInit {
     this.erro = null;
     this.aviso = null;
     this.permissoesEdicao = new Set(usuario.permissoes);
+
+    // A senha começa vazia e assim permanece se o administrador não quiser
+    // trocá-la — o BFF preserva a atual quando o campo não vem preenchido.
+    this.formEdicao.reset({
+      nome: usuario.nome ?? '',
+      cargo: usuario.cargo ?? '',
+      departamento: usuario.departamento ?? '',
+      telefoneComercial: usuario.telefoneComercial ?? '',
+      senha: '',
+    });
   }
 
   alternarPermissaoEdicao(permissao: string): void {
     this.alternar(this.permissoesEdicao, permissao);
   }
 
-  salvarPermissoes(usuario: UsuarioWl): void {
+  invalidoEdicao(campo: string): boolean {
+    const controle = this.formEdicao.get(campo);
+    return !!controle && controle.invalid && (controle.dirty || controle.touched);
+  }
+
+  salvarEdicao(usuario: UsuarioWl): void {
     this.erro = null;
     this.aviso = null;
+
+    if (this.formEdicao.invalid) {
+      this.formEdicao.markAllAsTouched();
+      return;
+    }
+
+    const v = this.formEdicao.getRawValue();
     this.salvando = true;
 
-    this.service.atualizar(usuario.id, { permissoes: [...this.permissoesEdicao] }).subscribe({
-      next: (resposta) => {
-        this.salvando = false;
-        this.editando = null;
-        this.aviso = resposta.message;
-        this.carregar();
-      },
-      error: (erro: unknown) => {
-        this.salvando = false;
-        this.erro = mensagemDeErro(erro, 'Não foi possível atualizar as permissões.');
-      },
-    });
+    this.service
+      .atualizar(usuario.id, {
+        nome: v.nome,
+        cargo: v.cargo || null,
+        departamento: v.departamento || null,
+        telefoneComercial: v.telefoneComercial || null,
+        // Só viaja quando preenchida: enviar string vazia faria o servidor
+        // tratar como tentativa de troca.
+        ...(v.senha ? { senha: v.senha } : {}),
+        permissoes: [...this.permissoesEdicao],
+      })
+      .subscribe({
+        next: (resposta) => {
+          this.salvando = false;
+          this.editando = null;
+          this.aviso = resposta.message;
+          this.carregar();
+        },
+        error: (erro: unknown) => {
+          this.salvando = false;
+          this.erro = mensagemDeErro(erro, 'Não foi possível atualizar o operador.');
+        },
+      });
   }
 
   // ------------------------------------------------------------ exclusão

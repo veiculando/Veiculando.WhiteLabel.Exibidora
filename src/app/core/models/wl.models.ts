@@ -301,11 +301,18 @@ export interface UsuarioWlCreate {
 /**
  * `PUT /api/wl/usuarios/{id}`.
  *
- * O DTO do BFF aceita nome/senha/cargo/departamento/telefone, mas o corpo do
- * `Update` chama SOMENTE `usuario.AtualizarPermissoes(dto.Permissoes)` — os
- * outros campos sao silenciosamente descartados. Ver o relatorio do TP-R4:
- * a UI de edicao expoe apenas permissoes para nao mentir para o operador.
+ * Atualização **parcial por campo**: o que for omitido preserva o valor atual no
+ * servidor. Por isso todos os campos são opcionais — uma tela que edite apenas
+ * permissões não zera o cargo do operador.
+ *
+ * `senha` só deve ser enviada quando o administrador realmente quer trocá-la;
+ * vazia ou ausente, a senha atual é mantida.
  */
 export interface UsuarioWlUpdate {
-  permissoes: string[];
+  nome?: string;
+  cargo?: string | null;
+  departamento?: string | null;
+  telefoneComercial?: string | null;
+  senha?: string;
+  permissoes?: string[];
 }
