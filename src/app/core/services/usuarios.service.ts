@@ -26,7 +26,12 @@ export class UsuariosService {
     return this.http.post<{ id: number; message: string }>(this.base, dto);
   }
 
-  /** `PUT /api/wl/usuarios/{id}` — na pratica atualiza somente permissoes. */
+  /**
+   * `PUT /api/wl/usuarios/{id}` — atualiza dados cadastrais, permissoes e senha.
+   *
+   * A atualizacao e parcial por campo: o que for omitido do payload e
+   * preservado no servidor, entao enviar so `permissoes` nao zera o cargo.
+   */
   atualizar(id: number, dto: UsuarioWlUpdate): Observable<{ message: string }> {
     return this.http.put<{ message: string }>(`${this.base}/${id}`, dto);
   }

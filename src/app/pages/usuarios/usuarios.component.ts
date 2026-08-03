@@ -22,12 +22,17 @@ import { UsuariosService } from '../../core/services/usuarios.service';
  * as permissões inválidas nomeadas. A lista aqui é para o operador não precisar
  * digitar identificadores.
  *
- * ⚠️ **A edição altera somente permissões.** O `WlUsuarioUpdateDto` do BFF aceita
- * nome, senha, cargo, departamento e telefone, mas o corpo do `Update` chama
- * apenas `usuario.AtualizarPermissoes(dto.Permissoes)` — os demais campos são
- * descartados sem erro. Expor esses campos no formulário faria o operador
- * acreditar que salvou uma alteração que o servidor jogou fora, então a edição
- * mostra só o que de fato persiste. Os dados cadastrais são definidos na criação.
+ * 📌 **O formulário de edição expõe apenas permissões — por escopo, não por
+ * limitação do servidor.** Isso já foi limitação: o `Update` do BFF aceitava
+ * nome, cargo, departamento, telefone e senha no DTO mas aplicava só
+ * `AtualizarPermissoes`, descartando o resto em silêncio. Esse defeito foi
+ * corrigido ainda na Sprint 9.0 — hoje o `Update` chama `AtualizarDados` e
+ * `AlterarSenha`, e a atualização é parcial por campo (o que não vier no
+ * payload é preservado).
+ *
+ * Ou seja, editar dados cadastrais é suportado pela API e não está exposto na
+ * tela. Enquanto não estiver, a única forma de corrigir o nome ou o cargo de um
+ * operador é excluir e recriar. Ver a pendência registrada na revisão do TP-R4.
  */
 @Component({
   selector: 'app-usuarios',
