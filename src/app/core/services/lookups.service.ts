@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, shareReplay } from 'rxjs';
+import { Observable, catchError, shareReplay, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { CidadeLookup, NomeadoLookup, PeriodoLookup } from '../models/wl.models';
 
@@ -18,7 +18,21 @@ export class LookupsService {
 
   private get<T>(caminho: string): Observable<T> {
     if (!this.cache.has(caminho)) {
-      this.cache.set(caminho, this.http.get<T>(`${this.base}/${caminho}`).pipe(shareReplay(1)));
+      const requisicao = this.http.get<T>(`${this.base}/${caminho}`).pipe(
+        // `shareReplay` reemite tambem o ERRO para todo assinante futuro. Sem
+        // descartar a entrada aqui, uma falha de rede na primeira chamada ficava
+        // cacheada pelo resto da sessao: o dropdown de cidades do cadastro de
+        // local (que engole o erro com `error: () => this.cidades = []`) ficava
+        // permanentemente vazio e nenhuma tentativa posterior refazia a
+        // requisicao — so recarregando a pagina.
+        catchError((erro: unknown) => {
+          this.cache.delete(caminho);
+          return throwError(() => erro);
+        }),
+        shareReplay(1)
+      );
+
+      this.cache.set(caminho, requisicao);
     }
     return this.cache.get(caminho) as Observable<T>;
   }

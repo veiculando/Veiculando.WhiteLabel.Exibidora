@@ -16,6 +16,17 @@ import { authGuard } from './core/auth/auth.guard';
  *
  * Toda a área autenticada é filha do `ShellComponent` (header/sidebar/breadcrumb/
  * footer); /login e /acesso-negado ficam fora dele por serem públicas.
+ *
+ * ⚠️ `canActivate: [authGuard]` precisa estar **em cada rota filha** que declare
+ * `data.permission`, e não só na rota pai. O guard recebe o
+ * `ActivatedRouteSnapshot` da rota em que está declarado: no pai (`path: ''`),
+ * `route.data` não contém o `permission` do filho, então `permissaoExigida` sai
+ * `undefined` e a checagem de permissão simplesmente não acontece — o guard vira
+ * só uma verificação de sessão. Data de rota é herdada de pai para filho, nunca
+ * o contrário.
+ *
+ * O guard no pai continua ali de propósito: cobre `/dashboard` e `/programacao`,
+ * que exigem sessão mas nenhuma permissão específica.
  */
 export const routes: Routes = [
   // Rota pública: login
@@ -53,6 +64,7 @@ export const routes: Routes = [
         path: 'locais',
         title: 'Locais e peças',
         data: { permission: 'PecaGerenciar' },
+        canActivate: [authGuard],
         loadComponent: () => import('./pages/locais/locais.component').then((m) => m.LocaisComponent),
       },
       {
@@ -65,6 +77,7 @@ export const routes: Routes = [
         path: 'checking',
         title: 'Checking',
         data: { permission: 'Checking' },
+        canActivate: [authGuard],
         loadComponent: () =>
           import('./pages/checking/checking.component').then((m) => m.CheckingComponent),
       },
@@ -74,6 +87,7 @@ export const routes: Routes = [
         path: 'pedidos-reserva',
         title: 'Pedidos de reserva',
         data: { permission: 'PedidoReservaGerenciar' },
+        canActivate: [authGuard],
         loadComponent: () =>
           import('./pages/pedidos-reserva/pedidos-reserva.component').then(
             (m) => m.PedidosReservaComponent
@@ -83,6 +97,7 @@ export const routes: Routes = [
         path: 'pedidos-insercao',
         title: 'Pedidos de inserção',
         data: { permission: 'PedidoInsercaoGerenciar' },
+        canActivate: [authGuard],
         loadComponent: () =>
           import('./pages/pedidos-insercao/pedidos-insercao.component').then(
             (m) => m.PedidosInsercaoComponent
@@ -94,6 +109,7 @@ export const routes: Routes = [
         path: 'usuarios',
         title: 'Operadores',
         data: { permission: 'UsuarioAfiliadaGerenciar' },
+        canActivate: [authGuard],
         loadComponent: () =>
           import('./pages/usuarios/usuarios.component').then((m) => m.UsuariosComponent),
       },
