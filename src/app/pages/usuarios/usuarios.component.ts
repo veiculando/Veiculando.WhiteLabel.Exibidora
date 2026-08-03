@@ -22,17 +22,18 @@ import { UsuariosService } from '../../core/services/usuarios.service';
  * as permissões inválidas nomeadas. A lista aqui é para o operador não precisar
  * digitar identificadores.
  *
- * 📌 **O formulário de edição expõe apenas permissões — por escopo, não por
- * limitação do servidor.** Isso já foi limitação: o `Update` do BFF aceitava
- * nome, cargo, departamento, telefone e senha no DTO mas aplicava só
- * `AtualizarPermissoes`, descartando o resto em silêncio. Esse defeito foi
- * corrigido ainda na Sprint 9.0 — hoje o `Update` chama `AtualizarDados` e
- * `AlterarSenha`, e a atualização é parcial por campo (o que não vier no
- * payload é preservado).
+ * A edição altera dados cadastrais, permissões e senha. Nem sempre foi assim: o
+ * `Update` do BFF aceitava nome, cargo, departamento, telefone e senha no DTO
+ * mas aplicava só `AtualizarPermissoes`, descartando o resto sem erro — o
+ * operador salvava e o dado voltava como antes. Corrigido ainda na Sprint 9.0,
+ * junto com o formulário completo desta tela.
  *
- * Ou seja, editar dados cadastrais é suportado pela API e não está exposto na
- * tela. Enquanto não estiver, a única forma de corrigir o nome ou o cargo de um
- * operador é excluir e recriar. Ver a pendência registrada na revisão do TP-R4.
+ * A atualização é parcial por campo: o que não vier no payload é preservado no
+ * servidor. Por isso a senha só viaja quando preenchida — string vazia seria
+ * lida como tentativa de troca.
+ *
+ * O e-mail é imutável: identifica o operador na instância e faz parte do índice
+ * único `UK_WlUsuario_Email_Afiliada`.
  */
 @Component({
   selector: 'app-usuarios',
@@ -192,7 +193,9 @@ import { UsuariosService } from '../../core/services/usuarios.service';
 
                   <p class="edicao__nota">
                     O e-mail não é alterável — ele identifica o operador na
-                    instância. Para trocá-lo, exclua e cadastre novamente.
+                    instância. Para trocá-lo, exclua este operador e cadastre um
+                    novo com o outro e-mail; o e-mail do excluído fica reservado
+                    e não pode ser reaproveitado.
                   </p>
 
                   <fieldset class="permissoes">

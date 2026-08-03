@@ -24,7 +24,16 @@ export class PermissionService {
 
   /**
    * Verifica se o operador autenticado possui a permissão especificada.
-   * Suporta claim única (string) ou múltiplas claims (array de strings), além de wildcard ('*').
+   *
+   * Suporta claim única (string) ou múltiplas claims (array), que é como o
+   * `AuthController` as emite — uma claim `permission` por permissão.
+   *
+   * Não há wildcard. Havia um tratamento de `'*'` aqui que concedia tudo, mas
+   * `'*'` não existe em `WlPermissoesValidas` (o domínio recusa o valor no
+   * cadastro) nem nas policies do BFF, que exigem `RequireClaim` com o nome
+   * exato da permissão. Um token com `'*'` liberaria o menu e as rotas inteiras
+   * no cliente enquanto toda chamada de escrita voltaria 403 — o operador veria
+   * a tela abrir e a ação falhar. Melhor não ter o conceito dos dois lados.
    */
   has(perm: string): boolean {
     const decoded = this.getDecodedToken();
@@ -33,11 +42,11 @@ export class PermissionService {
     const permissionClaim = decoded['permission'];
 
     if (Array.isArray(permissionClaim)) {
-      return permissionClaim.includes(perm) || permissionClaim.includes('*');
+      return permissionClaim.includes(perm);
     }
 
     if (typeof permissionClaim === 'string') {
-      return permissionClaim === perm || permissionClaim === '*';
+      return permissionClaim === perm;
     }
 
     return false;
