@@ -1,6 +1,6 @@
-import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { environment } from '../../environments/environment';
+import { Component, inject } from '@angular/core';
+import { BrandingService } from '../core/branding/branding.service';
 
 @Component({
   selector: 'app-footer',
@@ -8,7 +8,7 @@ import { environment } from '../../environments/environment';
   imports: [CommonModule],
   template: `
     <footer class="footer-container">
-      <span>&copy; {{ currentYear }} {{ footerText }}. Todos os direitos reservados.</span>
+      <span>&copy; {{ currentYear }} {{ brand()?.footerText || brand()?.nomeExibicao }}. Todos os direitos reservados.</span>
     </footer>
   `,
   styles: [`
@@ -16,6 +16,6 @@ import { environment } from '../../environments/environment';
   `]
 })
 export class FooterComponent {
-  currentYear = new Date().getFullYear();
-  footerText = environment.branding.footerText;
+  readonly currentYear = new Date().getFullYear();
+  readonly brand = inject(BrandingService).branding;
 }

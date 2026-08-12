@@ -44,10 +44,10 @@ describe('BrandingService', () => {
     });
     await carregamento;
 
-    service.branding()?.nomeExibicao.shouldBe('Marca A');
-    document.documentElement.style.getPropertyValue('--primary-color').shouldBe('#112233');
-    document.documentElement.style.getPropertyValue('--secondary-color').shouldBe('#334455');
-    title.getTitle().shouldBe('Portal Marca A');
+    expect(service.branding()?.nomeExibicao).toBe('Marca A');
+    expect(document.documentElement.style.getPropertyValue('--primary-color')).toBe('#112233');
+    expect(document.documentElement.style.getPropertyValue('--secondary-color')).toBe('#334455');
+    expect(title.getTitle()).toBe('Portal Marca A');
   });
 
   it('limpa a identidade anterior quando o payload obrigatorio e invalido', async () => {
