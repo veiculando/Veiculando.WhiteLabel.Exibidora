@@ -1,0 +1,66 @@
+import { DOCUMENT } from '@angular/common';
+import { provideHttpClient } from '@angular/common/http';
+import {
+  HttpTestingController,
+  provideHttpClientTesting,
+} from '@angular/common/http/testing';
+import { TestBed } from '@angular/core/testing';
+import { Title } from '@angular/platform-browser';
+import { BrandingService } from './branding.service';
+
+describe('BrandingService', () => {
+  let service: BrandingService;
+  let http: HttpTestingController;
+  let document: Document;
+  let title: Title;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
+
+    service = TestBed.inject(BrandingService);
+    http = TestBed.inject(HttpTestingController);
+    document = TestBed.inject(DOCUMENT);
+    title = TestBed.inject(Title);
+  });
+
+  afterEach(() => http.verify());
+
+  it('carrega branding same-origin e aplica identidade em runtime', async () => {
+    const carregamento = service.load();
+    const req = http.expectOne('/api/wl/config/branding');
+
+    req.flush({
+      nomeExibicao: 'Marca A',
+      logoUrl: '/assets/marca-a.svg',
+      faviconUrl: '/assets/marca-a.ico',
+      primaryColor: '#112233',
+      secondaryColor: '#334455',
+      accentColor: '#ffcc00',
+      footerText: 'Marca A',
+      seoTitle: 'Portal Marca A',
+      seoDescription: 'Descricao A',
+    });
+    await carregamento;
+
+    service.branding()?.nomeExibicao.shouldBe('Marca A');
+    document.documentElement.style.getPropertyValue('--primary-color').shouldBe('#112233');
+    document.documentElement.style.getPropertyValue('--secondary-color').shouldBe('#334455');
+    title.getTitle().shouldBe('Portal Marca A');
+  });
+
+  it('limpa a identidade anterior quando o payload obrigatorio e invalido', async () => {
+    document.documentElement.style.setProperty('--primary-color', '#abcdef');
+
+    const carregamento = service.load();
+    http.expectOne('/api/wl/config/branding').flush({
+      nomeExibicao: 'Sem logo',
+      primaryColor: '#112233',
+    });
+
+    await expectAsync(carregamento).toBeRejected();
+    expect(service.branding()).toBeNull();
+    expect(document.documentElement.style.getPropertyValue('--primary-color')).toBe('');
+  });
+});
