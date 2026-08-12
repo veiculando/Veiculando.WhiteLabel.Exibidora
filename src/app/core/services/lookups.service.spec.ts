@@ -53,11 +53,38 @@ describe('LookupsService', () => {
     expect(cidades.length).toBe(1);
   });
 
-  it('cada lookup tem cache proprio', () => {
+  /**
+   * O cache e um `Map` indexado pelo caminho do lookup, entao "cache proprio"
+   * significa duas coisas que precisam ser exercidas JUNTAS:
+   *
+   *   1. caminhos distintos nao se servem do mesmo balde (senao `periodos()`
+   *      devolveria as cidades e nenhuma requisicao de periodos sairia);
+   *   2. cada caminho continua cacheando por conta propria (uma requisicao
+   *      apesar de duas assinaturas).
+   *
+   * A versao anterior deste teste assinava cada lookup UMA unica vez. Isso
+   * cobria so o item 1 e, apesar do nome, nao exercia cache algum: uma regressao
+   * que fizesse o `Map` guardar por instancia em vez de por caminho — perdendo o
+   * cache mas mantendo as URLs certas — passaria despercebida. Chamar cada
+   * lookup duas vezes e o que transforma o nome do teste em assercao.
+   */
+  it('cada lookup tem cache proprio: repetir chamadas nao vaza entre caminhos', () => {
+    service.cidades().subscribe();
     service.cidades().subscribe();
     service.periodos().subscribe();
+    service.periodos().subscribe();
 
-    http.expectOne(`${environment.bffUrl}/lookups/cidades`).flush([]);
-    http.expectOne(`${environment.bffUrl}/lookups/periodos`).flush([]);
+    const cidades = http.match(`${environment.bffUrl}/lookups/cidades`);
+    const periodos = http.match(`${environment.bffUrl}/lookups/periodos`);
+
+    expect(cidades.length)
+      .withContext('cidades deve sair uma unica vez, mesmo com duas assinaturas')
+      .toBe(1);
+    expect(periodos.length)
+      .withContext('periodos precisa de requisicao propria, nao pode ser servido pelo cache de cidades')
+      .toBe(1);
+
+    cidades[0].flush([{ id: 1, nome: 'São Paulo', sigla: 'SP' }]);
+    periodos[0].flush([]);
   });
 });
