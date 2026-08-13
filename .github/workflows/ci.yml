@@ -1,6 +1,6 @@
 name: CI
 
-# Chamador do workflow reutilizavel mantido em veiculando/.github.
+# Chamador dos workflows reutilizaveis mantidos em veiculando/.github.
 #
 # Este repositorio e autocontido: nao depende do core, entao nao precisa de
 # secret nem de checkout adicional.
@@ -17,3 +17,9 @@ jobs:
     uses: veiculando/.github/.github/workflows/_angular-ci.yml@main
     with:
       node-version: '20'
+
+  security:
+    uses: veiculando/.github/.github/workflows/_security-ci.yml@main
+    with:
+      # Repositorio publico: dependency review e gratuito.
+      dependency-review: true
