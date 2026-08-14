@@ -1,5 +1,5 @@
-import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
+
+import { Component, EventEmitter, Input, OnInit, Output, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { mensagemDeErro } from '../../core/http/api-error';
 import { CidadeLookup, LocalDetalhe, LocalFormPayload } from '../../core/models/wl.models';
@@ -17,94 +17,109 @@ import { LookupsService } from '../../core/services/lookups.service';
  * cadastrou é usuário de afiliada (ADR-WL-004). A UI apenas avisa o operador.
  */
 @Component({
-  selector: 'app-local-form',
-  standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
-  template: `
+    selector: 'app-local-form',
+    imports: [ReactiveFormsModule],
+    template: `
     <form class="wl-card" [formGroup]="form" (ngSubmit)="salvar()">
       <h2 class="form__titulo">{{ local ? 'Editar local' : 'Novo local' }}</h2>
-
-      <p class="form__aviso" *ngIf="!local">
-        O local entrará como <strong>aguardando aprovação</strong>. A liberação é
-        feita pela equipe Veiculando no painel Admin.
-      </p>
-
-      <div class="wl-estado wl-estado--erro" *ngIf="erro">{{ erro }}</div>
-
+    
+      @if (!local) {
+        <p class="form__aviso">
+          O local entrará como <strong>aguardando aprovação</strong>. A liberação é
+          feita pela equipe Veiculando no painel Admin.
+        </p>
+      }
+    
+      @if (erro) {
+        <div class="wl-estado wl-estado--erro">{{ erro }}</div>
+      }
+    
       <div class="grade">
         <div class="wl-campo campo--largo">
           <label for="descricao">Descrição *</label>
           <input id="descricao" type="text" formControlName="descricao" />
-          <span class="wl-campo__erro" *ngIf="invalido('descricao')">Informe a descrição.</span>
+          @if (invalido('descricao')) {
+            <span class="wl-campo__erro">Informe a descrição.</span>
+          }
         </div>
-
+    
         <div class="wl-campo">
           <label for="idCidade">Cidade *</label>
           <select id="idCidade" formControlName="idCidade">
             <option [ngValue]="null">Selecione…</option>
-            <option *ngFor="let cidade of cidades" [ngValue]="cidade.id">
-              {{ cidade.nome }} / {{ cidade.sigla }}
-            </option>
+            @for (cidade of cidades; track cidade) {
+              <option [ngValue]="cidade.id">
+                {{ cidade.nome }} / {{ cidade.sigla }}
+              </option>
+            }
           </select>
-          <span class="wl-campo__erro" *ngIf="invalido('idCidade')">Selecione a cidade.</span>
+          @if (invalido('idCidade')) {
+            <span class="wl-campo__erro">Selecione a cidade.</span>
+          }
           <!-- O lookup lista apenas cidades onde a exibidora já tem inventário;
-               é a mesma restrição do endpoint, não uma limitação da tela. -->
+          é a mesma restrição do endpoint, não uma limitação da tela. -->
         </div>
-
+    
         <div class="wl-campo">
           <label for="codigoInterno">Código interno</label>
           <input id="codigoInterno" type="text" formControlName="codigoInterno" />
         </div>
-
+    
         <div class="wl-campo campo--largo">
           <label for="logradouro">Logradouro *</label>
           <input id="logradouro" type="text" formControlName="logradouro" />
-          <span class="wl-campo__erro" *ngIf="invalido('logradouro')">Informe o logradouro.</span>
+          @if (invalido('logradouro')) {
+            <span class="wl-campo__erro">Informe o logradouro.</span>
+          }
         </div>
-
+    
         <div class="wl-campo">
           <label for="numero">Número</label>
           <input id="numero" type="text" formControlName="numero" />
         </div>
-
+    
         <div class="wl-campo">
           <label for="bairro">Bairro</label>
           <input id="bairro" type="text" formControlName="bairro" />
         </div>
-
+    
         <div class="wl-campo">
           <label for="cep">CEP</label>
           <input id="cep" type="text" formControlName="cep" />
         </div>
-
+    
         <div class="wl-campo">
           <label for="complemento">Complemento</label>
           <input id="complemento" type="text" formControlName="complemento" />
         </div>
-
+    
         <div class="wl-campo campo--largo">
           <label for="referencia">Ponto de referência</label>
           <input id="referencia" type="text" formControlName="referencia" />
         </div>
-
+    
         <div class="wl-campo">
           <label for="latitude">Latitude *</label>
           <input id="latitude" type="number" step="any" formControlName="latitude" />
-          <span class="wl-campo__erro" *ngIf="invalido('latitude')">Informe a latitude.</span>
+          @if (invalido('latitude')) {
+            <span class="wl-campo__erro">Informe a latitude.</span>
+          }
         </div>
-
+    
         <div class="wl-campo">
           <label for="longitude">Longitude *</label>
           <input id="longitude" type="number" step="any" formControlName="longitude" />
-          <span class="wl-campo__erro" *ngIf="invalido('longitude')">Informe a longitude.</span>
+          @if (invalido('longitude')) {
+            <span class="wl-campo__erro">Informe a longitude.</span>
+          }
         </div>
-
+    
         <div class="wl-campo campo--largo">
           <label for="palavrasChave">Palavras-chave</label>
           <input id="palavrasChave" type="text" formControlName="palavrasChave" />
         </div>
       </div>
-
+    
       <div class="acoes">
         <button class="wl-btn" type="submit" [disabled]="salvando">
           {{ salvando ? 'Salvando…' : local ? 'Salvar alterações' : 'Cadastrar local' }}
@@ -114,9 +129,10 @@ import { LookupsService } from '../../core/services/lookups.service';
         </button>
       </div>
     </form>
-  `,
-  styles: [
-    `
+    `,
+    changeDetection: ChangeDetectionStrategy.Eager,
+    styles: [
+        `
       .form__titulo {
         margin: 0 0 8px;
         font-size: 1.1rem;
@@ -149,7 +165,7 @@ import { LookupsService } from '../../core/services/lookups.service';
         gap: 12px;
       }
     `,
-  ],
+    ]
 })
 export class LocalFormComponent implements OnInit {
   /** Ausente = criação. Presente = edição, e o formulário chega preenchido. */

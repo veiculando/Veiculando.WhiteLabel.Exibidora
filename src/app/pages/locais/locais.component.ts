@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { mensagemDeErro } from '../../core/http/api-error';
 import {
   LocalDetalhe,
@@ -34,122 +34,143 @@ const LIMITE_FOTO_PECA_BYTES = 10 * 1024 * 1024;
  * conta de serviço da instância como usuário de afiliada.
  */
 @Component({
-  selector: 'app-locais',
-  standalone: true,
-  imports: [CommonModule, LocalFormComponent],
-  template: `
+    selector: 'app-locais',
+    imports: [CommonModule, LocalFormComponent],
+    template: `
     <div class="wl-page">
       <h1 class="wl-page__titulo">Locais e peças</h1>
       <p class="wl-page__descricao">
         Pontos de exibição desta exibidora e as peças vinculadas a cada um.
       </p>
-
-      <div class="wl-toolbar" *ngIf="!formAberto">
-        <button class="wl-btn" type="button" (click)="abrirCriacao()">Novo local</button>
-      </div>
-
-      <app-local-form
-        *ngIf="formAberto"
-        [local]="localEmEdicao"
-        (salvo)="aoSalvar($event)"
-        (cancelar)="fecharForm()"
-      />
-
-      <div class="wl-estado wl-estado--carregando" *ngIf="carregando">Carregando locais…</div>
-
-      <div class="wl-estado wl-estado--erro" *ngIf="erro">
-        {{ erro }}
-        <button class="wl-btn wl-btn--link" type="button" (click)="carregar()">Tentar novamente</button>
-      </div>
-
-      <div class="wl-estado wl-estado--sucesso" *ngIf="aviso">{{ aviso }}</div>
-
-      <div class="wl-estado wl-estado--vazio" *ngIf="!carregando && !erro && locais.length === 0">
-        Nenhum local cadastrado para esta exibidora.
-      </div>
-
-      <div class="wl-tabela--rolavel" *ngIf="locais.length > 0">
-        <table class="wl-tabela">
-          <thead>
-            <tr>
-              <th>Código</th>
-              <th>Descrição</th>
-              <th>Cidade</th>
-              <th>UF</th>
-              <th>Situação</th>
-              <th>Peças</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            <ng-container *ngFor="let local of locais">
+    
+      @if (!formAberto) {
+        <div class="wl-toolbar">
+          <button class="wl-btn" type="button" (click)="abrirCriacao()">Novo local</button>
+        </div>
+      }
+    
+      @if (formAberto) {
+        <app-local-form
+          [local]="localEmEdicao"
+          (salvo)="aoSalvar($event)"
+          (cancelar)="fecharForm()"
+          />
+      }
+    
+      @if (carregando) {
+        <div class="wl-estado wl-estado--carregando">Carregando locais…</div>
+      }
+    
+      @if (erro) {
+        <div class="wl-estado wl-estado--erro">
+          {{ erro }}
+          <button class="wl-btn wl-btn--link" type="button" (click)="carregar()">Tentar novamente</button>
+        </div>
+      }
+    
+      @if (aviso) {
+        <div class="wl-estado wl-estado--sucesso">{{ aviso }}</div>
+      }
+    
+      @if (!carregando && !erro && locais.length === 0) {
+        <div class="wl-estado wl-estado--vazio">
+          Nenhum local cadastrado para esta exibidora.
+        </div>
+      }
+    
+      @if (locais.length > 0) {
+        <div class="wl-tabela--rolavel">
+          <table class="wl-tabela">
+            <thead>
               <tr>
-                <td>{{ local.codigo }}</td>
-                <td>{{ local.descricao }}</td>
-                <td>{{ local.cidade || '—' }}</td>
-                <td>{{ local.uf || '—' }}</td>
-                <td>
-                  <span class="wl-etiqueta" [class.wl-etiqueta--pendente]="aguardandoAprovacao(local)"
-                        [class.wl-etiqueta--ativo]="!aguardandoAprovacao(local)">
-                    {{ rotuloSituacao(local) }}
-                  </span>
-                </td>
-                <td>{{ pecasDoLocal(local.id).length }}</td>
-                <td class="acoes">
-                  <button class="wl-btn wl-btn--link" type="button" (click)="alternar(local.id)">
-                    {{ expandido === local.id ? 'Ocultar peças' : 'Ver peças' }}
-                  </button>
-                  <button class="wl-btn wl-btn--link" type="button" (click)="abrirEdicao(local)">
-                    Editar
-                  </button>
-                  <button class="wl-btn wl-btn--link excluir" type="button" (click)="excluir(local)">
-                    Excluir
-                  </button>
-                </td>
+                <th>Código</th>
+                <th>Descrição</th>
+                <th>Cidade</th>
+                <th>UF</th>
+                <th>Situação</th>
+                <th>Peças</th>
+                <th>Ações</th>
               </tr>
-
-              <tr *ngIf="expandido === local.id">
-                <td colspan="7" class="pecas">
-                  <div class="wl-estado wl-estado--vazio" *ngIf="pecasDoLocal(local.id).length === 0">
-                    Nenhuma peça vinculada a este local.
-                  </div>
-
-                  <table class="wl-tabela" *ngIf="pecasDoLocal(local.id).length > 0">
-                    <thead>
-                      <tr>
-                        <th>Código</th>
-                        <th>Formato</th>
-                        <th>Valor padrão</th>
-                        <th>Foto</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr *ngFor="let peca of pecasDoLocal(local.id)">
-                        <td>{{ peca.codigo }}</td>
-                        <td>{{ peca.formatoDimensao || '—' }}</td>
-                        <td>{{ peca.valorPadrao | currency: 'BRL' : 'symbol' : '1.2-2' }}</td>
-                        <td>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            [disabled]="enviandoFotoDe === peca.id"
-                            (change)="enviarFoto(local, peca, $event)"
-                          />
-                          <span class="enviando" *ngIf="enviandoFotoDe === peca.id">enviando…</span>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </td>
-              </tr>
-            </ng-container>
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              @for (local of locais; track local) {
+                <tr>
+                  <td>{{ local.codigo }}</td>
+                  <td>{{ local.descricao }}</td>
+                  <td>{{ local.cidade || '—' }}</td>
+                  <td>{{ local.uf || '—' }}</td>
+                  <td>
+                    <span class="wl-etiqueta" [class.wl-etiqueta--pendente]="aguardandoAprovacao(local)"
+                      [class.wl-etiqueta--ativo]="!aguardandoAprovacao(local)">
+                      {{ rotuloSituacao(local) }}
+                    </span>
+                  </td>
+                  <td>{{ pecasDoLocal(local.id).length }}</td>
+                  <td class="acoes">
+                    <button class="wl-btn wl-btn--link" type="button" (click)="alternar(local.id)">
+                      {{ expandido === local.id ? 'Ocultar peças' : 'Ver peças' }}
+                    </button>
+                    <button class="wl-btn wl-btn--link" type="button" (click)="abrirEdicao(local)">
+                      Editar
+                    </button>
+                    <button class="wl-btn wl-btn--link excluir" type="button" (click)="excluir(local)">
+                      Excluir
+                    </button>
+                  </td>
+                </tr>
+                @if (expandido === local.id) {
+                  <tr>
+                    <td colspan="7" class="pecas">
+                      @if (pecasDoLocal(local.id).length === 0) {
+                        <div class="wl-estado wl-estado--vazio">
+                          Nenhuma peça vinculada a este local.
+                        </div>
+                      }
+                      @if (pecasDoLocal(local.id).length > 0) {
+                        <table class="wl-tabela">
+                          <thead>
+                            <tr>
+                              <th>Código</th>
+                              <th>Formato</th>
+                              <th>Valor padrão</th>
+                              <th>Foto</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            @for (peca of pecasDoLocal(local.id); track peca) {
+                              <tr>
+                                <td>{{ peca.codigo }}</td>
+                                <td>{{ peca.formatoDimensao || '—' }}</td>
+                                <td>{{ peca.valorPadrao | currency: 'BRL' : 'symbol' : '1.2-2' }}</td>
+                                <td>
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    [disabled]="enviandoFotoDe === peca.id"
+                                    (change)="enviarFoto(local, peca, $event)"
+                                    />
+                                    @if (enviandoFotoDe === peca.id) {
+                                      <span class="enviando">enviando…</span>
+                                    }
+                                  </td>
+                                </tr>
+                              }
+                            </tbody>
+                          </table>
+                        }
+                      </td>
+                    </tr>
+                  }
+                }
+              </tbody>
+            </table>
+          </div>
+        }
       </div>
-    </div>
-  `,
-  styles: [
-    `
+    `,
+    changeDetection: ChangeDetectionStrategy.Eager,
+    styles: [
+        `
       .acoes {
         display: flex;
         gap: 12px;
@@ -167,7 +188,7 @@ const LIMITE_FOTO_PECA_BYTES = 10 * 1024 * 1024;
         color: var(--on-surface);
       }
     `,
-  ],
+    ]
 })
 export class LocaisComponent implements OnInit {
   private service = inject(LocaisService);

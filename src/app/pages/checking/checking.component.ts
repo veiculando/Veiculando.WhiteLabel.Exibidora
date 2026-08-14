@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { mensagemDeErro } from '../../core/http/api-error';
 import { ItemChecking, PiAutorizada } from '../../core/models/wl.models';
 import { CheckingService, LIMITE_FOTO_CHECKING_BYTES } from '../../core/services/checking.service';
@@ -26,57 +26,66 @@ import { CheckingService, LIMITE_FOTO_CHECKING_BYTES } from '../../core/services
  * A UI avisa o operador em vez de silenciar o risco.
  */
 @Component({
-  selector: 'app-checking',
-  standalone: true,
-  imports: [CommonModule],
-  template: `
+    selector: 'app-checking',
+    imports: [CommonModule],
+    template: `
     <div class="wl-page">
       <h1 class="wl-page__titulo">Checking de veiculação</h1>
       <p class="wl-page__descricao">
         Comprovação fotográfica das inserções autorizadas.
       </p>
-
-      <div class="wl-estado wl-estado--erro" *ngIf="erro">{{ erro }}</div>
-      <div class="wl-estado wl-estado--sucesso" *ngIf="aviso">{{ aviso }}</div>
-
+    
+      @if (erro) {
+        <div class="wl-estado wl-estado--erro">{{ erro }}</div>
+      }
+      @if (aviso) {
+        <div class="wl-estado wl-estado--sucesso">{{ aviso }}</div>
+      }
+    
       <!-- ---------------------------------------------- Tela 1: PIs -->
-      <ng-container *ngIf="!piSelecionada">
-        <div class="wl-estado wl-estado--carregando" *ngIf="carregandoPis">
-          Carregando pedidos de inserção…
-        </div>
-
-        <div class="wl-estado wl-estado--vazio" *ngIf="!carregandoPis && pis.length === 0">
-          Nenhum pedido de inserção autorizado para checking.
-        </div>
-
-        <div class="wl-tabela--rolavel" *ngIf="pis.length > 0">
-          <table class="wl-tabela">
-            <thead>
-              <tr>
-                <th>PI</th>
-                <th>Emissão</th>
-                <th>Valor líquido</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let pi of pis">
-                <td>{{ pi.codigo }}</td>
-                <td>{{ pi.dataCadastro | date: 'dd/MM/yyyy' }}</td>
-                <td>{{ pi.valorLiquidoVeiculacao | currency: 'BRL' : 'symbol' : '1.2-2' }}</td>
-                <td>
-                  <button class="wl-btn wl-btn--link" type="button" (click)="abrirPi(pi)">
-                    Ver itens
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </ng-container>
-
+      @if (!piSelecionada) {
+        @if (carregandoPis) {
+          <div class="wl-estado wl-estado--carregando">
+            Carregando pedidos de inserção…
+          </div>
+        }
+        @if (!carregandoPis && pis.length === 0) {
+          <div class="wl-estado wl-estado--vazio">
+            Nenhum pedido de inserção autorizado para checking.
+          </div>
+        }
+        @if (pis.length > 0) {
+          <div class="wl-tabela--rolavel">
+            <table class="wl-tabela">
+              <thead>
+                <tr>
+                  <th>PI</th>
+                  <th>Emissão</th>
+                  <th>Valor líquido</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (pi of pis; track pi) {
+                  <tr>
+                    <td>{{ pi.codigo }}</td>
+                    <td>{{ pi.dataCadastro | date: 'dd/MM/yyyy' }}</td>
+                    <td>{{ pi.valorLiquidoVeiculacao | currency: 'BRL' : 'symbol' : '1.2-2' }}</td>
+                    <td>
+                      <button class="wl-btn wl-btn--link" type="button" (click)="abrirPi(pi)">
+                        Ver itens
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      }
+    
       <!-- ------------------------------------- Telas 2 e 3: itens e envio -->
-      <ng-container *ngIf="piSelecionada as pi">
+      @if (piSelecionada; as pi) {
         <div class="wl-toolbar">
           <button class="wl-btn wl-btn--secundario" type="button" (click)="voltar()">
             ← Voltar para as PIs
@@ -86,60 +95,66 @@ import { CheckingService, LIMITE_FOTO_CHECKING_BYTES } from '../../core/services
             {{ pi.dataCadastro | date: 'dd/MM/yyyy' }}
           </span>
         </div>
-
         <div class="wl-estado aviso-geo">
           As fotos são validadas quanto à geolocalização de captura. Um arquivo sem
           esses dados pode ser marcado como <em>Erro de geolocalização</em> pela
           equipe de conferência.
         </div>
-
-        <div class="wl-estado wl-estado--carregando" *ngIf="carregandoItens">
-          Carregando itens da PI…
-        </div>
-
-        <div class="wl-estado wl-estado--vazio" *ngIf="!carregandoItens && itens.length === 0">
-          Esta PI não tem itens disponíveis para checking.
-        </div>
-
-        <div class="wl-tabela--rolavel" *ngIf="itens.length > 0">
-          <table class="wl-tabela">
-            <thead>
-              <tr>
-                <th>Item</th>
-                <th>Local</th>
-                <th>Peça</th>
-                <th>Status</th>
-                <th>Enviar foto</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let item of itens">
-                <td>{{ item.idPedidoItem }}</td>
-                <td>{{ item.localDescricao || item.localCodigo || '—' }}</td>
-                <td>{{ item.pecaCodigo || '—' }}</td>
-                <td>
-                  <span class="wl-etiqueta">{{ item.statusChecking || item.status }}</span>
-                </td>
-                <td>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    [disabled]="enviandoItem === item.idPedidoItem"
-                    (change)="enviarFoto(item, $event)"
-                  />
-                  <span class="enviando" *ngIf="enviandoItem === item.idPedidoItem">enviando…</span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <p class="limite">Tamanho máximo por foto: {{ limiteMb }} MB.</p>
-      </ng-container>
-    </div>
-  `,
-  styles: [
-    `
+        @if (carregandoItens) {
+          <div class="wl-estado wl-estado--carregando">
+            Carregando itens da PI…
+          </div>
+        }
+        @if (!carregandoItens && itens.length === 0) {
+          <div class="wl-estado wl-estado--vazio">
+            Esta PI não tem itens disponíveis para checking.
+          </div>
+        }
+        @if (itens.length > 0) {
+          <div class="wl-tabela--rolavel">
+            <table class="wl-tabela">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Local</th>
+                  <th>Peça</th>
+                  <th>Status</th>
+                  <th>Enviar foto</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of itens; track item) {
+                  <tr>
+                    <td>{{ item.idPedidoItem }}</td>
+                    <td>{{ item.localDescricao || item.localCodigo || '—' }}</td>
+                    <td>{{ item.pecaCodigo || '—' }}</td>
+                    <td>
+                      <span class="wl-etiqueta">{{ item.statusChecking || item.status }}</span>
+                    </td>
+                    <td>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        [disabled]="enviandoItem === item.idPedidoItem"
+                        (change)="enviarFoto(item, $event)"
+                        />
+                        @if (enviandoItem === item.idPedidoItem) {
+                          <span class="enviando">enviando…</span>
+                        }
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+          <p class="limite">Tamanho máximo por foto: {{ limiteMb }} MB.</p>
+        }
+      </div>
+    `,
+    changeDetection: ChangeDetectionStrategy.Eager,
+    styles: [
+        `
       .contexto {
         font-size: 0.875rem;
         color: var(--on-surface);
@@ -162,7 +177,7 @@ import { CheckingService, LIMITE_FOTO_CHECKING_BYTES } from '../../core/services
         color: var(--on-surface);
       }
     `,
-  ],
+    ]
 })
 export class CheckingComponent implements OnInit {
   private service = inject(CheckingService);

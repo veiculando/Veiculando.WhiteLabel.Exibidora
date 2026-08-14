@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { BreadcrumbComponent } from './breadcrumb.component';
 import { FooterComponent } from './footer.component';
@@ -18,10 +18,9 @@ import { SidebarComponent } from './sidebar.component';
  * nome de operador — continuem fora da moldura.
  */
 @Component({
-  selector: 'app-shell',
-  standalone: true,
-  imports: [RouterOutlet, HeaderComponent, SidebarComponent, BreadcrumbComponent, FooterComponent],
-  template: `
+    selector: 'app-shell',
+    imports: [RouterOutlet, HeaderComponent, SidebarComponent, BreadcrumbComponent, FooterComponent],
+    template: `
     <div class="shell">
       <app-header />
       <div class="shell__corpo">
@@ -34,8 +33,9 @@ import { SidebarComponent } from './sidebar.component';
       <app-footer />
     </div>
   `,
-  styles: [
-    `
+    changeDetection: ChangeDetectionStrategy.Eager,
+    styles: [
+        `
       .shell {
         display: flex;
         flex-direction: column;
@@ -58,6 +58,6 @@ import { SidebarComponent } from './sidebar.component';
         }
       }
     `,
-  ],
+    ]
 })
 export class ShellComponent {}

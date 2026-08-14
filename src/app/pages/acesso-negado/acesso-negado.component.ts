@@ -1,5 +1,5 @@
-import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 
@@ -15,10 +15,9 @@ import { AuthService } from '../../core/services/auth.service';
  * permissão, exibir o menu completo ao lado da mensagem seria contraditório.
  */
 @Component({
-  selector: 'app-acesso-negado',
-  standalone: true,
-  imports: [CommonModule, RouterLink],
-  template: `
+    selector: 'app-acesso-negado',
+    imports: [RouterLink],
+    template: `
     <div class="negado">
       <div class="negado__caixa">
         <h1 class="negado__titulo">Acesso negado</h1>
@@ -33,8 +32,9 @@ import { AuthService } from '../../core/services/auth.service';
       </div>
     </div>
   `,
-  styles: [
-    `
+    changeDetection: ChangeDetectionStrategy.Eager,
+    styles: [
+        `
       .negado {
         display: flex;
         align-items: center;
@@ -69,7 +69,7 @@ import { AuthService } from '../../core/services/auth.service';
         text-decoration: none;
       }
     `,
-  ],
+    ]
 })
 export class AcessoNegadoComponent {
   private auth = inject(AuthService);
