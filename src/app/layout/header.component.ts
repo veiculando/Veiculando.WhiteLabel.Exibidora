@@ -1,18 +1,19 @@
-import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+
 import { RouterModule, Router } from '@angular/router';
 import { environment } from '../../environments/environment';
 import { SecureStorage } from '../core/auth/secure-storage';
 import { PermissionService } from '../core/auth/permission.service';
 
 @Component({
-  selector: 'app-header',
-  standalone: true,
-  imports: [CommonModule, RouterModule],
-  template: `
+    selector: 'app-header',
+    imports: [RouterModule],
+    template: `
     <header class="header-container" [style.borderBottomColor]="primaryColor">
       <div class="header-brand">
-        <img [src]="logoUrl" alt="Logo" class="header-logo" *ngIf="logoUrl && !hasLogoError" (error)="onLogoError()" />
+        @if (logoUrl && !hasLogoError) {
+          <img [src]="logoUrl" alt="Logo" class="header-logo" (error)="onLogoError()" />
+        }
         <span class="header-title">Painel Exibidora WL</span>
       </div>
       <div class="header-user">
@@ -20,8 +21,9 @@ import { PermissionService } from '../core/auth/permission.service';
         <button (click)="logout()" class="btn-logout">Sair</button>
       </div>
     </header>
-  `,
-  styles: [`
+    `,
+    changeDetection: ChangeDetectionStrategy.Eager,
+    styles: [`
     .header-container { display: flex; justify-content: space-between; align-items: center; padding: 12px 24px; background: #1e1e2d; color: #fff; border-bottom: 3px solid #8a0009; }
     .header-brand { display: flex; align-items: center; gap: 12px; }
     .header-logo { height: 32px; }

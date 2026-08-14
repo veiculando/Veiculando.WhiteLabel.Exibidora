@@ -12,83 +12,79 @@ import { SecureStorage } from './secure-storage';
  * biblioteca de cripto no browser de teste.
  */
 function tokenCom(claims: Record<string, unknown>, expiraEmMinutos = 60): string {
-  const exp = Math.floor(Date.now() / 1000) + expiraEmMinutos * 60;
-  const payload = { ...claims, exp };
+    const exp = Math.floor(Date.now() / 1000) + expiraEmMinutos * 60;
+    const payload = { ...claims, exp };
 
-  const base64 = (obj: unknown) =>
-    btoa(JSON.stringify(obj)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+    const base64 = (obj: unknown) => btoa(JSON.stringify(obj)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
 
-  return `${base64({ alg: 'none', typ: 'JWT' })}.${base64(payload)}.assinatura`;
+    return `${base64({ alg: 'none', typ: 'JWT' })}.${base64(payload)}.assinatura`;
 }
 
 describe('PermissionService', () => {
-  let service: PermissionService;
+    let service: PermissionService;
 
-  beforeEach(() => {
-    TestBed.configureTestingModule({
-      providers: [{ provide: JWT_OPTIONS, useValue: {} }, JwtHelperService, PermissionService],
+    beforeEach(() => {
+        TestBed.configureTestingModule({
+            providers: [{ provide: JWT_OPTIONS, useValue: {} }, JwtHelperService, PermissionService],
+        });
+        service = TestBed.inject(PermissionService);
+        localStorage.clear();
     });
-    service = TestBed.inject(PermissionService);
-    localStorage.clear();
-  });
 
-  afterEach(() => localStorage.clear());
+    afterEach(() => localStorage.clear());
 
-  it('sem token, nao concede permissao', () => {
-    expect(service.has('PecaGerenciar')).toBeFalse();
-  });
+    it('sem token, nao concede permissao', () => {
+        expect(service.has('PecaGerenciar')).toBe(false);
+    });
 
-  it('reconhece a claim quando vem como array', () => {
-    SecureStorage.setToken(environment.tokenKey, tokenCom({ permission: ['PecaGerenciar', 'Checking'] }));
+    it('reconhece a claim quando vem como array', () => {
+        SecureStorage.setToken(environment.tokenKey, tokenCom({ permission: ['PecaGerenciar', 'Checking'] }));
 
-    expect(service.has('PecaGerenciar')).toBeTrue();
-    expect(service.has('Checking')).toBeTrue();
-    expect(service.has('UsuarioAfiliadaGerenciar')).toBeFalse();
-  });
+        expect(service.has('PecaGerenciar')).toBe(true);
+        expect(service.has('Checking')).toBe(true);
+        expect(service.has('UsuarioAfiliadaGerenciar')).toBe(false);
+    });
 
-  it('reconhece a claim quando vem como string unica', () => {
-    // O AuthController emite uma claim `permission` por permissao; com apenas
-    // uma, o decode devolve string em vez de array.
-    SecureStorage.setToken(environment.tokenKey, tokenCom({ permission: 'Checking' }));
+    it('reconhece a claim quando vem como string unica', () => {
+        // O AuthController emite uma claim `permission` por permissao; com apenas
+        // uma, o decode devolve string em vez de array.
+        SecureStorage.setToken(environment.tokenKey, tokenCom({ permission: 'Checking' }));
 
-    expect(service.has('Checking')).toBeTrue();
-    expect(service.has('PecaGerenciar')).toBeFalse();
-  });
+        expect(service.has('Checking')).toBe(true);
+        expect(service.has('PecaGerenciar')).toBe(false);
+    });
 
-  it('NAO trata "*" como coringa', () => {
-    // Havia tratamento de '*' concedendo tudo. O valor nao existe em
-    // WlPermissoesValidas nem nas policies do BFF: um token com '*' abriria o
-    // menu e as rotas no cliente enquanto toda escrita voltaria 403.
-    SecureStorage.setToken(environment.tokenKey, tokenCom({ permission: '*' }));
-    expect(service.has('PecaGerenciar')).toBeFalse();
+    it('NAO trata "*" como coringa', () => {
+        // Havia tratamento de '*' concedendo tudo. O valor nao existe em
+        // WlPermissoesValidas nem nas policies do BFF: um token com '*' abriria o
+        // menu e as rotas no cliente enquanto toda escrita voltaria 403.
+        SecureStorage.setToken(environment.tokenKey, tokenCom({ permission: '*' }));
+        expect(service.has('PecaGerenciar')).toBe(false);
 
-    SecureStorage.setToken(environment.tokenKey, tokenCom({ permission: ['*'] }));
-    expect(service.has('PecaGerenciar')).toBeFalse();
-  });
+        SecureStorage.setToken(environment.tokenKey, tokenCom({ permission: ['*'] }));
+        expect(service.has('PecaGerenciar')).toBe(false);
+    });
 
-  it('token expirado nao concede permissao', () => {
-    SecureStorage.setToken(
-      environment.tokenKey,
-      tokenCom({ permission: ['PecaGerenciar'] }, -10)
-    );
+    it('token expirado nao concede permissao', () => {
+        SecureStorage.setToken(environment.tokenKey, tokenCom({ permission: ['PecaGerenciar'] }, -10));
 
-    expect(service.has('PecaGerenciar')).toBeFalse();
-  });
+        expect(service.has('PecaGerenciar')).toBe(false);
+    });
 
-  it('token corrompido no storage nao derruba a aplicacao', () => {
-    localStorage.setItem(environment.tokenKey, 'isto-nao-e-um-token-cifrado');
+    it('token corrompido no storage nao derruba a aplicacao', () => {
+        localStorage.setItem(environment.tokenKey, 'isto-nao-e-um-token-cifrado');
 
-    expect(() => service.has('PecaGerenciar')).not.toThrow();
-    expect(service.has('PecaGerenciar')).toBeFalse();
-  });
+        expect(() => service.has('PecaGerenciar')).not.toThrow();
+        expect(service.has('PecaGerenciar')).toBe(false);
+    });
 
-  it('devolve o nome do operador a partir das claims', () => {
-    SecureStorage.setToken(environment.tokenKey, tokenCom({ permission: [], name: 'Fulano de Tal' }));
+    it('devolve o nome do operador a partir das claims', () => {
+        SecureStorage.setToken(environment.tokenKey, tokenCom({ permission: [], name: 'Fulano de Tal' }));
 
-    expect(service.getOperatorName()).toBe('Fulano de Tal');
-  });
+        expect(service.getOperatorName()).toBe('Fulano de Tal');
+    });
 
-  it('sem token, o nome cai no rotulo generico', () => {
-    expect(service.getOperatorName()).toBe('Operador WL');
-  });
+    it('sem token, o nome cai no rotulo generico', () => {
+        expect(service.getOperatorName()).toBe('Operador WL');
+    });
 });

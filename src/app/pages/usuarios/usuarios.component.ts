@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { mensagemDeErro } from '../../core/http/api-error';
 import {
@@ -36,195 +36,223 @@ import { UsuariosService } from '../../core/services/usuarios.service';
  * único `UK_WlUsuario_Email_Afiliada`.
  */
 @Component({
-  selector: 'app-usuarios',
-  standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
-  template: `
+    selector: 'app-usuarios',
+    imports: [CommonModule, ReactiveFormsModule],
+    template: `
     <div class="wl-page">
       <h1 class="wl-page__titulo">Operadores da exibidora</h1>
       <p class="wl-page__descricao">Contas de acesso ao painel e suas permissões.</p>
-
-      <div class="wl-estado wl-estado--erro" *ngIf="erro">{{ erro }}</div>
-      <div class="wl-estado wl-estado--sucesso" *ngIf="aviso">{{ aviso }}</div>
-
+    
+      @if (erro) {
+        <div class="wl-estado wl-estado--erro">{{ erro }}</div>
+      }
+      @if (aviso) {
+        <div class="wl-estado wl-estado--sucesso">{{ aviso }}</div>
+      }
+    
       <div class="wl-toolbar">
-        <button class="wl-btn" type="button" (click)="abrirCriacao()" *ngIf="!criando">
-          Novo operador
-        </button>
+        @if (!criando) {
+          <button class="wl-btn" type="button" (click)="abrirCriacao()">
+            Novo operador
+          </button>
+        }
       </div>
-
+    
       <!-- --------------------------------------------- Criação -->
-      <form class="wl-card" [formGroup]="formCriacao" (ngSubmit)="criar()" *ngIf="criando">
-        <h2 class="cartao__titulo">Novo operador</h2>
-
-        <div class="grade">
-          <div class="wl-campo">
-            <label for="nome">Nome *</label>
-            <input id="nome" type="text" formControlName="nome" />
-            <span class="wl-campo__erro" *ngIf="invalido('nome')">Informe o nome.</span>
+      @if (criando) {
+        <form class="wl-card" [formGroup]="formCriacao" (ngSubmit)="criar()">
+          <h2 class="cartao__titulo">Novo operador</h2>
+          <div class="grade">
+            <div class="wl-campo">
+              <label for="nome">Nome *</label>
+              <input id="nome" type="text" formControlName="nome" />
+              @if (invalido('nome')) {
+                <span class="wl-campo__erro">Informe o nome.</span>
+              }
+            </div>
+            <div class="wl-campo">
+              <label for="email">E-mail *</label>
+              <input id="email" type="email" formControlName="email" />
+              @if (invalido('email')) {
+                <span class="wl-campo__erro">Informe um e-mail válido.</span>
+              }
+            </div>
+            <div class="wl-campo">
+              <label for="senha">Senha *</label>
+              <input id="senha" type="password" formControlName="senha" autocomplete="new-password" />
+              @if (invalido('senha')) {
+                <span class="wl-campo__erro">Mínimo de 8 caracteres.</span>
+              }
+            </div>
+            <div class="wl-campo">
+              <label for="cargo">Cargo</label>
+              <input id="cargo" type="text" formControlName="cargo" />
+            </div>
+            <div class="wl-campo">
+              <label for="departamento">Departamento</label>
+              <input id="departamento" type="text" formControlName="departamento" />
+            </div>
+            <div class="wl-campo">
+              <label for="telefone">Telefone comercial</label>
+              <input id="telefone" type="text" formControlName="telefoneComercial" />
+            </div>
           </div>
-          <div class="wl-campo">
-            <label for="email">E-mail *</label>
-            <input id="email" type="email" formControlName="email" />
-            <span class="wl-campo__erro" *ngIf="invalido('email')">Informe um e-mail válido.</span>
+          <fieldset class="permissoes">
+            <legend>Permissões</legend>
+            @for (permissao of permissoes; track permissao) {
+              <label class="permissao">
+                <input
+                  type="checkbox"
+                  [checked]="permissoesNovas.has(permissao)"
+                  (change)="alternarPermissaoNova(permissao)"
+                  />
+                  <span>{{ rotulo(permissao) }}</span>
+                  <code>{{ permissao }}</code>
+                </label>
+              }
+            </fieldset>
+            <div class="acoes-form">
+              <button class="wl-btn" type="submit" [disabled]="salvando">
+                {{ salvando ? 'Salvando…' : 'Cadastrar' }}
+              </button>
+              <button class="wl-btn wl-btn--secundario" type="button" (click)="cancelarCriacao()">
+                Cancelar
+              </button>
+            </div>
+          </form>
+        }
+    
+        <!-- --------------------------------------------- Listagem -->
+        @if (carregando) {
+          <div class="wl-estado wl-estado--carregando">Carregando operadores…</div>
+        }
+    
+        @if (!carregando && !erro && usuarios.length === 0) {
+          <div class="wl-estado wl-estado--vazio">
+            Nenhum operador cadastrado.
           </div>
-          <div class="wl-campo">
-            <label for="senha">Senha *</label>
-            <input id="senha" type="password" formControlName="senha" autocomplete="new-password" />
-            <span class="wl-campo__erro" *ngIf="invalido('senha')">Mínimo de 8 caracteres.</span>
-          </div>
-          <div class="wl-campo">
-            <label for="cargo">Cargo</label>
-            <input id="cargo" type="text" formControlName="cargo" />
-          </div>
-          <div class="wl-campo">
-            <label for="departamento">Departamento</label>
-            <input id="departamento" type="text" formControlName="departamento" />
-          </div>
-          <div class="wl-campo">
-            <label for="telefone">Telefone comercial</label>
-            <input id="telefone" type="text" formControlName="telefoneComercial" />
-          </div>
-        </div>
-
-        <fieldset class="permissoes">
-          <legend>Permissões</legend>
-          <label class="permissao" *ngFor="let permissao of permissoes">
-            <input
-              type="checkbox"
-              [checked]="permissoesNovas.has(permissao)"
-              (change)="alternarPermissaoNova(permissao)"
-            />
-            <span>{{ rotulo(permissao) }}</span>
-            <code>{{ permissao }}</code>
-          </label>
-        </fieldset>
-
-        <div class="acoes-form">
-          <button class="wl-btn" type="submit" [disabled]="salvando">
-            {{ salvando ? 'Salvando…' : 'Cadastrar' }}
-          </button>
-          <button class="wl-btn wl-btn--secundario" type="button" (click)="cancelarCriacao()">
-            Cancelar
-          </button>
-        </div>
-      </form>
-
-      <!-- --------------------------------------------- Listagem -->
-      <div class="wl-estado wl-estado--carregando" *ngIf="carregando">Carregando operadores…</div>
-
-      <div class="wl-estado wl-estado--vazio" *ngIf="!carregando && !erro && usuarios.length === 0">
-        Nenhum operador cadastrado.
-      </div>
-
-      <div class="wl-tabela--rolavel" *ngIf="usuarios.length > 0">
-        <table class="wl-tabela">
-          <thead>
-            <tr>
-              <th>Nome</th>
-              <th>E-mail</th>
-              <th>Cargo</th>
-              <th>Último acesso</th>
-              <th>Permissões</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            <ng-container *ngFor="let usuario of usuarios">
-              <tr>
-                <td>{{ usuario.nome }}</td>
-                <td>{{ usuario.email }}</td>
-                <td>{{ usuario.cargo || '—' }}</td>
-                <td>
-                  {{ usuario.dataUltimoLogin ? (usuario.dataUltimoLogin | date: 'dd/MM/yyyy HH:mm') : 'nunca' }}
-                </td>
-                <td>
-                  <span class="wl-etiqueta" *ngFor="let p of usuario.permissoes">{{ rotulo(p) }}</span>
-                  <span class="sem-permissao" *ngIf="usuario.permissoes.length === 0">
-                    sem permissões
-                  </span>
-                </td>
-                <td class="acoes">
-                  <button class="wl-btn wl-btn--link" type="button" (click)="abrirEdicao(usuario)">
-                    {{ editando === usuario.id ? 'Fechar' : 'Editar' }}
-                  </button>
-                  <button class="wl-btn wl-btn--link excluir" type="button" (click)="excluir(usuario)">
-                    Excluir
-                  </button>
-                </td>
-              </tr>
-
-              <tr *ngIf="editando === usuario.id">
-                <td colspan="6" class="edicao">
-                  <form [formGroup]="formEdicao">
-                    <div class="grade">
-                      <div class="wl-campo">
-                        <label [attr.for]="'nome-' + usuario.id">Nome *</label>
-                        <input [id]="'nome-' + usuario.id" type="text" formControlName="nome" />
-                        <span class="wl-campo__erro" *ngIf="invalidoEdicao('nome')">Informe o nome.</span>
-                      </div>
-                      <div class="wl-campo">
-                        <label [attr.for]="'cargo-' + usuario.id">Cargo</label>
-                        <input [id]="'cargo-' + usuario.id" type="text" formControlName="cargo" />
-                      </div>
-                      <div class="wl-campo">
-                        <label [attr.for]="'depto-' + usuario.id">Departamento</label>
-                        <input [id]="'depto-' + usuario.id" type="text" formControlName="departamento" />
-                      </div>
-                      <div class="wl-campo">
-                        <label [attr.for]="'tel-' + usuario.id">Telefone comercial</label>
-                        <input [id]="'tel-' + usuario.id" type="text" formControlName="telefoneComercial" />
-                      </div>
-                      <div class="wl-campo">
-                        <label [attr.for]="'senha-' + usuario.id">Nova senha</label>
-                        <input
-                          [id]="'senha-' + usuario.id"
-                          type="password"
-                          formControlName="senha"
-                          autocomplete="new-password"
-                          placeholder="deixe em branco para manter"
-                        />
-                        <span class="wl-campo__erro" *ngIf="invalidoEdicao('senha')">
-                          Mínimo de 8 caracteres.
+        }
+    
+        @if (usuarios.length > 0) {
+          <div class="wl-tabela--rolavel">
+            <table class="wl-tabela">
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>E-mail</th>
+                  <th>Cargo</th>
+                  <th>Último acesso</th>
+                  <th>Permissões</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (usuario of usuarios; track usuario) {
+                  <tr>
+                    <td>{{ usuario.nome }}</td>
+                    <td>{{ usuario.email }}</td>
+                    <td>{{ usuario.cargo || '—' }}</td>
+                    <td>
+                      {{ usuario.dataUltimoLogin ? (usuario.dataUltimoLogin | date: 'dd/MM/yyyy HH:mm') : 'nunca' }}
+                    </td>
+                    <td>
+                      @for (p of usuario.permissoes; track p) {
+                        <span class="wl-etiqueta">{{ rotulo(p) }}</span>
+                      }
+                      @if (usuario.permissoes.length === 0) {
+                        <span class="sem-permissao">
+                          sem permissões
                         </span>
-                      </div>
-                    </div>
-                  </form>
-
-                  <p class="edicao__nota">
-                    O e-mail não é alterável — ele identifica o operador na
-                    instância. Para trocá-lo, exclua este operador e cadastre um
-                    novo com o outro e-mail; o e-mail do excluído fica reservado
-                    e não pode ser reaproveitado.
-                  </p>
-
-                  <fieldset class="permissoes">
-                    <legend>Permissões de {{ usuario.nome }}</legend>
-                    <label class="permissao" *ngFor="let permissao of permissoes">
-                      <input
-                        type="checkbox"
-                        [checked]="permissoesEdicao.has(permissao)"
-                        (change)="alternarPermissaoEdicao(permissao)"
-                      />
-                      <span>{{ rotulo(permissao) }}</span>
-                      <code>{{ permissao }}</code>
-                    </label>
-                  </fieldset>
-                  <div class="acoes-form">
-                    <button class="wl-btn" type="button" [disabled]="salvando" (click)="salvarEdicao(usuario)">
-                      {{ salvando ? 'Salvando…' : 'Salvar alterações' }}
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            </ng-container>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  `,
-  styles: [
-    `
+                      }
+                    </td>
+                    <td class="acoes">
+                      <button class="wl-btn wl-btn--link" type="button" (click)="abrirEdicao(usuario)">
+                        {{ editando === usuario.id ? 'Fechar' : 'Editar' }}
+                      </button>
+                      <button class="wl-btn wl-btn--link excluir" type="button" (click)="excluir(usuario)">
+                        Excluir
+                      </button>
+                    </td>
+                  </tr>
+                  @if (editando === usuario.id) {
+                    <tr>
+                      <td colspan="6" class="edicao">
+                        <form [formGroup]="formEdicao">
+                          <div class="grade">
+                            <div class="wl-campo">
+                              <label [attr.for]="'nome-' + usuario.id">Nome *</label>
+                              <input [id]="'nome-' + usuario.id" type="text" formControlName="nome" />
+                              @if (invalidoEdicao('nome')) {
+                                <span class="wl-campo__erro">Informe o nome.</span>
+                              }
+                            </div>
+                            <div class="wl-campo">
+                              <label [attr.for]="'cargo-' + usuario.id">Cargo</label>
+                              <input [id]="'cargo-' + usuario.id" type="text" formControlName="cargo" />
+                            </div>
+                            <div class="wl-campo">
+                              <label [attr.for]="'depto-' + usuario.id">Departamento</label>
+                              <input [id]="'depto-' + usuario.id" type="text" formControlName="departamento" />
+                            </div>
+                            <div class="wl-campo">
+                              <label [attr.for]="'tel-' + usuario.id">Telefone comercial</label>
+                              <input [id]="'tel-' + usuario.id" type="text" formControlName="telefoneComercial" />
+                            </div>
+                            <div class="wl-campo">
+                              <label [attr.for]="'senha-' + usuario.id">Nova senha</label>
+                              <input
+                                [id]="'senha-' + usuario.id"
+                                type="password"
+                                formControlName="senha"
+                                autocomplete="new-password"
+                                placeholder="deixe em branco para manter"
+                                />
+                                @if (invalidoEdicao('senha')) {
+                                  <span class="wl-campo__erro">
+                                    Mínimo de 8 caracteres.
+                                  </span>
+                                }
+                              </div>
+                            </div>
+                          </form>
+                          <p class="edicao__nota">
+                            O e-mail não é alterável — ele identifica o operador na
+                            instância. Para trocá-lo, exclua este operador e cadastre um
+                            novo com o outro e-mail; o e-mail do excluído fica reservado
+                            e não pode ser reaproveitado.
+                          </p>
+                          <fieldset class="permissoes">
+                            <legend>Permissões de {{ usuario.nome }}</legend>
+                            @for (permissao of permissoes; track permissao) {
+                              <label class="permissao">
+                                <input
+                                  type="checkbox"
+                                  [checked]="permissoesEdicao.has(permissao)"
+                                  (change)="alternarPermissaoEdicao(permissao)"
+                                  />
+                                  <span>{{ rotulo(permissao) }}</span>
+                                  <code>{{ permissao }}</code>
+                                </label>
+                              }
+                            </fieldset>
+                            <div class="acoes-form">
+                              <button class="wl-btn" type="button" [disabled]="salvando" (click)="salvarEdicao(usuario)">
+                                {{ salvando ? 'Salvando…' : 'Salvar alterações' }}
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      }
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
+    `,
+    changeDetection: ChangeDetectionStrategy.Eager,
+    styles: [
+        `
       .cartao__titulo {
         margin: 0 0 16px;
         font-size: 1.1rem;
@@ -290,7 +318,7 @@ import { UsuariosService } from '../../core/services/usuarios.service';
         margin: 0 4px 4px 0;
       }
     `,
-  ],
+    ]
 })
 export class UsuariosComponent implements OnInit {
   private service = inject(UsuariosService);

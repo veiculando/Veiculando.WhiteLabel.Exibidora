@@ -1,5 +1,5 @@
-import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
@@ -19,39 +19,45 @@ import { AuthService } from '../../core/services/auth.service';
  * decorativo e enganoso.
  */
 @Component({
-  selector: 'app-login',
-  standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
-  template: `
+    selector: 'app-login',
+    imports: [ReactiveFormsModule],
+    template: `
     <div class="login">
       <form class="login__caixa" [formGroup]="form" (ngSubmit)="entrar()">
         <h1 class="login__titulo">Painel Exibidora</h1>
         <p class="login__subtitulo">Acesso do operador</p>
-
+    
         <div class="wl-campo login__campo">
           <label for="email">E-mail</label>
           <input id="email" type="email" formControlName="email" autocomplete="username" />
-          <span class="wl-campo__erro" *ngIf="mostrarErro('email')">Informe um e-mail válido.</span>
+          @if (mostrarErro('email')) {
+            <span class="wl-campo__erro">Informe um e-mail válido.</span>
+          }
         </div>
-
+    
         <div class="wl-campo login__campo">
           <label for="senha">Senha</label>
           <input id="senha" type="password" formControlName="senha" autocomplete="current-password" />
-          <span class="wl-campo__erro" *ngIf="mostrarErro('senha')">Informe a senha.</span>
+          @if (mostrarErro('senha')) {
+            <span class="wl-campo__erro">Informe a senha.</span>
+          }
         </div>
-
-        <div class="wl-estado wl-estado--erro login__erro" *ngIf="erro">{{ erro }}</div>
-
+    
+        @if (erro) {
+          <div class="wl-estado wl-estado--erro login__erro">{{ erro }}</div>
+        }
+    
         <button class="wl-btn login__botao" type="submit" [disabled]="enviando">
           {{ enviando ? 'Entrando…' : 'Entrar' }}
         </button>
       </form>
-
+    
       <p class="login__rodape">{{ rodape }}</p>
     </div>
-  `,
-  styles: [
-    `
+    `,
+    changeDetection: ChangeDetectionStrategy.Eager,
+    styles: [
+        `
       .login {
         display: flex;
         flex-direction: column;
@@ -96,7 +102,7 @@ import { AuthService } from '../../core/services/auth.service';
         color: var(--on-surface);
       }
     `,
-  ],
+    ]
 })
 export class LoginComponent {
   private fb = inject(FormBuilder);

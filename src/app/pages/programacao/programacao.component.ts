@@ -1,5 +1,5 @@
-import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+
+import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { mensagemDeErro } from '../../core/http/api-error';
 import { LocalListItem, PeriodoLookup, ProgramacaoItem } from '../../core/models/wl.models';
@@ -28,83 +28,105 @@ interface LinhaGrade {
  * servidor; ausentes, significam "todos".
  */
 @Component({
-  selector: 'app-programacao',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  template: `
+    selector: 'app-programacao',
+    imports: [FormsModule],
+    template: `
     <div class="wl-page">
       <h1 class="wl-page__titulo">Grade de programação</h1>
       <p class="wl-page__descricao">Status de cada peça por bi-semana.</p>
-
+    
       <div class="wl-toolbar">
         <div class="wl-campo">
           <label for="local">Local</label>
           <select id="local" [(ngModel)]="idLocal">
             <option [ngValue]="null">Todos</option>
-            <option *ngFor="let local of locais" [ngValue]="local.id">
-              {{ local.codigo }} — {{ local.descricao }}
-            </option>
+            @for (local of locais; track local) {
+              <option [ngValue]="local.id">
+                {{ local.codigo }} — {{ local.descricao }}
+              </option>
+            }
           </select>
         </div>
-
+    
         <div class="wl-campo">
           <label for="periodo">Bi-semana</label>
           <select id="periodo" [(ngModel)]="idPeriodo">
             <option [ngValue]="null">Todas</option>
-            <option *ngFor="let periodo of periodos" [ngValue]="periodo.id">
-              {{ periodo.nome }}
-            </option>
+            @for (periodo of periodos; track periodo) {
+              <option [ngValue]="periodo.id">
+                {{ periodo.nome }}
+              </option>
+            }
           </select>
         </div>
-
+    
         <button class="wl-btn" type="button" [disabled]="carregando" (click)="carregar()">
           {{ carregando ? 'Consultando…' : 'Consultar' }}
         </button>
       </div>
-
-      <div class="wl-estado wl-estado--carregando" *ngIf="carregando">Carregando a grade…</div>
-
-      <div class="wl-estado wl-estado--erro" *ngIf="erro">
-        {{ erro }}
-        <button class="wl-btn wl-btn--link" type="button" (click)="carregar()">Tentar novamente</button>
-      </div>
-
-      <div class="wl-estado wl-estado--vazio" *ngIf="!carregando && !erro && linhas.length === 0">
-        Nenhuma programação encontrada para o filtro selecionado.
-      </div>
-
-      <div class="wl-tabela--rolavel" *ngIf="linhas.length > 0">
-        <table class="wl-tabela">
-          <thead>
-            <tr>
-              <th>Local</th>
-              <th>Peça</th>
-              <th *ngFor="let periodo of colunas">{{ periodo.nome }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let linha of linhas">
-              <td>{{ linha.localCodigo }}</td>
-              <td>{{ linha.pecaCodigo }}</td>
-              <td *ngFor="let periodo of colunas">
-                <span class="wl-etiqueta" *ngIf="linha.statusPorPeriodo.get(periodo.id) as status">
-                  {{ status }}
-                </span>
-                <span class="vazio" *ngIf="!linha.statusPorPeriodo.has(periodo.id)">—</span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+    
+      @if (carregando) {
+        <div class="wl-estado wl-estado--carregando">Carregando a grade…</div>
+      }
+    
+      @if (erro) {
+        <div class="wl-estado wl-estado--erro">
+          {{ erro }}
+          <button class="wl-btn wl-btn--link" type="button" (click)="carregar()">Tentar novamente</button>
+        </div>
+      }
+    
+      @if (!carregando && !erro && linhas.length === 0) {
+        <div class="wl-estado wl-estado--vazio">
+          Nenhuma programação encontrada para o filtro selecionado.
+        </div>
+      }
+    
+      @if (linhas.length > 0) {
+        <div class="wl-tabela--rolavel">
+          <table class="wl-tabela">
+            <thead>
+              <tr>
+                <th>Local</th>
+                <th>Peça</th>
+                @for (periodo of colunas; track periodo) {
+                  <th>{{ periodo.nome }}</th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (linha of linhas; track linha) {
+                <tr>
+                  <td>{{ linha.localCodigo }}</td>
+                  <td>{{ linha.pecaCodigo }}</td>
+                  @for (periodo of colunas; track periodo) {
+                    <td>
+                      @if (linha.statusPorPeriodo.get(periodo.id); as status) {
+                        <span class="wl-etiqueta">
+                          {{ status }}
+                        </span>
+                      }
+                      @if (!linha.statusPorPeriodo.has(periodo.id)) {
+                        <span class="vazio">—</span>
+                      }
+                    </td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
     </div>
-  `,
-  styles: [
-    `
+    `,
+    changeDetection: ChangeDetectionStrategy.Eager,
+    styles: [
+        `
       .vazio {
         color: #b6b6bd;
       }
     `,
-  ],
+    ]
 })
 export class ProgramacaoComponent implements OnInit {
   private service = inject(ProgramacaoService);

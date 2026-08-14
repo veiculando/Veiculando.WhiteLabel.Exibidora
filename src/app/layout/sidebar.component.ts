@@ -1,41 +1,51 @@
-import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+
 import { RouterModule } from '@angular/router';
 import { PermissionService } from '../core/auth/permission.service';
 
 @Component({
-  selector: 'app-sidebar',
-  standalone: true,
-  imports: [CommonModule, RouterModule],
-  template: `
+    selector: 'app-sidebar',
+    imports: [RouterModule],
+    template: `
     <aside class="sidebar-container">
       <nav class="sidebar-nav">
         <div class="nav-section">
           <span class="section-title">Geral</span>
           <a routerLink="/dashboard" routerLinkActive="active" class="nav-item">Dashboard</a>
         </div>
-
+    
         <div class="nav-section">
           <span class="section-title">Inventário & Operação</span>
-          <a routerLink="/locais" routerLinkActive="active" class="nav-item" *ngIf="hasPermission('PecaGerenciar')">Locais & Peças</a>
+          @if (hasPermission('PecaGerenciar')) {
+            <a routerLink="/locais" routerLinkActive="active" class="nav-item">Locais & Peças</a>
+          }
           <a routerLink="/programacao" routerLinkActive="active" class="nav-item">Programação</a>
-          <a routerLink="/checking" routerLinkActive="active" class="nav-item" *ngIf="hasPermission('Checking')">Checking</a>
+          @if (hasPermission('Checking')) {
+            <a routerLink="/checking" routerLinkActive="active" class="nav-item">Checking</a>
+          }
         </div>
-
+    
         <div class="nav-section">
           <span class="section-title">Comercial</span>
-          <a routerLink="/pedidos-reserva" routerLinkActive="active" class="nav-item" *ngIf="hasPermission('PedidoReservaGerenciar')">Pedidos de Reserva</a>
-          <a routerLink="/pedidos-insercao" routerLinkActive="active" class="nav-item" *ngIf="hasPermission('PedidoInsercaoGerenciar')">Pedidos de Inserção</a>
+          @if (hasPermission('PedidoReservaGerenciar')) {
+            <a routerLink="/pedidos-reserva" routerLinkActive="active" class="nav-item">Pedidos de Reserva</a>
+          }
+          @if (hasPermission('PedidoInsercaoGerenciar')) {
+            <a routerLink="/pedidos-insercao" routerLinkActive="active" class="nav-item">Pedidos de Inserção</a>
+          }
         </div>
-
-        <div class="nav-section" *ngIf="hasPermission('UsuarioAfiliadaGerenciar')">
-          <span class="section-title">Administração</span>
-          <a routerLink="/usuarios" routerLinkActive="active" class="nav-item">Operadores</a>
-        </div>
+    
+        @if (hasPermission('UsuarioAfiliadaGerenciar')) {
+          <div class="nav-section">
+            <span class="section-title">Administração</span>
+            <a routerLink="/usuarios" routerLinkActive="active" class="nav-item">Operadores</a>
+          </div>
+        }
       </nav>
     </aside>
-  `,
-  styles: [`
+    `,
+    changeDetection: ChangeDetectionStrategy.Eager,
+    styles: [`
     .sidebar-container { width: 240px; background: #151521; color: #a2a3b7; min-height: calc(100vh - 60px); padding: 16px; }
     .nav-section { margin-bottom: 24px; }
     .section-title { display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #4c4e69; margin-bottom: 8px; font-weight: 700; }

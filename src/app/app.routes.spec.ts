@@ -23,61 +23,53 @@ import { PERMISSOES_WL } from './core/models/wl.models';
  * teste de navegacao passaria mesmo com o guard so no pai — porque o pai roda.
  */
 describe('app.routes', () => {
-  const areaProtegida = routes.find((r) => r.path === '' && !!r.children)!;
-  const filhos: Route[] = areaProtegida.children ?? [];
+    const areaProtegida = routes.find((r) => r.path === '' && !!r.children)!;
+    const filhos: Route[] = areaProtegida.children ?? [];
 
-  const comPermissao = filhos.filter((r) => !!r.data?.['permission']);
+    const comPermissao = filhos.filter((r) => !!r.data?.['permission']);
 
-  it('a area protegida existe e tem guard no proprio no', () => {
-    expect(areaProtegida).toBeTruthy();
-    expect(areaProtegida.canActivate).toContain(authGuard);
-  });
-
-  it('ha cinco rotas declarando permissao', () => {
-    // Uma por permissao da whitelist do dominio. Se alguem adicionar rota nova
-    // com permissao, este numero muda de proposito e forca revisar o resto.
-    expect(comPermissao.length).toBe(5);
-  });
-
-  comPermissaoNomes().forEach((caminho) => {
-    it(`/${caminho} tem canActivate proprio, senao a permissao nao e lida`, () => {
-      const rota = filhos.find((r) => r.path === caminho)!;
-
-      expect(rota)
-        .withContext(`rota /${caminho} nao encontrada`)
-        .toBeTruthy();
-
-      expect(rota.canActivate)
-        .withContext(
-          `/${caminho} declara data.permission mas nao tem canActivate. ` +
-            `O guard no pai recebe o snapshot do pai, cujo data nao tem permission — ` +
-            `a checagem nao acontece.`
-        )
-        .toContain(authGuard);
+    it('a area protegida existe e tem guard no proprio no', () => {
+        expect(areaProtegida).toBeTruthy();
+        expect(areaProtegida.canActivate).toContain(authGuard);
     });
-  });
 
-  it('toda permissao declarada nas rotas existe na whitelist do dominio', () => {
-    const declaradas = comPermissao.map((r) => r.data!['permission'] as string);
-
-    declaradas.forEach((p) => {
-      expect(PERMISSOES_WL as readonly string[])
-        .withContext(`permissao '${p}' nao existe em WlPermissoesValidas`)
-        .toContain(p);
+    it('ha cinco rotas declarando permissao', () => {
+        // Uma por permissao da whitelist do dominio. Se alguem adicionar rota nova
+        // com permissao, este numero muda de proposito e forca revisar o resto.
+        expect(comPermissao.length).toBe(5);
     });
-  });
 
-  it('rotas publicas ficam fora da area protegida', () => {
-    // /login e /acesso-negado nao podem herdar o guard: quem chega nelas ou nao
-    // tem sessao, ou foi barrado por permissao. Guard ali seria um loop.
-    ['login', 'acesso-negado'].forEach((caminho) => {
-      const rota = routes.find((r) => r.path === caminho);
-      expect(rota).withContext(`/${caminho} deveria ser rota de topo`).toBeTruthy();
-      expect(rota!.canActivate).toBeUndefined();
+    comPermissaoNomes().forEach((caminho) => {
+        it(`/${caminho} tem canActivate proprio, senao a permissao nao e lida`, () => {
+            const rota = filhos.find((r) => r.path === caminho)!;
+
+            expect(rota, `rota /${caminho} nao encontrada`).toBeTruthy();
+
+            expect(rota.canActivate, `/${caminho} declara data.permission mas nao tem canActivate. ` +
+                `O guard no pai recebe o snapshot do pai, cujo data nao tem permission — ` +
+                `a checagem nao acontece.`).toContain(authGuard);
+        });
     });
-  });
 
-  function comPermissaoNomes(): string[] {
-    return ['locais', 'checking', 'pedidos-reserva', 'pedidos-insercao', 'usuarios'];
-  }
+    it('toda permissao declarada nas rotas existe na whitelist do dominio', () => {
+        const declaradas = comPermissao.map((r) => r.data!['permission'] as string);
+
+        declaradas.forEach((p) => {
+            expect(PERMISSOES_WL as readonly string[], `permissao '${p}' nao existe em WlPermissoesValidas`).toContain(p);
+        });
+    });
+
+    it('rotas publicas ficam fora da area protegida', () => {
+        // /login e /acesso-negado nao podem herdar o guard: quem chega nelas ou nao
+        // tem sessao, ou foi barrado por permissao. Guard ali seria um loop.
+        ['login', 'acesso-negado'].forEach((caminho) => {
+            const rota = routes.find((r) => r.path === caminho);
+            expect(rota, `/${caminho} deveria ser rota de topo`).toBeTruthy();
+            expect(rota!.canActivate).toBeUndefined();
+        });
+    });
+
+    function comPermissaoNomes(): string[] {
+        return ['locais', 'checking', 'pedidos-reserva', 'pedidos-insercao', 'usuarios'];
+    }
 });

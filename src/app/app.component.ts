@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
 /**
@@ -10,9 +10,9 @@ import { RouterOutlet } from '@angular/router';
  * ou seja, em todas as telas, inclusive na de login. Removido aqui.
  */
 @Component({
-  selector: 'app-root',
-  standalone: true,
-  imports: [RouterOutlet],
-  template: '<router-outlet />',
+    selector: 'app-root',
+    imports: [RouterOutlet],
+    changeDetection: ChangeDetectionStrategy.Eager,
+    template: '<router-outlet />'
 })
 export class AppComponent {}

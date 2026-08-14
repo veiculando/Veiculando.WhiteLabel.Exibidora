@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { mensagemDeErro } from '../../core/http/api-error';
 import { DashboardKpis } from '../../core/models/wl.models';
@@ -12,31 +12,35 @@ import { DashboardService } from '../../core/services/dashboard.service';
  * instância; o frontend não recalcula nada.
  */
 @Component({
-  selector: 'app-dashboard',
-  standalone: true,
-  imports: [CommonModule, RouterLink],
-  template: `
+    selector: 'app-dashboard',
+    imports: [CommonModule, RouterLink],
+    template: `
     <div class="wl-page">
       <h1 class="wl-page__titulo">Dashboard operacional</h1>
       <p class="wl-page__descricao">Visão geral do inventário e da operação da exibidora.</p>
-
-      <div class="wl-estado wl-estado--carregando" *ngIf="carregando">Carregando indicadores…</div>
-
-      <div class="wl-estado wl-estado--erro" *ngIf="erro">
-        {{ erro }}
-        <button class="wl-btn wl-btn--link" type="button" (click)="carregar()">Tentar novamente</button>
-      </div>
-
-      <ng-container *ngIf="kpis as k">
-        <!-- Alerta de aprovação pendente: locais criados pela Exibidora entram
-             como StatusExibicao = AprovacaoPendente e são liberados no Admin. -->
-        <div class="alerta" *ngIf="aprovacaoPendente(k) > 0">
-          <strong>{{ aprovacaoPendente(k) }}</strong>
-          {{ aprovacaoPendente(k) === 1 ? 'local aguarda aprovação' : 'locais aguardam aprovação' }}.
-          A liberação é feita pela equipe Veiculando no painel Admin.
-          <a routerLink="/locais">Ver locais</a>
+    
+      @if (carregando) {
+        <div class="wl-estado wl-estado--carregando">Carregando indicadores…</div>
+      }
+    
+      @if (erro) {
+        <div class="wl-estado wl-estado--erro">
+          {{ erro }}
+          <button class="wl-btn wl-btn--link" type="button" (click)="carregar()">Tentar novamente</button>
         </div>
-
+      }
+    
+      @if (kpis; as k) {
+        <!-- Alerta de aprovação pendente: locais criados pela Exibidora entram
+        como StatusExibicao = AprovacaoPendente e são liberados no Admin. -->
+        @if (aprovacaoPendente(k) > 0) {
+          <div class="alerta">
+            <strong>{{ aprovacaoPendente(k) }}</strong>
+            {{ aprovacaoPendente(k) === 1 ? 'local aguarda aprovação' : 'locais aguardam aprovação' }}.
+            A liberação é feita pela equipe Veiculando no painel Admin.
+            <a routerLink="/locais">Ver locais</a>
+          </div>
+        }
         <div class="kpis">
           <div class="kpi">
             <span class="kpi__rotulo">Locais ativos</span>
@@ -54,16 +58,17 @@ import { DashboardService } from '../../core/services/dashboard.service';
             <span class="kpi__rotulo">Receita mensal</span>
             <span class="kpi__valor">{{ k.receitaMensal | currency: 'BRL' : 'symbol' : '1.2-2' }}</span>
             <!-- O BFF devolve 0 fixo. É o comportamento definido para a V1, não
-                 um defeito: a rotulagem existe para o operador não ler o zero
-                 como "nenhuma receita neste mês". -->
+            um defeito: a rotulagem existe para o operador não ler o zero
+            como "nenhuma receita neste mês". -->
             <span class="kpi__nota">Valor ainda não integrado (previsto para versão futura)</span>
           </div>
         </div>
-      </ng-container>
+      }
     </div>
-  `,
-  styles: [
-    `
+    `,
+    changeDetection: ChangeDetectionStrategy.Eager,
+    styles: [
+        `
       .kpis {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -112,7 +117,7 @@ import { DashboardService } from '../../core/services/dashboard.service';
         margin-left: 6px;
       }
     `,
-  ],
+    ]
 })
 export class DashboardComponent implements OnInit {
   private service = inject(DashboardService);

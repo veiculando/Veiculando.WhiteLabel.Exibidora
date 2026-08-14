@@ -1,4 +1,4 @@
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { provideHttpClient, withInterceptors, withXhr } from '@angular/common/http';
 import { ApplicationConfig } from '@angular/core';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { JWT_OPTIONS, JwtHelperService } from '@auth0/angular-jwt';
@@ -9,7 +9,7 @@ import { authErrorInterceptor } from './core/http/auth-error.interceptor';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes, withComponentInputBinding()),
-    provideHttpClient(
+    provideHttpClient(withXhr(), 
       // A ordem importa: o jwtInterceptor precisa anexar o Bearer antes de a
       // requisição sair, e o authErrorInterceptor precisa ver a resposta que
       // volta. Interceptors funcionais são executados em cadeia, então o
