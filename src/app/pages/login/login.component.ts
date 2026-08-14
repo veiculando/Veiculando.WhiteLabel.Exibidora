@@ -2,7 +2,7 @@
 import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { environment } from '../../../environments/environment';
+import { BrandingService } from '../../core/branding/branding.service';
 import { mensagemDeErro } from '../../core/http/api-error';
 import { AuthService } from '../../core/services/auth.service';
 
@@ -52,7 +52,7 @@ import { AuthService } from '../../core/services/auth.service';
         </button>
       </form>
     
-      <p class="login__rodape">{{ rodape }}</p>
+      <p class="login__rodape">{{ brand()?.footerText || brand()?.nomeExibicao }}</p>
     </div>
     `,
     changeDetection: ChangeDetectionStrategy.Eager,
@@ -109,7 +109,7 @@ export class LoginComponent {
   private auth = inject(AuthService);
   private router = inject(Router);
 
-  readonly rodape = environment.branding.footerText;
+  readonly brand = inject(BrandingService).branding;
 
   form = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
