@@ -1,13 +1,13 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 
-import { environment } from '../../environments/environment';
+import { BrandingService } from '../core/branding/branding.service';
 
 @Component({
     selector: 'app-footer',
     imports: [],
     template: `
     <footer class="footer-container">
-      <span>&copy; {{ currentYear }} {{ footerText }}. Todos os direitos reservados.</span>
+      <span>&copy; {{ currentYear }} {{ brand()?.footerText || brand()?.nomeExibicao }}. Todos os direitos reservados.</span>
     </footer>
   `,
     changeDetection: ChangeDetectionStrategy.Eager,
@@ -16,6 +16,6 @@ import { environment } from '../../environments/environment';
   `]
 })
 export class FooterComponent {
-  currentYear = new Date().getFullYear();
-  footerText = environment.branding.footerText;
+  readonly currentYear = new Date().getFullYear();
+  readonly brand = inject(BrandingService).branding;
 }
