@@ -1,355 +1,96 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
-import { mensagemDeErro } from '../../core/http/api-error';
-import {
-  LocalDetalhe,
-  LocalListItem,
-  PecaListItem,
-  STATUS_EXIBICAO_ROTULOS,
-  StatusExibicao,
-} from '../../core/models/wl.models';
-import { LocaisService } from '../../core/services/locais.service';
-import { LocalFormComponent } from './local-form.component';
-
-/** Limite deste endpoint no BFF: `maxBytes = 10 * 1024 * 1024`. */
-const LIMITE_FOTO_PECA_BYTES = 10 * 1024 * 1024;
+import { Component, OnInit, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { LocalService } from './services/local.service';
+import { LocalListItem } from './models/local.model';
+import { STATUS_EXIBICAO_LABEL, StatusExibicao } from './models/status-exibicao.enum';
 
 /**
- * Locais e peças da exibidora — card `9d56ac0a`.
+ * Listagem de Locais (Inventário).
  *
- * O que esta tela faz, e por quê exatamente isso:
+ * A afiliada exibida é sempre a resolvida pelo Host — este componente
+ * jamais filtra ou envia um AfiliadaId próprio (ADR-WL-008). O status
+ * "Aguardando aprovação" reflete StatusExibicao.AprovacaoPendente,
+ * único indicador de fila de aprovação disponível (ADR-WL-004: não há
+ * tela de aprovação nem AprovacaoLog na Exibidora).
  *
- *  - **Lista** (`GET /api/wl/locais`), já filtrada por `AfiliadaId` no servidor.
- *    Por isso não existe seletor de afiliada: escolher outra não teria efeito, o
- *    `TenantMiddleware` sobrepõe o header com o `WL:AfiliadaId` da instância.
- *  - **Peças por local** (`GET /api/wl/pecas`), agrupadas no cliente.
- *  - **Foto da peça** (`POST .../foto`), com validação de tamanho antes de subir.
- *  - **Exclusão** (`DELETE /api/wl/locais/{id}`), que é soft delete no core.
- *  - **Cadastro e edição**, delegados ao `LocalFormComponent`.
- *
- * O fluxo de aprovação é transparente aqui: quem cria um local pela Exibidora o
- * recebe em `StatusExibicao = AprovacaoPendente` e a liberação acontece no
- * Admin (ADR-WL-004 revisada). Esta tela apenas **reflete** o estado — a
- * transição é aplicada pelo `LocalCadastroHandler` do core, que reconhece a
- * conta de serviço da instância como usuário de afiliada.
+ * GET /api/wl/locais não pagina nem filtra por querystring (o BFF real
+ * devolve um array cru) — a busca abaixo é aplicada em memória sobre o
+ * que já foi carregado.
  */
 @Component({
-    selector: 'app-locais',
-    imports: [CommonModule, LocalFormComponent],
-    template: `
-    <div class="wl-page">
-      <h1 class="wl-page__titulo">Locais e peças</h1>
-      <p class="wl-page__descricao">
-        Pontos de exibição desta exibidora e as peças vinculadas a cada um.
-      </p>
-    
-      @if (!formAberto) {
-        <div class="wl-toolbar">
-          <button class="wl-btn" type="button" (click)="abrirCriacao()">Novo local</button>
-        </div>
-      }
-    
-      @if (formAberto) {
-        <app-local-form
-          [local]="localEmEdicao"
-          (salvo)="aoSalvar($event)"
-          (cancelar)="fecharForm()"
-          />
-      }
-    
-      @if (carregando) {
-        <div class="wl-estado wl-estado--carregando">Carregando locais…</div>
-      }
-    
-      @if (erro) {
-        <div class="wl-estado wl-estado--erro">
-          {{ erro }}
-          <button class="wl-btn wl-btn--link" type="button" (click)="carregar()">Tentar novamente</button>
-        </div>
-      }
-    
-      @if (aviso) {
-        <div class="wl-estado wl-estado--sucesso">{{ aviso }}</div>
-      }
-    
-      @if (!carregando && !erro && locais.length === 0) {
-        <div class="wl-estado wl-estado--vazio">
-          Nenhum local cadastrado para esta exibidora.
-        </div>
-      }
-    
-      @if (locais.length > 0) {
-        <div class="wl-tabela--rolavel">
-          <table class="wl-tabela">
-            <thead>
-              <tr>
-                <th>Código</th>
-                <th>Descrição</th>
-                <th>Cidade</th>
-                <th>UF</th>
-                <th>Situação</th>
-                <th>Peças</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (local of locais; track local) {
-                <tr>
-                  <td>{{ local.codigo }}</td>
-                  <td>{{ local.descricao }}</td>
-                  <td>{{ local.cidade || '—' }}</td>
-                  <td>{{ local.uf || '—' }}</td>
-                  <td>
-                    <span class="wl-etiqueta" [class.wl-etiqueta--pendente]="aguardandoAprovacao(local)"
-                      [class.wl-etiqueta--ativo]="!aguardandoAprovacao(local)">
-                      {{ rotuloSituacao(local) }}
-                    </span>
-                  </td>
-                  <td>{{ pecasDoLocal(local.id).length }}</td>
-                  <td class="acoes">
-                    <button class="wl-btn wl-btn--link" type="button" (click)="alternar(local.id)">
-                      {{ expandido === local.id ? 'Ocultar peças' : 'Ver peças' }}
-                    </button>
-                    <button class="wl-btn wl-btn--link" type="button" (click)="abrirEdicao(local)">
-                      Editar
-                    </button>
-                    <button class="wl-btn wl-btn--link excluir" type="button" (click)="excluir(local)">
-                      Excluir
-                    </button>
-                  </td>
-                </tr>
-                @if (expandido === local.id) {
-                  <tr>
-                    <td colspan="7" class="pecas">
-                      @if (pecasDoLocal(local.id).length === 0) {
-                        <div class="wl-estado wl-estado--vazio">
-                          Nenhuma peça vinculada a este local.
-                        </div>
-                      }
-                      @if (pecasDoLocal(local.id).length > 0) {
-                        <table class="wl-tabela">
-                          <thead>
-                            <tr>
-                              <th>Código</th>
-                              <th>Formato</th>
-                              <th>Valor padrão</th>
-                              <th>Foto</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            @for (peca of pecasDoLocal(local.id); track peca) {
-                              <tr>
-                                <td>{{ peca.codigo }}</td>
-                                <td>{{ peca.formatoDimensao || '—' }}</td>
-                                <td>{{ peca.valorPadrao | currency: 'BRL' : 'symbol' : '1.2-2' }}</td>
-                                <td>
-                                  <input
-                                    type="file"
-                                    accept="image/*"
-                                    [disabled]="enviandoFotoDe === peca.id"
-                                    (change)="enviarFoto(local, peca, $event)"
-                                    />
-                                    @if (enviandoFotoDe === peca.id) {
-                                      <span class="enviando">enviando…</span>
-                                    }
-                                  </td>
-                                </tr>
-                              }
-                            </tbody>
-                          </table>
-                        }
-                      </td>
-                    </tr>
-                  }
-                }
-              </tbody>
-            </table>
-          </div>
-        }
-      </div>
-    `,
-    changeDetection: ChangeDetectionStrategy.Eager,
-    styles: [
-        `
-      .acoes {
-        display: flex;
-        gap: 12px;
-        white-space: nowrap;
-      }
-      .excluir {
-        color: #b3261e;
-      }
-      .pecas {
-        background: #faf9f6;
-      }
-      .enviando {
-        margin-left: 8px;
-        font-size: 0.75rem;
-        color: var(--on-surface);
-      }
-    `,
-    ]
+  selector: 'app-locais',
+  standalone: true,
+  imports: [CommonModule, RouterLink],
+  templateUrl: './locais.component.html',
 })
 export class LocaisComponent implements OnInit {
-  private service = inject(LocaisService);
+  private readonly localService = inject(LocalService);
 
-  locais: LocalListItem[] = [];
-  pecas: PecaListItem[] = [];
-  carregando = false;
-  erro: string | null = null;
-  aviso: string | null = null;
-  expandido: number | null = null;
-  enviandoFotoDe: number | null = null;
+  private todosOsLocais: LocalListItem[] = [];
 
-  formAberto = false;
-  /** `null` com o formulário aberto significa criação. */
-  localEmEdicao: LocalDetalhe | null = null;
-
-  abrirCriacao(): void {
-    this.localEmEdicao = null;
-    this.formAberto = true;
-    this.erro = null;
-    this.aviso = null;
-  }
-
-  /**
-   * Busca o detalhe antes de abrir a edição em vez de reaproveitar a linha da
-   * listagem: o item de lista não traz endereço nem geolocalização, e o core
-   * sobrescreve esses campos com o que o formulário enviar.
-   */
-  abrirEdicao(local: LocalListItem): void {
-    this.erro = null;
-    this.aviso = null;
-
-    this.service.obter(local.id).subscribe({
-      next: (detalhe) => {
-        this.localEmEdicao = detalhe;
-        this.formAberto = true;
-      },
-      error: (erro: unknown) => {
-        this.erro = mensagemDeErro(erro, 'Não foi possível abrir o local para edição.');
-      },
-    });
-  }
-
-  fecharForm(): void {
-    this.formAberto = false;
-    this.localEmEdicao = null;
-  }
-
-  aoSalvar(mensagem: string): void {
-    this.fecharForm();
-    this.aviso = mensagem;
-    this.carregar();
-  }
+  readonly locais = signal<LocalListItem[]>([]);
+  readonly carregando = signal(false);
+  readonly excluindoId = signal<number | null>(null);
+  readonly erro = signal(false);
+  readonly statusLabel = STATUS_EXIBICAO_LABEL;
+  readonly StatusExibicao = StatusExibicao;
 
   ngOnInit(): void {
     this.carregar();
   }
 
-  carregar(): void {
-    this.carregando = true;
-    this.erro = null;
-
-    this.service.listar().subscribe({
-      next: (locais) => {
-        this.locais = locais;
-        this.carregando = false;
-        this.carregarPecas();
-      },
-      error: (erro: unknown) => {
-        this.carregando = false;
-        this.erro = mensagemDeErro(erro, 'Não foi possível carregar os locais.');
-      },
-    });
-  }
-
-  /**
-   * As peças vêm em uma chamada única e são agrupadas no cliente. O BFF não tem
-   * `GET /pecas?idLocal=`, e uma chamada por local geraria N requisições para
-   * montar a coluna de contagem.
-   */
-  private carregarPecas(): void {
-    this.service.listarPecas().subscribe({
-      next: (pecas) => (this.pecas = pecas),
-      error: () => (this.pecas = []),
-    });
-  }
-
-  pecasDoLocal(idLocal: number): PecaListItem[] {
-    return this.pecas.filter((p) => p.idLocal === idLocal);
-  }
-
-  alternar(idLocal: number): void {
-    this.expandido = this.expandido === idLocal ? null : idLocal;
-  }
-
-  aguardandoAprovacao(local: LocalListItem): boolean {
-    return local.statusExibicao === StatusExibicao.AprovacaoPendente;
-  }
-
-  rotuloSituacao(local: LocalListItem): string {
-    // Um BFF que não projete `statusExibicao` só devolve locais ativos, então a
-    // ausência do campo equivale a Ativo.
-    const status = local.statusExibicao ?? StatusExibicao.Ativo;
-    return STATUS_EXIBICAO_ROTULOS[status] ?? 'Desconhecida';
+  buscar(termo: string): void {
+    const termoNormalizado = termo.trim().toLowerCase();
+    if (!termoNormalizado) {
+      this.locais.set(this.todosOsLocais);
+      return;
+    }
+    this.locais.set(
+      this.todosOsLocais.filter((local) =>
+        [local.codigo, local.descricao, local.cidade]
+          .filter((campo): campo is string => !!campo)
+          .some((campo) => campo.toLowerCase().includes(termoNormalizado))
+      )
+    );
   }
 
   excluir(local: LocalListItem): void {
-    const confirmado = confirm(
-      `Excluir o local ${local.codigo}? A exclusão é lógica e pode ser revertida pela equipe Veiculando.`
-    );
-    if (!confirmado) return;
-
-    this.erro = null;
-    this.aviso = null;
-
-    this.service.excluir(local.id).subscribe({
-      next: () => {
-        this.aviso = `Local ${local.codigo} excluído.`;
-        this.carregar();
-      },
-      error: (erro: unknown) => {
-        this.erro = mensagemDeErro(erro, 'Não foi possível excluir o local.');
-      },
-    });
-  }
-
-  enviarFoto(local: LocalListItem, peca: PecaListItem, evento: Event): void {
-    const input = evento.target as HTMLInputElement;
-    const arquivo = input.files?.[0];
-    if (!arquivo) return;
-
-    this.erro = null;
-    this.aviso = null;
-
-    // Barra o arquivo antes de subir: o servidor recusaria de qualquer forma,
-    // mas sem isso o operador espera o upload inteiro para receber o 400.
-    if (arquivo.size > LIMITE_FOTO_PECA_BYTES) {
-      this.erro = `A foto tem ${this.emMb(arquivo.size)} MB e o limite é ${this.emMb(
-        LIMITE_FOTO_PECA_BYTES
-      )} MB. Escolha um arquivo menor.`;
-      input.value = '';
+    if (!window.confirm(`Excluir o local ${local.codigo}?`)) {
       return;
     }
 
-    this.enviandoFotoDe = peca.id;
-
-    this.service.enviarFotoPeca(local.id, peca.id, arquivo).subscribe({
-      next: (resposta) => {
-        this.enviandoFotoDe = null;
-        this.aviso = resposta.message;
-        input.value = '';
+    this.excluindoId.set(local.id);
+    this.erro.set(false);
+    this.localService.deleteLocal(local.id).subscribe({
+      next: () => {
+        this.excluindoId.set(null);
+        this.carregar();
       },
-      error: (erro: unknown) => {
-        this.enviandoFotoDe = null;
-        this.erro = mensagemDeErro(erro, 'Não foi possível enviar a foto da peça.');
-        input.value = '';
+      error: () => {
+        this.excluindoId.set(null);
+        this.erro.set(true);
       },
     });
   }
 
-  private emMb(bytes: number): string {
-    return (bytes / (1024 * 1024)).toFixed(1);
+  private carregar(): void {
+    this.carregando.set(true);
+    this.erro.set(false);
+
+    this.localService.listLocais().subscribe({
+      next: (locais) => {
+        this.todosOsLocais = locais;
+        this.locais.set(locais);
+        this.carregando.set(false);
+      },
+      error: () => {
+        // Nunca exibe dados parciais/estado anterior em caso de falha.
+        this.todosOsLocais = [];
+        this.locais.set([]);
+        this.carregando.set(false);
+        this.erro.set(true);
+      },
+    });
   }
 }

@@ -1,0 +1,36 @@
+<form class="local-demografia-step" [formGroup]="form" (ngSubmit)="onSubmit()">
+  <fieldset>
+    <legend>Dados Demográficos</legend>
+
+    <label>
+      Audiência por dia
+      <input type="number" formControlName="audiencia" />
+    </label>
+
+    <label>
+      Tipo de medição
+      <input type="number" formControlName="tipoMedicao" />
+    </label>
+
+    <label>
+      Fonte
+      <input type="text" formControlName="fonte" />
+    </label>
+
+    <label>
+      Predominância de gênero
+      <select formControlName="genero">
+        <option [value]="0">Sem predominância</option>
+        <option [value]="1">Predominância masculina</option>
+        <option [value]="2">Predominância feminina</option>
+      </select>
+    </label>
+  </fieldset>
+
+  <p class="local-demografia-step__hint">
+    Faixas etárias, faixas de renda, perfis psicográficos, segmentos e
+    pontos de interesse podem ser detalhados após o cadastro inicial.
+  </p>
+
+  <button type="submit" class="btn btn--primary">Salvar Dados Demográficos</button>
+</form>

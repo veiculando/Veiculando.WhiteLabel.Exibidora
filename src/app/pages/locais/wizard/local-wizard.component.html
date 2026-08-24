@@ -1,0 +1,42 @@
+<section class="local-wizard">
+  @if (naoEncontrado()) {
+    <p class="local-wizard__estado local-wizard__estado--erro" role="alert">
+      Local não encontrado.
+    </p>
+  } @else if (carregando()) {
+    <p class="local-wizard__estado">Carregando local…</p>
+  } @else {
+    <header class="local-wizard__header">
+      <h1>{{ idLocal() ? 'Editar local' : 'Novo local' }}</h1>
+      @if (statusExibicao() !== null) {
+        <span class="badge">{{ statusLabel[statusExibicao()!] }}</span>
+      }
+    </header>
+
+    <nav class="local-wizard__abas">
+      <button type="button" [disabled]="!etapasHabilitadas()[0]" (click)="irParaEtapa(0)">
+        1. Dados do Local
+      </button>
+      <button type="button" [disabled]="!etapasHabilitadas()[1]" (click)="irParaEtapa(1)">
+        2. Dados Demográficos
+      </button>
+      <button type="button" [disabled]="!etapasHabilitadas()[2]" (click)="irParaEtapa(2)">
+        3. Peças
+      </button>
+    </nav>
+
+    @switch (etapaAtual()) {
+      @case (0) {
+        <app-local-dados-step [valorInicial]="dadosIniciais" (salvar)="onSalvarDados($event)" />
+      }
+      @case (1) {
+        <app-local-demografia-step [valorInicial]="demografiaInicial" (salvar)="onSalvarDemografia($event)" />
+      }
+      @case (2) {
+        @if (idLocal()) {
+          <app-local-pecas-step [idLocal]="idLocal()!" />
+        }
+      }
+    }
+  }
+</section>

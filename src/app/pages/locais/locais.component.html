@@ -1,0 +1,69 @@
+<section class="locais">
+  <header class="locais__header">
+    <h1>Locais</h1>
+    <a class="btn btn--primary" routerLink="/locais/novo">Novo local</a>
+  </header>
+
+  <div class="locais__filtros">
+    <input
+      type="search"
+      placeholder="Buscar por código, descrição ou cidade"
+      #buscaInput
+      (input)="buscar(buscaInput.value)"
+    />
+  </div>
+
+  @if (carregando()) {
+    <p class="locais__estado">Carregando locais…</p>
+  } @else if (erro()) {
+    <p class="locais__estado locais__estado--erro" role="alert">
+      Erro ao carregar os locais. Tente novamente.
+    </p>
+  } @else if (locais().length === 0) {
+    <p class="locais__estado">Nenhum local encontrado.</p>
+  } @else {
+    <table class="locais__tabela">
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Descrição</th>
+          <th>Cidade</th>
+          <th>UF</th>
+          <th>Status</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (local of locais(); track local.id) {
+          <tr>
+            <td>{{ local.codigo }}</td>
+            <td>{{ local.descricao || '—' }}</td>
+            <td>{{ local.cidade }}</td>
+            <td>{{ local.uf }}</td>
+            <td>
+              <span
+                class="badge"
+                [class.badge--pendente]="local.statusExibicao === StatusExibicao.AprovacaoPendente"
+                [class.badge--ativo]="local.statusExibicao === StatusExibicao.Ativo"
+                [class.badge--inativo]="local.statusExibicao === StatusExibicao.Inativo"
+              >
+                {{ statusLabel[local.statusExibicao] }}
+              </span>
+            </td>
+            <td>
+              <a [routerLink]="['/locais', local.id]">Editar</a>
+              <a [routerLink]="['/locais', local.id, 'pecas', 'nova']">+ Peça</a>
+              <button
+                type="button"
+                (click)="excluir(local)"
+                [disabled]="excluindoId() === local.id"
+              >
+                {{ excluindoId() === local.id ? 'Excluindo…' : 'Excluir' }}
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</section>

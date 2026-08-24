@@ -1,0 +1,67 @@
+<form class="local-dados-step" [formGroup]="form" (ngSubmit)="onSubmit()">
+  <fieldset>
+    <legend>Dados do Local</legend>
+
+    <label>
+      CEP
+      <input type="text" formControlName="cep" placeholder="00000-000" />
+    </label>
+
+    <label>
+      Cidade
+      <input type="number" formControlName="idCidade" required />
+    </label>
+
+    <label>
+      Código interno
+      <input type="text" formControlName="codigoInterno" />
+    </label>
+
+    <label>
+      Logradouro
+      <input type="text" formControlName="logradouro" required />
+    </label>
+
+    <label>
+      Número
+      <input type="text" formControlName="numero" />
+    </label>
+
+    <label>
+      Bairro
+      <input type="text" formControlName="bairro" />
+    </label>
+
+    <label>
+      Complemento
+      <input type="text" formControlName="complemento" />
+    </label>
+
+    <label>
+      Ponto de referência
+      <input type="text" formControlName="referencia" />
+    </label>
+
+    <label>
+      Latitude
+      <input type="number" formControlName="latitude" required />
+    </label>
+
+    <label>
+      Longitude
+      <input type="number" formControlName="longitude" required />
+    </label>
+
+    <label>
+      Descrição
+      <textarea formControlName="descricao"></textarea>
+    </label>
+
+    <label>
+      Palavras-chave / observações
+      <textarea formControlName="palavrasChave"></textarea>
+    </label>
+  </fieldset>
+
+  <button type="submit" class="btn btn--primary">Salvar Dados do Local</button>
+</form>
