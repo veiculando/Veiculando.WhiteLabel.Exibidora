@@ -86,8 +86,6 @@ export interface DashboardKpis {
   locaisAtivos: number;
   pecasEmExibicao: number;
   pedidosPendentes: number;
-  /** Mockada em 0 pelo BFF na V1 — comportamento esperado, nao um bug. */
-  receitaMensal: number;
   'alertasAprovaçãoPendente': number;
 }
 

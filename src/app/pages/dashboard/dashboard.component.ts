@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { mensagemDeErro } from '../../core/http/api-error';
@@ -13,7 +12,7 @@ import { DashboardService } from '../../core/services/dashboard.service';
  */
 @Component({
     selector: 'app-dashboard',
-    imports: [CommonModule, RouterLink],
+    imports: [RouterLink],
     template: `
     <div class="wl-page">
       <h1 class="wl-page__titulo">Dashboard operacional</h1>
@@ -54,14 +53,11 @@ import { DashboardService } from '../../core/services/dashboard.service';
             <span class="kpi__rotulo">Pedidos pendentes</span>
             <span class="kpi__valor">{{ k.pedidosPendentes }}</span>
           </div>
-          <div class="kpi kpi--mock">
-            <span class="kpi__rotulo">Receita mensal</span>
-            <span class="kpi__valor">{{ k.receitaMensal | currency: 'BRL' : 'symbol' : '1.2-2' }}</span>
-            <!-- O BFF devolve 0 fixo. É o comportamento definido para a V1, não
-            um defeito: a rotulagem existe para o operador não ler o zero
-            como "nenhuma receita neste mês". -->
-            <span class="kpi__nota">Valor ainda não integrado (previsto para versão futura)</span>
-          </div>
+          <!-- Sem card de Receita mensal, de propósito (TP-B, seção 2): o BFF
+          não calcula esse valor (nenhuma regra financeira aprovada ainda) e
+          não devolve mais o campo. Mostrar zero como se fosse dado real é
+          proibido pelo PRD vigente — a saída não é "rotular o zero melhor",
+          é não apresentar o card até existir a regra de verdade. -->
         </div>
       }
     </div>
@@ -94,14 +90,6 @@ import { DashboardService } from '../../core/services/dashboard.service';
         font-family: var(--font-display);
         font-size: 1.8rem;
         color: var(--primary-dark);
-      }
-      .kpi__nota {
-        font-size: 0.72rem;
-        font-style: italic;
-        color: var(--on-surface);
-      }
-      .kpi--mock {
-        border-style: dashed;
       }
       .alerta {
         padding: 12px 16px;
