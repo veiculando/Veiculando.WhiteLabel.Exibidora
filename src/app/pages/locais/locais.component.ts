@@ -31,6 +31,7 @@ export class LocaisComponent implements OnInit {
 
   readonly locais = signal<LocalListItem[]>([]);
   readonly carregando = signal(false);
+  readonly excluindoId = signal<number | null>(null);
   readonly erro = signal(false);
   readonly statusLabel = STATUS_EXIBICAO_LABEL;
   readonly StatusExibicao = StatusExibicao;
@@ -52,6 +53,25 @@ export class LocaisComponent implements OnInit {
           .some((campo) => campo.toLowerCase().includes(termoNormalizado))
       )
     );
+  }
+
+  excluir(local: LocalListItem): void {
+    if (!window.confirm(`Excluir o local ${local.codigo}?`)) {
+      return;
+    }
+
+    this.excluindoId.set(local.id);
+    this.erro.set(false);
+    this.localService.deleteLocal(local.id).subscribe({
+      next: () => {
+        this.excluindoId.set(null);
+        this.carregar();
+      },
+      error: () => {
+        this.excluindoId.set(null);
+        this.erro.set(true);
+      },
+    });
   }
 
   private carregar(): void {

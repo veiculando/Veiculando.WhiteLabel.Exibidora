@@ -35,7 +35,7 @@ describe('LocaisComponent', () => {
   ];
 
   async function setup(): Promise<void> {
-    localServiceSpy = jasmine.createSpyObj('LocalService', ['listLocais']);
+    localServiceSpy = jasmine.createSpyObj('LocalService', ['listLocais', 'deleteLocal']);
     await TestBed.configureTestingModule({
       imports: [LocaisComponent],
       providers: [{ provide: LocalService, useValue: localServiceSpy }, provideRouter([])],
@@ -78,5 +78,19 @@ describe('LocaisComponent', () => {
     expect(fixture.componentInstance.erro()).toBeTrue();
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
     expect(text.toLowerCase()).toContain('erro');
+  });
+
+  it('exclui um local confirmado e recarrega a listagem', async () => {
+    await setup();
+    localServiceSpy.listLocais.and.returnValue(of(itens));
+    localServiceSpy.deleteLocal.and.returnValue(of(void 0));
+    spyOn(window, 'confirm').and.returnValue(true);
+    fixture.detectChanges();
+
+    fixture.componentInstance.excluir(itens[0]);
+
+    expect(localServiceSpy.deleteLocal).toHaveBeenCalledOnceWith(1);
+    expect(localServiceSpy.listLocais).toHaveBeenCalledTimes(2);
+    expect(fixture.componentInstance.excluindoId()).toBeNull();
   });
 });

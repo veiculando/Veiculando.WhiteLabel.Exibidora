@@ -53,6 +53,13 @@
             <td>
               <a [routerLink]="['/locais', local.id]">Editar</a>
               <a [routerLink]="['/locais', local.id, 'pecas', 'nova']">+ Peça</a>
+              <button
+                type="button"
+                (click)="excluir(local)"
+                [disabled]="excluindoId() === local.id"
+              >
+                {{ excluindoId() === local.id ? 'Excluindo…' : 'Excluir' }}
+              </button>
             </td>
           </tr>
         }

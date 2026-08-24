@@ -37,3 +37,190 @@ h1, h2, h3, h4, h5, h6 {
   --ag-active-color: var(--primary-color);
   --ag-font-family: var(--font-ui);
 }
+
+/* ------------------------------------------------------------------ *
+ * Utilitarios funcionais das paginas (TP-R4 / ADR-WL-010)
+ *
+ * ADR-WL-010 e "Logic-First, Functional-UI-Only": o Design System Aurum entra
+ * em sprint posterior. Estas classes existem para que as 9 paginas nao repitam
+ * o mesmo bloco de `styles` inline — sao estruturais, nao decorativas.
+ * ------------------------------------------------------------------ */
+
+.wl-page {
+  padding: 24px;
+}
+
+.wl-page__titulo {
+  margin: 0 0 4px;
+  font-size: 1.5rem;
+}
+
+.wl-page__descricao {
+  margin: 0 0 20px;
+  color: var(--on-surface);
+  font-size: 0.9rem;
+}
+
+.wl-card {
+  background: var(--white);
+  border: 1px solid #e1e3ea;
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.wl-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+  margin-bottom: 16px;
+}
+
+.wl-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 180px;
+}
+
+.wl-campo > label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--on-surface);
+}
+
+.wl-campo input,
+.wl-campo select,
+.wl-campo textarea {
+  padding: 8px 10px;
+  border: 1px solid #d0d2dc;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  background: var(--white);
+  color: var(--charcoal);
+}
+
+.wl-campo__erro {
+  font-size: 0.75rem;
+  color: var(--primary-color);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.wl-btn {
+  padding: 8px 16px;
+  border: 1px solid var(--primary-color);
+  border-radius: var(--radius-sm);
+  background: var(--primary-color);
+  color: var(--white);
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.wl-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.wl-btn--secundario {
+  background: transparent;
+  color: var(--primary-color);
+}
+
+.wl-btn--perigo {
+  background: transparent;
+  border-color: #b3261e;
+  color: #b3261e;
+}
+
+.wl-btn--link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--primary-color);
+  text-decoration: underline;
+  cursor: pointer;
+  font: inherit;
+}
+
+.wl-tabela {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  background: var(--white);
+}
+
+.wl-tabela th,
+.wl-tabela td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid #e1e3ea;
+}
+
+.wl-tabela th {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--on-surface);
+  background: #f4f2ee;
+}
+
+.wl-tabela--rolavel {
+  display: block;
+  overflow-x: auto;
+}
+
+.wl-estado {
+  padding: 16px;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+}
+
+.wl-estado--carregando {
+  background: #f4f2ee;
+  color: var(--on-surface);
+}
+
+.wl-estado--erro {
+  background: #fdecea;
+  border: 1px solid #f5c2bd;
+  color: #7a1710;
+}
+
+.wl-estado--sucesso {
+  background: #e8f5e9;
+  border: 1px solid #b7dfb9;
+  color: #1b5e20;
+}
+
+.wl-estado--vazio {
+  background: #f4f2ee;
+  color: var(--on-surface);
+  font-style: italic;
+}
+
+.wl-etiqueta {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: #eceef3;
+  color: var(--on-surface);
+}
+
+.wl-etiqueta--pendente {
+  background: #fff4d6;
+  color: #7a5600;
+}
+
+.wl-etiqueta--ativo {
+  background: #e8f5e9;
+  color: #1b5e20;
+}
