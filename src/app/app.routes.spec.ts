@@ -33,18 +33,20 @@ describe('app.routes', () => {
         expect(areaProtegida.canActivate).toContain(authGuard);
     });
 
-    it('ha cinco rotas declarando permissao', () => {
-        // Uma por permissao da whitelist do dominio. Se alguem adicionar rota nova
-        // com permissao, este numero muda de proposito e forca revisar o resto.
-        expect(comPermissao.length).toBe(5);
+    it('todas as permissoes da whitelist aparecem nas rotas protegidas', () => {
+        // Várias subrotas podem reutilizar a mesma permissão (por exemplo, o
+        // wizard e o formulário de peça usam PecaGerenciar). O contrato é a
+        // cobertura da whitelist, não uma quantidade fixa de rotas.
+        const declaradas = [...new Set(
+            comPermissao.map((r) => r.data!['permission'] as string)
+        )].sort();
+
+        expect(declaradas).toEqual([...PERMISSOES_WL].sort());
     });
 
-    comPermissaoNomes().forEach((caminho) => {
+    comPermissao.forEach((rota) => {
+        const caminho = rota.path!;
         it(`/${caminho} tem canActivate proprio, senao a permissao nao e lida`, () => {
-            const rota = filhos.find((r) => r.path === caminho)!;
-
-            expect(rota, `rota /${caminho} nao encontrada`).toBeTruthy();
-
             expect(rota.canActivate, `/${caminho} declara data.permission mas nao tem canActivate. ` +
                 `O guard no pai recebe o snapshot do pai, cujo data nao tem permission — ` +
                 `a checagem nao acontece.`).toContain(authGuard);
@@ -68,8 +70,4 @@ describe('app.routes', () => {
             expect(rota!.canActivate).toBeUndefined();
         });
     });
-
-    function comPermissaoNomes(): string[] {
-        return ['locais', 'checking', 'pedidos-reserva', 'pedidos-insercao', 'usuarios'];
-    }
 });
