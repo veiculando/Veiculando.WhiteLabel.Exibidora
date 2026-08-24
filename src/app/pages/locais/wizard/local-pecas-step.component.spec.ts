@@ -4,13 +4,16 @@ import { provideRouter } from '@angular/router';
 import { LocalPecasStepComponent } from './local-pecas-step.component';
 import { PecaService } from '../services/peca.service';
 import { StatusExibicao } from '../models/status-exibicao.enum';
+import type { Mocked } from 'vitest';
 
 describe('LocalPecasStepComponent', () => {
   let fixture: ComponentFixture<LocalPecasStepComponent>;
-  let pecaServiceSpy: jasmine.SpyObj<PecaService>;
+  let pecaServiceSpy: Mocked<PecaService>;
 
   beforeEach(async () => {
-    pecaServiceSpy = jasmine.createSpyObj('PecaService', ['listPecasByLocal']);
+    pecaServiceSpy = {
+      listPecasByLocal: vi.fn(),
+    } as unknown as Mocked<PecaService>;
     await TestBed.configureTestingModule({
       imports: [LocalPecasStepComponent],
       providers: [{ provide: PecaService, useValue: pecaServiceSpy }, provideRouter([])],
@@ -19,7 +22,7 @@ describe('LocalPecasStepComponent', () => {
   });
 
   it('lista as peças do local recebido via @Input idLocal', () => {
-    pecaServiceSpy.listPecasByLocal.and.returnValue(
+    pecaServiceSpy.listPecasByLocal.mockReturnValue(
       of([
         {
           id: 1,
@@ -45,7 +48,7 @@ describe('LocalPecasStepComponent', () => {
   });
 
   it('exibe estado vazio quando o local ainda não tem peças', () => {
-    pecaServiceSpy.listPecasByLocal.and.returnValue(of([]));
+    pecaServiceSpy.listPecasByLocal.mockReturnValue(of([]));
 
     fixture.componentInstance.idLocal = 9;
     fixture.detectChanges();

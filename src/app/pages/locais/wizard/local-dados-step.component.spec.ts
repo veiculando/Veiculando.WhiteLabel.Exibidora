@@ -38,7 +38,7 @@ describe('LocalDadosStepComponent', () => {
 
     fixture.componentInstance.onSubmit();
 
-    expect(chamado).toBeFalse();
+    expect(chamado).toBe(false);
   });
 
   it('pré-carrega valores existentes via @Input valorInicial', () => {

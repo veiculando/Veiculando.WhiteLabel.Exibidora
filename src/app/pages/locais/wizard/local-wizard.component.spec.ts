@@ -9,11 +9,12 @@ import { LocalPublicoService } from '../services/local-publico.service';
 import { StatusExibicao } from '../models/status-exibicao.enum';
 import { emptyLocalPublicoPayload } from '../models/local-publico.model';
 import { LocalDetalhe } from '../models/local.model';
+import type { Mocked } from 'vitest';
 
 describe('LocalWizardComponent', () => {
   let fixture: ComponentFixture<LocalWizardComponent>;
-  let localServiceSpy: jasmine.SpyObj<LocalService>;
-  let publicoServiceSpy: jasmine.SpyObj<LocalPublicoService>;
+  let localServiceSpy: Mocked<LocalService>;
+  let publicoServiceSpy: Mocked<LocalPublicoService>;
 
   const localCarregado: LocalDetalhe = {
     id: 7,
@@ -40,8 +41,15 @@ describe('LocalWizardComponent', () => {
   };
 
   async function setup(params: Record<string, string>): Promise<void> {
-    localServiceSpy = jasmine.createSpyObj('LocalService', ['getLocal', 'createLocal', 'updateLocal']);
-    publicoServiceSpy = jasmine.createSpyObj('LocalPublicoService', ['getPublico', 'savePublico']);
+    localServiceSpy = {
+      getLocal: vi.fn(),
+      createLocal: vi.fn(),
+      updateLocal: vi.fn(),
+    } as unknown as Mocked<LocalService>;
+    publicoServiceSpy = {
+      getPublico: vi.fn(),
+      savePublico: vi.fn(),
+    } as unknown as Mocked<LocalPublicoService>;
 
     await TestBed.configureTestingModule({
       imports: [LocalWizardComponent],
@@ -64,7 +72,7 @@ describe('LocalWizardComponent', () => {
 
   it('ao salvar Dados do Local em modo criação, chama createLocal e habilita as demais etapas', async () => {
     await setup({});
-    localServiceSpy.createLocal.and.returnValue(
+    localServiceSpy.createLocal.mockReturnValue(
       of({
         id: 10,
         codigo: 'LOC-10',
@@ -104,9 +112,9 @@ describe('LocalWizardComponent', () => {
 
   it('em modo edição, carrega Local (endereço/geolocalização aninhados → form flat) e Demografia, chamando updateLocal ao salvar a etapa 1', async () => {
     await setup({ id: '7' });
-    localServiceSpy.getLocal.and.returnValue(of(localCarregado));
-    publicoServiceSpy.getPublico.and.returnValue(of(emptyLocalPublicoPayload()));
-    localServiceSpy.updateLocal.and.returnValue(of(null));
+    localServiceSpy.getLocal.mockReturnValue(of(localCarregado));
+    publicoServiceSpy.getPublico.mockReturnValue(of(emptyLocalPublicoPayload()));
+    localServiceSpy.updateLocal.mockReturnValue(of(null));
 
     fixture.detectChanges();
 
@@ -130,14 +138,14 @@ describe('LocalWizardComponent', () => {
       palavrasChave: null,
     });
 
-    expect(localServiceSpy.updateLocal).toHaveBeenCalledWith(7, jasmine.objectContaining({ logradouro: 'Av. B Editada' }));
+    expect(localServiceSpy.updateLocal).toHaveBeenCalledWith(7, expect.objectContaining({ logradouro: 'Av. B Editada' }));
   });
 
   it('ao salvar a etapa de Demografia, chama LocalPublicoService.savePublico — nunca LocalService', async () => {
     await setup({ id: '7' });
-    localServiceSpy.getLocal.and.returnValue(of(localCarregado));
-    publicoServiceSpy.getPublico.and.returnValue(of(emptyLocalPublicoPayload()));
-    publicoServiceSpy.savePublico.and.returnValue(of(undefined));
+    localServiceSpy.getLocal.mockReturnValue(of(localCarregado));
+    publicoServiceSpy.getPublico.mockReturnValue(of(emptyLocalPublicoPayload()));
+    publicoServiceSpy.savePublico.mockReturnValue(of(undefined));
 
     fixture.detectChanges();
     fixture.componentInstance.onSalvarDemografia(emptyLocalPublicoPayload());
@@ -148,11 +156,11 @@ describe('LocalWizardComponent', () => {
 
   it('quando o local pertence a outro tenant (404), exibe "não encontrado" e não tenta renderizar o formulário', async () => {
     await setup({ id: '999' });
-    localServiceSpy.getLocal.and.returnValue(throwError(() => new HttpErrorResponse({ status: 404 })));
+    localServiceSpy.getLocal.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 404 })));
 
     fixture.detectChanges();
 
-    expect(fixture.componentInstance.naoEncontrado()).toBeTrue();
+    expect(fixture.componentInstance.naoEncontrado()).toBe(true);
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
     expect(text.toLowerCase()).toContain('não encontrado');
   });

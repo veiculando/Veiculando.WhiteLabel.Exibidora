@@ -5,11 +5,12 @@ import { PecaFormComponent } from './peca-form.component';
 import { PecaService } from '../services/peca.service';
 import { PecaDetalhe } from '../models/peca.model';
 import { StatusExibicao } from '../models/status-exibicao.enum';
+import type { Mocked } from 'vitest';
 
 describe('PecaFormComponent', () => {
   let fixture: ComponentFixture<PecaFormComponent>;
-  let pecaServiceSpy: jasmine.SpyObj<PecaService>;
-  let routerSpy: jasmine.SpyObj<Router>;
+  let pecaServiceSpy: Mocked<PecaService>;
+  let routerSpy: Mocked<Router>;
 
   const pecaBase: PecaDetalhe = {
     id: 1,
@@ -45,8 +46,12 @@ describe('PecaFormComponent', () => {
   };
 
   async function setup(params: Record<string, string>): Promise<void> {
-    pecaServiceSpy = jasmine.createSpyObj('PecaService', ['getPeca', 'createPeca', 'updatePeca']);
-    routerSpy = jasmine.createSpyObj('Router', ['navigate']);
+    pecaServiceSpy = {
+      getPeca: vi.fn(),
+      createPeca: vi.fn(),
+      updatePeca: vi.fn(),
+    } as unknown as Mocked<PecaService>;
+    routerSpy = { navigate: vi.fn() } as unknown as Mocked<Router>;
 
     await TestBed.configureTestingModule({
       imports: [PecaFormComponent],
@@ -69,7 +74,7 @@ describe('PecaFormComponent', () => {
     const btn: HTMLButtonElement | null = fixture.nativeElement.querySelector(
       '[data-testid="upload-foto-btn"]'
     );
-    expect(btn?.disabled).toBeTrue();
+    expect(btn?.disabled).toBe(true);
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
     expect(text.toLowerCase()).toContain('envio de foto indisponível');
     expect(text.toLowerCase()).not.toContain('foto enviada com sucesso');
@@ -85,7 +90,7 @@ describe('PecaFormComponent', () => {
 
   it('ao submeter em modo criação, chama pecaService.createPeca com idLocal fixo da rota', async () => {
     await setup({ idLocal: '9' });
-    pecaServiceSpy.createPeca.and.returnValue(of(undefined));
+    pecaServiceSpy.createPeca.mockReturnValue(of(undefined));
 
     fixture.componentInstance.form.patchValue({
       idTipoSuporte: 1,
@@ -100,12 +105,12 @@ describe('PecaFormComponent', () => {
     });
     fixture.componentInstance.onSubmit();
 
-    expect(pecaServiceSpy.createPeca).toHaveBeenCalledWith(jasmine.objectContaining({ idLocal: 9 }));
+    expect(pecaServiceSpy.createPeca).toHaveBeenCalledWith(expect.objectContaining({ idLocal: 9 }));
   });
 
   it('não submete (nem chama o serviço) enquanto campos estruturados obrigatórios (Via, Formato) faltarem', async () => {
     await setup({ idLocal: '9' });
-    pecaServiceSpy.createPeca.and.returnValue(of(undefined));
+    pecaServiceSpy.createPeca.mockReturnValue(of(undefined));
 
     fixture.componentInstance.form.patchValue({ idTipoSuporte: 1 });
     fixture.componentInstance.onSubmit();
@@ -114,10 +119,14 @@ describe('PecaFormComponent', () => {
   });
 
   it('em modo edição (idPeca na rota), carrega a peça e chama updatePeca ao submeter', async () => {
-    pecaServiceSpy = jasmine.createSpyObj('PecaService', ['getPeca', 'createPeca', 'updatePeca']);
-    routerSpy = jasmine.createSpyObj('Router', ['navigate']);
-    pecaServiceSpy.getPeca.and.returnValue(of({ ...pecaBase, id: 3, codigoInterno: 'PC-INT', valorPadrao: 200 }));
-    pecaServiceSpy.updatePeca.and.returnValue(of(undefined));
+    pecaServiceSpy = {
+      getPeca: vi.fn(),
+      createPeca: vi.fn(),
+      updatePeca: vi.fn(),
+    } as unknown as Mocked<PecaService>;
+    routerSpy = { navigate: vi.fn() } as unknown as Mocked<Router>;
+    pecaServiceSpy.getPeca.mockReturnValue(of({ ...pecaBase, id: 3, codigoInterno: 'PC-INT', valorPadrao: 200 }));
+    pecaServiceSpy.updatePeca.mockReturnValue(of(undefined));
 
     await TestBed.configureTestingModule({
       imports: [PecaFormComponent],
@@ -138,6 +147,6 @@ describe('PecaFormComponent', () => {
 
     fixture.componentInstance.onSubmit();
 
-    expect(pecaServiceSpy.updatePeca).toHaveBeenCalledWith(3, jasmine.objectContaining({ idLocal: 9 }));
+    expect(pecaServiceSpy.updatePeca).toHaveBeenCalledWith(3, expect.objectContaining({ idLocal: 9 }));
   });
 });

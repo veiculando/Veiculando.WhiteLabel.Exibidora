@@ -6,10 +6,11 @@ import { LocaisComponent } from './locais.component';
 import { LocalService } from './services/local.service';
 import { StatusExibicao } from './models/status-exibicao.enum';
 import { LocalListItem } from './models/local.model';
+import type { Mocked } from 'vitest';
 
 describe('LocaisComponent', () => {
   let fixture: ComponentFixture<LocaisComponent>;
-  let localServiceSpy: jasmine.SpyObj<LocalService>;
+  let localServiceSpy: Mocked<LocalService>;
 
   const itens: LocalListItem[] = [
     {
@@ -35,7 +36,10 @@ describe('LocaisComponent', () => {
   ];
 
   async function setup(): Promise<void> {
-    localServiceSpy = jasmine.createSpyObj('LocalService', ['listLocais', 'deleteLocal']);
+    localServiceSpy = {
+      listLocais: vi.fn(),
+      deleteLocal: vi.fn(),
+    } as unknown as Mocked<LocalService>;
     await TestBed.configureTestingModule({
       imports: [LocaisComponent],
       providers: [{ provide: LocalService, useValue: localServiceSpy }, provideRouter([])],
@@ -45,7 +49,7 @@ describe('LocaisComponent', () => {
 
   it('exibe "Aguardando aprovação" para local com StatusExibicao.AprovacaoPendente', async () => {
     await setup();
-    localServiceSpy.listLocais.and.returnValue(of(itens));
+    localServiceSpy.listLocais.mockReturnValue(of(itens));
 
     fixture.detectChanges();
 
@@ -56,7 +60,7 @@ describe('LocaisComponent', () => {
 
   it('busca filtra em memória por código/descrição/cidade (GET real não pagina nem filtra por querystring)', async () => {
     await setup();
-    localServiceSpy.listLocais.and.returnValue(of(itens));
+    localServiceSpy.listLocais.mockReturnValue(of(itens));
     fixture.detectChanges();
 
     fixture.componentInstance.buscar('Praça');
@@ -69,27 +73,28 @@ describe('LocaisComponent', () => {
 
   it('em erro de carga, exibe estado de erro genérico sem expor dados parciais', async () => {
     await setup();
-    localServiceSpy.listLocais.and.returnValue(
+    localServiceSpy.listLocais.mockReturnValue(
       throwError(() => new HttpErrorResponse({ status: 500 }))
     );
 
     fixture.detectChanges();
 
-    expect(fixture.componentInstance.erro()).toBeTrue();
+    expect(fixture.componentInstance.erro()).toBe(true);
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
     expect(text.toLowerCase()).toContain('erro');
   });
 
   it('exclui um local confirmado e recarrega a listagem', async () => {
     await setup();
-    localServiceSpy.listLocais.and.returnValue(of(itens));
-    localServiceSpy.deleteLocal.and.returnValue(of(void 0));
-    spyOn(window, 'confirm').and.returnValue(true);
+    localServiceSpy.listLocais.mockReturnValue(of(itens));
+    localServiceSpy.deleteLocal.mockReturnValue(of(void 0));
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
     fixture.detectChanges();
 
     fixture.componentInstance.excluir(itens[0]);
 
-    expect(localServiceSpy.deleteLocal).toHaveBeenCalledOnceWith(1);
+    expect(localServiceSpy.deleteLocal).toHaveBeenCalledTimes(1);
+    expect(localServiceSpy.deleteLocal).toHaveBeenCalledWith(1);
     expect(localServiceSpy.listLocais).toHaveBeenCalledTimes(2);
     expect(fixture.componentInstance.excluindoId()).toBeNull();
   });

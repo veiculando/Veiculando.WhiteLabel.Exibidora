@@ -25,8 +25,8 @@ describe('LocalService', () => {
 
     const req = httpMock.expectOne(`${environment.bffUrl}/locais`);
     expect(req.request.method).toBe('GET');
-    expect(req.request.params.has('afiliadaId')).toBeFalse();
-    expect(req.request.params.has('idAfiliada')).toBeFalse();
+    expect(req.request.params.has('afiliadaId')).toBe(false);
+    expect(req.request.params.has('idAfiliada')).toBe(false);
     req.flush([]);
   });
 
