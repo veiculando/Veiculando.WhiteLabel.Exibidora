@@ -3,6 +3,7 @@ import { of } from 'rxjs';
 import { provideRouter } from '@angular/router';
 import { LocalPecasStepComponent } from './local-pecas-step.component';
 import { PecaService } from '../services/peca.service';
+import { StatusExibicao } from '../models/status-exibicao.enum';
 
 describe('LocalPecasStepComponent', () => {
   let fixture: ComponentFixture<LocalPecasStepComponent>;
@@ -28,6 +29,7 @@ describe('LocalPecasStepComponent', () => {
           formatoDimensao: '9x3',
           valorPadrao: 500,
           fonteOrigem: 1,
+          statusExibicao: StatusExibicao.AprovacaoPendente,
         },
       ])
     );
@@ -39,6 +41,7 @@ describe('LocalPecasStepComponent', () => {
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
     expect(text).toContain('PC-1');
     expect(text).toContain('9x3');
+    expect(text).toContain('Aguardando aprovação');
   });
 
   it('exibe estado vazio quando o local ainda não tem peças', () => {

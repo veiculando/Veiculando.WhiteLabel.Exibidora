@@ -15,6 +15,7 @@
           <th>Código</th>
           <th>Formato</th>
           <th>Valor Padrão</th>
+          <th>Status</th>
           <th>Ações</th>
         </tr>
       </thead>
@@ -24,6 +25,7 @@
             <td>{{ peca.codigo }}</td>
             <td>{{ peca.formatoDimensao || '—' }}</td>
             <td>{{ peca.valorPadrao | currency: 'BRL' }}</td>
+            <td>{{ statusLabel[peca.statusExibicao] }}</td>
             <td>
               <a [routerLink]="['/locais', idLocal, 'pecas', peca.id]">Editar</a>
             </td>

@@ -13,6 +13,7 @@ export interface PecaListItem {
   formatoDimensao: string | null;
   valorPadrao: number;
   fonteOrigem: number | null;
+  statusExibicao: StatusExibicao;
 }
 
 /**
@@ -117,6 +118,7 @@ export interface PecaApiDetalhe {
     material: number | null;
     especificacao: string | null;
   } | null;
+  idsSubstratoTipo: number[];
   periodicidadePadrao: number;
   valorPadrao: number;
   iluminacao: boolean;

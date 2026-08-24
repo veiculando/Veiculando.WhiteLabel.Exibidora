@@ -65,9 +65,9 @@
     <label>
       Junção
       <select formControlName="formatoJuncao">
-        <option [value]="0">Não</option>
-        <option [value]="1">Dupla</option>
-        <option [value]="2">Tripla</option>
+        <option [ngValue]="0">Não</option>
+        <option [ngValue]="1">Dupla</option>
+        <option [ngValue]="2">Tripla</option>
       </select>
     </label>
   </fieldset>
@@ -89,9 +89,9 @@
       Material
       <select formControlName="especificacaoMaterial">
         <option [ngValue]="null">Não informado</option>
-        <option [value]="1">Papel</option>
-        <option [value]="2">Lona</option>
-        <option [value]="3">Adesivo</option>
+        <option [ngValue]="1">Papel</option>
+        <option [ngValue]="2">Lona</option>
+        <option [ngValue]="3">Adesivo</option>
       </select>
     </label>
 
@@ -107,9 +107,9 @@
     <label>
       Tipo de via
       <select formControlName="viaTipo">
-        <option [value]="0">Simples</option>
-        <option [value]="1">Dupla</option>
-        <option [value]="2">Provisória</option>
+        <option [ngValue]="0">Simples</option>
+        <option [ngValue]="1">Dupla</option>
+        <option [ngValue]="2">Provisória</option>
       </select>
     </label>
 
@@ -126,9 +126,9 @@
     <label>
       Pedestre
       <select formControlName="viaPedestre">
-        <option [value]="0">Não</option>
-        <option [value]="1">Sim</option>
-        <option [value]="2">Apenas pedestre</option>
+        <option [ngValue]="0">Não</option>
+        <option [ngValue]="1">Sim</option>
+        <option [ngValue]="2">Apenas pedestre</option>
       </select>
     </label>
   </fieldset>

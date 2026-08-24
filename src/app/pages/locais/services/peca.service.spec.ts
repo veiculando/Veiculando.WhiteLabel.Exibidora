@@ -51,6 +51,7 @@ describe('PecaService', () => {
     formatoDimensao: '3 x 2',
     formato: { largura: 3, altura: 2, juncao: 0 },
     especificacaoProducao: { largura: 3, altura: 2, material: 1, especificacao: 'texto' },
+    idsSubstratoTipo: [4, 7],
     periodicidadePadrao: 1,
     valorPadrao: 100,
     iluminacao: false,
@@ -119,6 +120,7 @@ describe('PecaService', () => {
     expect(detalhe.formatoLargura).toBe(3);
     expect(detalhe.viaFaixas).toBe(2);
     expect(detalhe.especificacaoTexto).toBe('texto');
+    expect(detalhe.idsSubstratoTipo).toEqual([4, 7]);
     expect(detalhe.streetView).toBe('https://maps.example/x');
   });
 });

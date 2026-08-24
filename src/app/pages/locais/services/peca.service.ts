@@ -102,7 +102,9 @@ function paraDetalheFlat(peca: PecaApiDetalhe): PecaDetalhe {
     especificacaoMaterial: peca.especificacaoProducao?.material ?? null,
     especificacaoTexto: peca.especificacaoProducao?.especificacao ?? null,
 
-    idsSubstratoTipo: [],
+    // Preservar os substratos recebidos é obrigatório na edição: o Core
+    // substitui a coleção inteira pelo array do command.
+    idsSubstratoTipo: [...(peca.idsSubstratoTipo ?? [])],
 
     iluminacao: peca.iluminacao,
     semaforo: peca.semaforo,

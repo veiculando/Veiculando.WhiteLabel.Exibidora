@@ -3,6 +3,7 @@ import { Component, Input, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { PecaService } from '../services/peca.service';
 import { PecaListItem } from '../models/peca.model';
+import { STATUS_EXIBICAO_LABEL } from '../models/status-exibicao.enum';
 
 /**
  * Etapa 3 do wizard — "Peças". Lista as peças do local e encaminha o
@@ -28,6 +29,7 @@ export class LocalPecasStepComponent implements OnInit {
 
   readonly pecas = signal<PecaListItem[]>([]);
   readonly carregando = signal(false);
+  readonly statusLabel = STATUS_EXIBICAO_LABEL;
 
   ngOnInit(): void {
     if (!this.idLocal) return;
