@@ -1,0 +1,66 @@
+<section class="locais">
+  <header class="locais__header">
+    <h1>Locais</h1>
+    <a class="btn btn--primary" routerLink="/locais/novo">Novo local</a>
+  </header>
+
+  <div class="locais__filtros">
+    <input
+      type="search"
+      placeholder="Buscar por código, cidade ou endereço"
+      #buscaInput
+      (change)="buscar(buscaInput.value)"
+    />
+  </div>
+
+  @if (carregando()) {
+    <p class="locais__estado">Carregando locais…</p>
+  } @else if (erro()) {
+    <p class="locais__estado locais__estado--erro" role="alert">
+      Erro ao carregar os locais. Tente novamente.
+    </p>
+  } @else if (locais().length === 0) {
+    <p class="locais__estado">Nenhum local encontrado.</p>
+  } @else {
+    <table class="locais__tabela">
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Código Interno</th>
+          <th>Cidade</th>
+          <th>Endereço</th>
+          <th>Nº de Peças</th>
+          <th>Status</th>
+          <th>Atualização</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (local of locais(); track local.id) {
+          <tr>
+            <td>{{ local.codigo }}</td>
+            <td>{{ local.codigoInterno || '—' }}</td>
+            <td>{{ local.cidade }}</td>
+            <td>{{ local.endereco }}</td>
+            <td>{{ local.numeroPecas }}</td>
+            <td>
+              <span
+                class="badge"
+                [class.badge--pendente]="local.statusExibicao === StatusExibicao.AprovacaoPendente"
+                [class.badge--ativo]="local.statusExibicao === StatusExibicao.Ativo"
+                [class.badge--inativo]="local.statusExibicao === StatusExibicao.Inativo"
+              >
+                {{ statusLabel[local.statusExibicao] }}
+              </span>
+            </td>
+            <td>{{ local.dataAtualizacao | date: 'dd/MM/yyyy' }}</td>
+            <td>
+              <a [routerLink]="['/locais', local.id]">Editar</a>
+              <a [routerLink]="['/locais', local.id, 'pecas', 'nova']">+ Peça</a>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</section>
