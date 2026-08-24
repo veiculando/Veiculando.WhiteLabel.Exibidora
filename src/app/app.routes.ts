@@ -36,6 +36,21 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/login/login.component').then((m) => m.LoginComponent),
   },
 
+  // Recuperação de senha — públicas, fora do ShellComponent (o operador ainda
+  // não tem sessão nesta etapa).
+  {
+    path: 'login/esqueci-senha',
+    title: 'Esqueci minha senha — Painel Exibidora',
+    loadComponent: () =>
+      import('./pages/login/esqueci-senha.component').then((m) => m.EsqueciSenhaComponent),
+  },
+  {
+    path: 'login/alterar-senha',
+    title: 'Redefinir senha — Painel Exibidora',
+    loadComponent: () =>
+      import('./pages/login/alterar-senha.component').then((m) => m.AlterarSenhaComponent),
+  },
+
   // Rota de acesso negado
   {
     path: 'acesso-negado',

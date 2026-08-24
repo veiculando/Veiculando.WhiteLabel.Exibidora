@@ -5,7 +5,14 @@ import { Observable, of, tap } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { SecureStorage } from '../auth/secure-storage';
-import { LoginRequest, LoginResponse, OperadorLogado } from '../models/wl.models';
+import {
+  AlterarSenhaRequest,
+  EsqueciSenhaRequest,
+  LoginRequest,
+  LoginResponse,
+  MensagemResposta,
+  OperadorLogado,
+} from '../models/wl.models';
 
 /**
  * Ciclo de vida da sessão do operador WL: login, dados do autenticado,
@@ -38,6 +45,25 @@ export class AuthService {
 
   me(): Observable<OperadorLogado> {
     return this.http.get<OperadorLogado>(`${this.base}/me`);
+  }
+
+  /**
+   * `POST /api/wl/auth/esqueci-senha`. O BFF sempre devolve 200 com a mesma
+   * mensagem, exista ou não o e-mail nesta instância — não há nada aqui para
+   * distinguir os dois casos, de propósito.
+   */
+  esqueciSenha(request: EsqueciSenhaRequest): Observable<MensagemResposta> {
+    return this.http.post<MensagemResposta>(`${this.base}/esqueci-senha`, request);
+  }
+
+  /**
+   * `POST /api/wl/auth/alterar-senha`. O token bruto vem da URL (query param
+   * do link recebido por e-mail) e só passa pela memória deste request — em
+   * nenhum momento é gravado em `localStorage`/`SecureStorage` (ADR-WL-007
+   * trata do JWT de sessão, não deste token de uso único).
+   */
+  alterarSenha(request: AlterarSenhaRequest): Observable<MensagemResposta> {
+    return this.http.post<MensagemResposta>(`${this.base}/alterar-senha`, request);
   }
 
   logout(): void {

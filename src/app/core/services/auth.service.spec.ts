@@ -126,4 +126,50 @@ describe('AuthService', () => {
         expect(SecureStorage.getToken(environment.tokenKey)).toBeNull();
         expect(service.estaAutenticado()).toBe(false);
     });
+
+    it('esqueciSenha posta no endpoint certo e nao mexe no storage do token', () => {
+        let resposta: { message: string } | null = null;
+        service.esqueciSenha({ email: 'recuperar@exemplo.com' }).subscribe((r) => (resposta = r));
+
+        const requisicao = http.expectOne(`${environment.bffUrl}/auth/esqueci-senha`);
+        expect(requisicao.request.body).toEqual({ email: 'recuperar@exemplo.com' });
+
+        requisicao.flush({ message: 'Se o e-mail informado estiver cadastrado, enviaremos instruções.' });
+
+        expect(resposta!.message).toContain('Se o e-mail informado');
+        expect(SecureStorage.getToken(environment.tokenKey)).toBeNull();
+    });
+
+    it('alterarSenha posta email, token bruto e nova senha — nunca persiste o token de reset', () => {
+        let resposta: { message: string } | null = null;
+        service
+            .alterarSenha({ email: 'recuperar@exemplo.com', token: 'token-bruto-do-link', novaSenha: 'NovaSenha456' })
+            .subscribe((r) => (resposta = r));
+
+        const requisicao = http.expectOne(`${environment.bffUrl}/auth/alterar-senha`);
+        expect(requisicao.request.body).toEqual({
+            email: 'recuperar@exemplo.com',
+            token: 'token-bruto-do-link',
+            novaSenha: 'NovaSenha456',
+        });
+
+        requisicao.flush({ message: 'Senha alterada com sucesso.' });
+
+        expect(resposta!.message).toBe('Senha alterada com sucesso.');
+        // O token de reset nunca deveria ir para localStorage — só o JWT de
+        // sessao vai, e so depois de um login de verdade.
+        expect(localStorage.getItem(environment.tokenKey)).toBeNull();
+        expect(localStorage.getItem('token-bruto-do-link')).toBeNull();
+    });
+
+    it('alterarSenha com token invalido nao persiste nada no storage', () => {
+        service
+            .alterarSenha({ email: 'recuperar@exemplo.com', token: 'token-invalido', novaSenha: 'NovaSenha456' })
+            .subscribe({ error: () => {} });
+
+        http.expectOne(`${environment.bffUrl}/auth/alterar-senha`)
+            .flush({ message: 'Link de recuperação inválido ou expirado.' }, { status: 400, statusText: 'Bad Request' });
+
+        expect(SecureStorage.getToken(environment.tokenKey)).toBeNull();
+    });
 });

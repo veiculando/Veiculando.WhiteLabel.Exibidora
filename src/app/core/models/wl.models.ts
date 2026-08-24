@@ -21,6 +21,22 @@ export interface LoginResponse {
   permissoes: string[];
 }
 
+export interface MensagemResposta {
+  message: string;
+}
+
+/** `POST /api/wl/auth/esqueci-senha`. */
+export interface EsqueciSenhaRequest {
+  email: string;
+}
+
+/** `POST /api/wl/auth/alterar-senha`. */
+export interface AlterarSenhaRequest {
+  email: string;
+  token: string;
+  novaSenha: string;
+}
+
 export interface OperadorLogado {
   id: number;
   nome: string;
@@ -70,8 +86,6 @@ export interface DashboardKpis {
   locaisAtivos: number;
   pecasEmExibicao: number;
   pedidosPendentes: number;
-  /** Mockada em 0 pelo BFF na V1 — comportamento esperado, nao um bug. */
-  receitaMensal: number;
   'alertasAprovaçãoPendente': number;
 }
 

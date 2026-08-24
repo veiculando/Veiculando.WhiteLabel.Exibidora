@@ -1,7 +1,7 @@
 
 import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { BrandingService } from '../../core/branding/branding.service';
 import { mensagemDeErro } from '../../core/http/api-error';
 import { AuthService } from '../../core/services/auth.service';
@@ -20,7 +20,7 @@ import { AuthService } from '../../core/services/auth.service';
  */
 @Component({
     selector: 'app-login',
-    imports: [ReactiveFormsModule],
+    imports: [ReactiveFormsModule, RouterLink],
     template: `
     <div class="login">
       <form class="login__caixa" [formGroup]="form" (ngSubmit)="entrar()">
@@ -46,12 +46,14 @@ import { AuthService } from '../../core/services/auth.service';
         @if (erro) {
           <div class="wl-estado wl-estado--erro login__erro">{{ erro }}</div>
         }
-    
+
         <button class="wl-btn login__botao" type="submit" [disabled]="enviando">
           {{ enviando ? 'Entrando…' : 'Entrar' }}
         </button>
+
+        <a class="wl-btn--link login__esqueci" routerLink="/login/esqueci-senha">Esqueci minha senha</a>
       </form>
-    
+
       <p class="login__rodape">{{ brand()?.footerText || brand()?.nomeExibicao }}</p>
     </div>
     `,
@@ -100,6 +102,12 @@ import { AuthService } from '../../core/services/auth.service';
         margin-top: 20px;
         font-size: 0.75rem;
         color: var(--on-surface);
+      }
+      .login__esqueci {
+        display: block;
+        margin-top: 14px;
+        text-align: center;
+        font-size: 0.85rem;
       }
     `,
     ]
