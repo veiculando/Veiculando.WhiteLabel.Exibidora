@@ -21,6 +21,22 @@ export interface LoginResponse {
   permissoes: string[];
 }
 
+export interface MensagemResposta {
+  message: string;
+}
+
+/** `POST /api/wl/auth/esqueci-senha`. */
+export interface EsqueciSenhaRequest {
+  email: string;
+}
+
+/** `POST /api/wl/auth/alterar-senha`. */
+export interface AlterarSenhaRequest {
+  email: string;
+  token: string;
+  novaSenha: string;
+}
+
 export interface OperadorLogado {
   id: number;
   nome: string;
