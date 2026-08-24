@@ -49,6 +49,34 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/locais/locais.component').then(m => m.LocaisComponent),
       },
+      {
+        path: 'locais/novo',
+        data: { permission: 'PecaGerenciar' },
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./pages/locais/wizard/local-wizard.component').then(m => m.LocalWizardComponent),
+      },
+      {
+        path: 'locais/:id',
+        data: { permission: 'PecaGerenciar' },
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./pages/locais/wizard/local-wizard.component').then(m => m.LocalWizardComponent),
+      },
+      {
+        path: 'locais/:idLocal/pecas/nova',
+        data: { permission: 'PecaGerenciar' },
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./pages/locais/pecas/peca-form.component').then(m => m.PecaFormComponent),
+      },
+      {
+        path: 'locais/:idLocal/pecas/:idPeca',
+        data: { permission: 'PecaGerenciar' },
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./pages/locais/pecas/peca-form.component').then(m => m.PecaFormComponent),
+      },
 
       // --- Comercial ---
       {

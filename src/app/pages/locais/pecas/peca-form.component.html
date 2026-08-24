@@ -1,0 +1,108 @@
+<form class="peca-form" [formGroup]="form" (ngSubmit)="onSubmit()">
+  <h1>{{ idPeca ? 'Editar peça' : 'Nova peça' }}</h1>
+
+  <fieldset class="peca-form__foto">
+    <legend>Foto da peça</legend>
+
+    @if (fotoUrl) {
+      <img [src]="fotoUrl" alt="Foto atual da peça" width="120" />
+    } @else {
+      <p>Nenhuma foto cadastrada.</p>
+    }
+
+    <button type="button" data-testid="upload-foto-btn" [disabled]="uploadFotoIndisponivel">
+      Enviar foto
+    </button>
+    @if (uploadFotoIndisponivel) {
+      <p class="peca-form__aviso" role="note">
+        Envio de foto indisponível no momento. A foto existente é somente leitura.
+      </p>
+    }
+  </fieldset>
+
+  <fieldset>
+    <legend>Dados da peça</legend>
+
+    <label>
+      Tipo de suporte
+      <input type="number" formControlName="idTipoSuporte" required />
+    </label>
+
+    <label>
+      Código interno
+      <input type="text" formControlName="codigoInterno" />
+    </label>
+
+    <label>
+      Formato
+      <input type="number" formControlName="idFormato" required />
+    </label>
+
+    <label>
+      Periodicidade padrão
+      <input type="number" formControlName="periodicidadePadrao" required />
+    </label>
+
+    <label>
+      Valor padrão
+      <input type="number" formControlName="valorPadrao" required />
+    </label>
+
+    <label>
+      Especificação de produção
+      <input type="text" formControlName="especificacaoProducao" />
+    </label>
+
+    <label>
+      Substratos
+      <input type="text" formControlName="substratos" />
+    </label>
+
+    <label>
+      <input type="checkbox" formControlName="iluminacao" />
+      Iluminação
+    </label>
+
+    <label>
+      <input type="checkbox" formControlName="semaforo" />
+      Semáforo
+    </label>
+
+    <label>
+      Ângulo de visão
+      <input type="text" formControlName="anguloDeVisao" />
+    </label>
+
+    <label>
+      Via
+      <input type="text" formControlName="via" />
+    </label>
+
+    <label>
+      Roteiro comercial
+      <input type="text" formControlName="roteiroComercial" />
+    </label>
+
+    <label>
+      Alvará
+      <input type="text" formControlName="alvara" />
+    </label>
+
+    <label>
+      Street View
+      <input type="text" formControlName="streetView" />
+    </label>
+
+    <label>
+      Descrição
+      <textarea formControlName="descricao"></textarea>
+    </label>
+
+    <label>
+      Restrição
+      <textarea formControlName="restricao"></textarea>
+    </label>
+  </fieldset>
+
+  <button type="submit" class="btn btn--primary">Salvar peça</button>
+</form>
