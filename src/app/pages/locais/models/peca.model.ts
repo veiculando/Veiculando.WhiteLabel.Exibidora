@@ -17,6 +17,13 @@ export interface PecaListItem {
  * Payload de PecaCadastroCommand.
  * `idLocal` vem sempre da rota (nunca de um campo editável do formulário) —
  * ver T1 do plano tático.
+ *
+ * O shape espelha PecaCadastroCommand do Core campo a campo — inclusive
+ * onde o Core exige um objeto estruturado (Via, FormatoPeca,
+ * EspecificacaoProducao) em vez do texto livre que uma primeira versão
+ * deste formulário assumia. Sem isso o BFF não tem como montar os Value
+ * Objects que Via/FormatoPeca exigem (com suas próprias validações:
+ * Faixas 2–9, Velocidade 11–119 etc.).
  */
 export interface PecaPayload {
   idLocal: number;
@@ -24,15 +31,34 @@ export interface PecaPayload {
   codigoInterno: string | null;
   periodicidadePadrao: number;
   valorPadrao: number;
+
   idFormato: number;
-  especificacaoProducao: string | null;
-  substratos: string | null;
+  formatoLargura: number;
+  formatoAltura: number;
+  /** JuncaoTipoEnum do Core: 0=Não, 1=Dupla, 2=Tripla. */
+  formatoJuncao: number;
+
+  especificacaoLargura: number | null;
+  especificacaoAltura: number | null;
+  /** MaterialProducaoEnum do Core: 1=Papel, 2=Lona, 3=Adesivo. */
+  especificacaoMaterial: number | null;
+  especificacaoTexto: string | null;
+
+  idsSubstratoTipo: number[];
+
   iluminacao: boolean;
   semaforo: boolean;
-  anguloDeVisao: string | null;
-  via: string | null;
-  roteiroComercial: string | null;
-  alvara: string | null;
+  anguloDeVisao: number;
+
+  /** ViaTipoEnum do Core: 0=Simples, 1=Dupla, 2=Provisória. */
+  viaTipo: number;
+  viaFaixas: number;
+  viaVelocidade: number;
+  /** ViaPedestreEnum do Core: 0=Não, 1=Sim, 2=ApenasPedestre. */
+  viaPedestre: number;
+
+  roteiroComercial: boolean;
+  alvara: boolean;
   streetView: string | null;
   descricao: string | null;
   restricao: string | null;

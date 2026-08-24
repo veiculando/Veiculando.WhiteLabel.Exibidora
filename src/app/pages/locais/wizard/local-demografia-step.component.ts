@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { LocalPublicoDistribuicao, LocalPublicoPayload, emptyLocalPublicoPayload } from '../models/local-publico.model';
+import { LocalPublicoPayload, emptyLocalPublicoPayload } from '../models/local-publico.model';
 
 /**
  * Etapa 2 do wizard — "Dados Demográficos".
@@ -10,6 +10,12 @@ import { LocalPublicoDistribuicao, LocalPublicoPayload, emptyLocalPublicoPayload
  * separado do Local (LocalPublicoService). Emite EXCLUSIVAMENTE campos
  * de LocalPublicoPayload — nunca endereço, geolocalização ou código
  * interno, para não sobrescrever o que a etapa 1 já salvou.
+ *
+ * Gênero/faixas/perfis/segmentos/POI usam os MESMOS IDs de catálogo que
+ * o Core aceita (LocalPublicoCadastroCommand não tem contrato para
+ * rótulo+percentual livre) — por ora preservados como vieram do backend,
+ * sem edição nesta etapa (mesma limitação documentada antes da mudança
+ * de shape, apenas com os tipos certos).
  */
 @Component({
   selector: 'app-local-demografia-step',
@@ -24,28 +30,28 @@ export class LocalDemografiaStepComponent implements OnChanges {
   private readonly fb = new FormBuilder();
 
   readonly form = this.fb.nonNullable.group({
-    audienciaDia: this.fb.control<number | null>(null),
-    formaMedicao: this.fb.control<string | null>(null),
+    audiencia: this.fb.control<number | null>(null),
+    tipoMedicao: this.fb.control<number | null>(null),
     fonte: this.fb.control<string | null>(null),
+    genero: this.fb.nonNullable.control<number>(0),
   });
 
-  genero: LocalPublicoDistribuicao[] = [];
-  faixasEtarias: LocalPublicoDistribuicao[] = [];
-  faixasRenda: LocalPublicoDistribuicao[] = [];
-  perfisPsicograficos: string[] = [];
-  segmentos: string[] = [];
-  poiCategorias: string[] = [];
+  faixaEtaria: number[] = [];
+  faixaRenda: number[] = [];
+  perfisPsicograficos: number[] = [];
+  segmentos: number[] = [];
+  poiCategorias: number[] = [];
 
   ngOnChanges(): void {
     const valor = this.valorInicial ?? emptyLocalPublicoPayload();
     this.form.patchValue({
-      audienciaDia: valor.audienciaDia,
-      formaMedicao: valor.formaMedicao,
+      audiencia: valor.audiencia,
+      tipoMedicao: valor.tipoMedicao,
       fonte: valor.fonte,
+      genero: valor.genero,
     });
-    this.genero = [...(valor.genero ?? [])];
-    this.faixasEtarias = [...(valor.faixasEtarias ?? [])];
-    this.faixasRenda = [...(valor.faixasRenda ?? [])];
+    this.faixaEtaria = [...(valor.faixaEtaria ?? [])];
+    this.faixaRenda = [...(valor.faixaRenda ?? [])];
     this.perfisPsicograficos = [...(valor.perfisPsicograficos ?? [])];
     this.segmentos = [...(valor.segmentos ?? [])];
     this.poiCategorias = [...(valor.poiCategorias ?? [])];
@@ -54,9 +60,8 @@ export class LocalDemografiaStepComponent implements OnChanges {
   onSubmit(): void {
     const payload: LocalPublicoPayload = {
       ...this.form.getRawValue(),
-      genero: this.genero,
-      faixasEtarias: this.faixasEtarias,
-      faixasRenda: this.faixasRenda,
+      faixaEtaria: this.faixaEtaria,
+      faixaRenda: this.faixaRenda,
       perfisPsicograficos: this.perfisPsicograficos,
       segmentos: this.segmentos,
       poiCategorias: this.poiCategorias,

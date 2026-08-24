@@ -34,11 +34,6 @@
     </label>
 
     <label>
-      Formato
-      <input type="number" formControlName="idFormato" required />
-    </label>
-
-    <label>
       Periodicidade padrão
       <input type="number" formControlName="periodicidadePadrao" required />
     </label>
@@ -47,16 +42,99 @@
       Valor padrão
       <input type="number" formControlName="valorPadrao" required />
     </label>
+  </fieldset>
+
+  <fieldset>
+    <legend>Formato</legend>
 
     <label>
-      Especificação de produção
-      <input type="text" formControlName="especificacaoProducao" />
+      Formato (catálogo)
+      <input type="number" formControlName="idFormato" required />
     </label>
 
     <label>
-      Substratos
-      <input type="text" formControlName="substratos" />
+      Largura (m)
+      <input type="number" formControlName="formatoLargura" required />
     </label>
+
+    <label>
+      Altura (m)
+      <input type="number" formControlName="formatoAltura" required />
+    </label>
+
+    <label>
+      Junção
+      <select formControlName="formatoJuncao">
+        <option [value]="0">Não</option>
+        <option [value]="1">Dupla</option>
+        <option [value]="2">Tripla</option>
+      </select>
+    </label>
+  </fieldset>
+
+  <fieldset>
+    <legend>Especificação de produção</legend>
+
+    <label>
+      Largura (m)
+      <input type="number" formControlName="especificacaoLargura" />
+    </label>
+
+    <label>
+      Altura (m)
+      <input type="number" formControlName="especificacaoAltura" />
+    </label>
+
+    <label>
+      Material
+      <select formControlName="especificacaoMaterial">
+        <option [ngValue]="null">Não informado</option>
+        <option [value]="1">Papel</option>
+        <option [value]="2">Lona</option>
+        <option [value]="3">Adesivo</option>
+      </select>
+    </label>
+
+    <label>
+      Especificação (texto)
+      <input type="text" formControlName="especificacaoTexto" />
+    </label>
+  </fieldset>
+
+  <fieldset>
+    <legend>Via</legend>
+
+    <label>
+      Tipo de via
+      <select formControlName="viaTipo">
+        <option [value]="0">Simples</option>
+        <option [value]="1">Dupla</option>
+        <option [value]="2">Provisória</option>
+      </select>
+    </label>
+
+    <label>
+      Faixas (2 a 9)
+      <input type="number" formControlName="viaFaixas" min="2" max="9" required />
+    </label>
+
+    <label>
+      Velocidade (11 a 119 km/h)
+      <input type="number" formControlName="viaVelocidade" min="11" max="119" required />
+    </label>
+
+    <label>
+      Pedestre
+      <select formControlName="viaPedestre">
+        <option [value]="0">Não</option>
+        <option [value]="1">Sim</option>
+        <option [value]="2">Apenas pedestre</option>
+      </select>
+    </label>
+  </fieldset>
+
+  <fieldset>
+    <legend>Demais dados</legend>
 
     <label>
       <input type="checkbox" formControlName="iluminacao" />
@@ -69,27 +147,22 @@
     </label>
 
     <label>
-      Ângulo de visão
-      <input type="text" formControlName="anguloDeVisao" />
+      Ângulo de visão (graus)
+      <input type="number" formControlName="anguloDeVisao" required />
     </label>
 
     <label>
-      Via
-      <input type="text" formControlName="via" />
-    </label>
-
-    <label>
+      <input type="checkbox" formControlName="roteiroComercial" />
       Roteiro comercial
-      <input type="text" formControlName="roteiroComercial" />
     </label>
 
     <label>
+      <input type="checkbox" formControlName="alvara" />
       Alvará
-      <input type="text" formControlName="alvara" />
     </label>
 
     <label>
-      Street View
+      Street View (URL)
       <input type="text" formControlName="streetView" />
     </label>
 

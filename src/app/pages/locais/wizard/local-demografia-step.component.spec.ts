@@ -17,11 +17,11 @@ describe('LocalDemografiaStepComponent', () => {
     let emitido: LocalPublicoPayload | undefined;
     fixture.componentInstance.salvar.subscribe((p: LocalPublicoPayload) => (emitido = p));
 
-    fixture.componentInstance.form.patchValue({ audienciaDia: 1500, formaMedicao: 'Contagem manual' });
+    fixture.componentInstance.form.patchValue({ audiencia: 1500, tipoMedicao: 2 });
     fixture.componentInstance.onSubmit();
 
     expect(emitido).toBeTruthy();
-    expect(emitido!.audienciaDia).toBe(1500);
+    expect(emitido!.audiencia).toBe(1500);
     expect(Object.keys(emitido as object)).not.toContain('logradouro');
     expect(Object.keys(emitido as object)).not.toContain('latitude');
     expect(Object.keys(emitido as object)).not.toContain('codigoInterno');
@@ -33,8 +33,8 @@ describe('LocalDemografiaStepComponent', () => {
 
     fixture.componentInstance.onSubmit();
 
-    expect(emitido!.genero).toEqual([]);
-    expect(emitido!.faixasEtarias).toEqual([]);
+    expect(emitido!.faixaEtaria).toEqual([]);
+    expect(emitido!.faixaRenda).toEqual([]);
     expect(emitido!.perfisPsicograficos).toEqual([]);
   });
 });

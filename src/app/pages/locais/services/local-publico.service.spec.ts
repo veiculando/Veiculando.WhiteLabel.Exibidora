@@ -28,7 +28,7 @@ describe('LocalPublicoService', () => {
 
   it('grava a demografia em PUT {bffUrl}/locais/{id}/publico (BFF delega a LocalPublicoCadastroCommand no Core)', () => {
     const payload = emptyLocalPublicoPayload();
-    payload.audienciaDia = 1000;
+    payload.audiencia = 1000;
 
     service.savePublico(5, payload).subscribe();
 
@@ -44,9 +44,8 @@ describe('LocalPublicoService', () => {
 
   it('nunca envia arrays nulos — payload vazio tem todos os arrays como []', () => {
     const payload = emptyLocalPublicoPayload();
-    expect(payload.genero).toEqual([]);
-    expect(payload.faixasEtarias).toEqual([]);
-    expect(payload.faixasRenda).toEqual([]);
+    expect(payload.faixaEtaria).toEqual([]);
+    expect(payload.faixaRenda).toEqual([]);
     expect(payload.perfisPsicograficos).toEqual([]);
     expect(payload.segmentos).toEqual([]);
     expect(payload.poiCategorias).toEqual([]);

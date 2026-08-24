@@ -13,6 +13,12 @@ import { PecaPayload } from '../models/peca.model';
  * o que impede mover uma peça para o local de outro tenant a partir do
  * formulário (ver PecaService.updatePeca).
  *
+ * Os campos de Via, Formato e Especificação de Produção são estruturados
+ * (não texto livre) porque o Core monta Value Objects próprios a partir
+ * deles, cada um com sua validação (ex.: Via.Faixas entre 2 e 9,
+ * Via.Velocidade entre 11 e 119) — um campo de texto solto não tem como
+ * satisfazer isso no BFF sem inventar dados.
+ *
  * Upload de foto permanece fora de escopo (T6): enquanto o endpoint do
  * BFF responder 501, o CTA fica desabilitado e nunca simula sucesso.
  */
@@ -40,15 +46,30 @@ export class PecaFormComponent implements OnInit {
     codigoInterno: this.fb.control<string | null>(null),
     periodicidadePadrao: this.fb.control<number | null>(null, Validators.required),
     valorPadrao: this.fb.control<number | null>(null, Validators.required),
+
     idFormato: this.fb.control<number | null>(null, Validators.required),
-    especificacaoProducao: this.fb.control<string | null>(null),
-    substratos: this.fb.control<string | null>(null),
+    formatoLargura: this.fb.control<number | null>(null, Validators.required),
+    formatoAltura: this.fb.control<number | null>(null, Validators.required),
+    formatoJuncao: this.fb.control<number>(0),
+
+    especificacaoLargura: this.fb.control<number | null>(null),
+    especificacaoAltura: this.fb.control<number | null>(null),
+    especificacaoMaterial: this.fb.control<number | null>(null),
+    especificacaoTexto: this.fb.control<string | null>(null),
+
+    idsSubstratoTipo: this.fb.control<number[]>([]),
+
     iluminacao: this.fb.control<boolean>(false),
     semaforo: this.fb.control<boolean>(false),
-    anguloDeVisao: this.fb.control<string | null>(null),
-    via: this.fb.control<string | null>(null),
-    roteiroComercial: this.fb.control<string | null>(null),
-    alvara: this.fb.control<string | null>(null),
+    anguloDeVisao: this.fb.control<number | null>(null, Validators.required),
+
+    viaTipo: this.fb.control<number>(0),
+    viaFaixas: this.fb.control<number | null>(null, [Validators.required, Validators.min(2), Validators.max(9)]),
+    viaVelocidade: this.fb.control<number | null>(null, [Validators.required, Validators.min(11), Validators.max(119)]),
+    viaPedestre: this.fb.control<number>(0),
+
+    roteiroComercial: this.fb.control<boolean>(false),
+    alvara: this.fb.control<boolean>(false),
     streetView: this.fb.control<string | null>(null),
     descricao: this.fb.control<string | null>(null),
     restricao: this.fb.control<string | null>(null),
