@@ -8,11 +8,36 @@ import { LocalService } from '../services/local.service';
 import { LocalPublicoService } from '../services/local-publico.service';
 import { StatusExibicao } from '../models/status-exibicao.enum';
 import { emptyLocalPublicoPayload } from '../models/local-publico.model';
+import { LocalDetalhe } from '../models/local.model';
 
 describe('LocalWizardComponent', () => {
   let fixture: ComponentFixture<LocalWizardComponent>;
   let localServiceSpy: jasmine.SpyObj<LocalService>;
   let publicoServiceSpy: jasmine.SpyObj<LocalPublicoService>;
+
+  const localCarregado: LocalDetalhe = {
+    id: 7,
+    codigo: 'LOC-7',
+    statusExibicao: StatusExibicao.Ativo,
+    idCidade: 2,
+    cidade: 'Santos',
+    uf: 'SP',
+    codigoInterno: 'INT-7',
+    descricao: null,
+    palavrasChave: null,
+    endereco: {
+      logradouro: 'Av. B',
+      numero: null,
+      bairro: null,
+      complemento: null,
+      referencia: null,
+      cep: { numero: null },
+    },
+    geolocalizacao: { latitude: -23, longitude: -46 },
+    fonteOrigem: 1,
+    fonteUsuarioId: null,
+    fonteTimestamp: null,
+  };
 
   async function setup(params: Record<string, string>): Promise<void> {
     localServiceSpy = jasmine.createSpyObj('LocalService', ['getLocal', 'createLocal', 'updateLocal']);
@@ -43,20 +68,15 @@ describe('LocalWizardComponent', () => {
       of({
         id: 10,
         codigo: 'LOC-10',
-        statusExibicao: StatusExibicao.AprovacaoPendente,
-        cidade: 'São Paulo',
-        idCidade: 1,
         codigoInterno: null,
+        idAfiliada: 1,
+        idCidade: 1,
+        cidade: 'São Paulo',
         descricao: null,
-        cep: null,
-        logradouro: 'Rua A',
-        numero: null,
-        bairro: null,
-        complemento: null,
-        referencia: null,
-        latitude: -23.5,
-        longitude: -46.6,
         palavrasChave: null,
+        statusExibicao: StatusExibicao.AprovacaoPendente,
+        dataCadastro: '2026-08-01T00:00:00Z',
+        dataAtualizacao: '2026-08-01T00:00:00Z',
       })
     );
     fixture.detectChanges();
@@ -82,35 +102,18 @@ describe('LocalWizardComponent', () => {
     expect(fixture.componentInstance.idLocal()).toBe(10);
   });
 
-  it('em modo edição, carrega Local e Demografia via getLocal/getPublico e chama updateLocal ao salvar a etapa 1', async () => {
+  it('em modo edição, carrega Local (endereço/geolocalização aninhados → form flat) e Demografia, chamando updateLocal ao salvar a etapa 1', async () => {
     await setup({ id: '7' });
-    localServiceSpy.getLocal.and.returnValue(
-      of({
-        id: 7,
-        codigo: 'LOC-7',
-        statusExibicao: StatusExibicao.Ativo,
-        cidade: 'Santos',
-        idCidade: 2,
-        codigoInterno: 'INT-7',
-        descricao: null,
-        cep: null,
-        logradouro: 'Av. B',
-        numero: null,
-        bairro: null,
-        complemento: null,
-        referencia: null,
-        latitude: -23,
-        longitude: -46,
-        palavrasChave: null,
-      })
-    );
+    localServiceSpy.getLocal.and.returnValue(of(localCarregado));
     publicoServiceSpy.getPublico.and.returnValue(of(emptyLocalPublicoPayload()));
-    localServiceSpy.updateLocal.and.returnValue(of({} as any));
+    localServiceSpy.updateLocal.and.returnValue(of(null));
 
     fixture.detectChanges();
 
     expect(localServiceSpy.getLocal).toHaveBeenCalledWith(7);
     expect(fixture.componentInstance.etapasHabilitadas()).toEqual([true, true, true]);
+    expect(fixture.componentInstance.dadosIniciais?.logradouro).toBe('Av. B');
+    expect(fixture.componentInstance.dadosIniciais?.latitude).toBe(-23);
 
     fixture.componentInstance.onSalvarDados({
       idCidade: 2,
@@ -132,28 +135,9 @@ describe('LocalWizardComponent', () => {
 
   it('ao salvar a etapa de Demografia, chama LocalPublicoService.savePublico — nunca LocalService', async () => {
     await setup({ id: '7' });
-    localServiceSpy.getLocal.and.returnValue(
-      of({
-        id: 7,
-        codigo: 'LOC-7',
-        statusExibicao: StatusExibicao.Ativo,
-        cidade: 'Santos',
-        idCidade: 2,
-        codigoInterno: 'INT-7',
-        descricao: null,
-        cep: null,
-        logradouro: 'Av. B',
-        numero: null,
-        bairro: null,
-        complemento: null,
-        referencia: null,
-        latitude: -23,
-        longitude: -46,
-        palavrasChave: null,
-      })
-    );
+    localServiceSpy.getLocal.and.returnValue(of(localCarregado));
     publicoServiceSpy.getPublico.and.returnValue(of(emptyLocalPublicoPayload()));
-    publicoServiceSpy.savePublico.and.returnValue(of(emptyLocalPublicoPayload()));
+    publicoServiceSpy.savePublico.and.returnValue(of(undefined));
 
     fixture.detectChanges();
     fixture.componentInstance.onSalvarDemografia(emptyLocalPublicoPayload());

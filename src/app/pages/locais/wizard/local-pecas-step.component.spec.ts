@@ -3,7 +3,6 @@ import { of } from 'rxjs';
 import { provideRouter } from '@angular/router';
 import { LocalPecasStepComponent } from './local-pecas-step.component';
 import { PecaService } from '../services/peca.service';
-import { StatusExibicao } from '../models/status-exibicao.enum';
 
 describe('LocalPecasStepComponent', () => {
   let fixture: ComponentFixture<LocalPecasStepComponent>;
@@ -24,13 +23,11 @@ describe('LocalPecasStepComponent', () => {
         {
           id: 1,
           codigo: 'PC-1',
-          codigoInterno: null,
-          fotoUrl: null,
-          tipoSuporte: 'Outdoor',
-          formato: '9x3',
+          idLocal: 9,
+          localCodigo: 'LOC-9',
+          formatoDimensao: '9x3',
           valorPadrao: 500,
-          periodicidadePadrao: 'Bissemanal',
-          statusExibicao: StatusExibicao.AprovacaoPendente,
+          fonteOrigem: 1,
         },
       ])
     );
@@ -41,7 +38,7 @@ describe('LocalPecasStepComponent', () => {
     expect(pecaServiceSpy.listPecasByLocal).toHaveBeenCalledWith(9);
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
     expect(text).toContain('PC-1');
-    expect(text).toContain('Aguardando aprovação');
+    expect(text).toContain('9x3');
   });
 
   it('exibe estado vazio quando o local ainda não tem peças', () => {

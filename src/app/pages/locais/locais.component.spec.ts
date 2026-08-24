@@ -5,42 +5,34 @@ import { provideRouter } from '@angular/router';
 import { LocaisComponent } from './locais.component';
 import { LocalService } from './services/local.service';
 import { StatusExibicao } from './models/status-exibicao.enum';
-import { LocalListResponse } from './models/local.model';
+import { LocalListItem } from './models/local.model';
 
 describe('LocaisComponent', () => {
   let fixture: ComponentFixture<LocaisComponent>;
   let localServiceSpy: jasmine.SpyObj<LocalService>;
 
-  const response: LocalListResponse = {
-    items: [
-      {
-        id: 1,
-        codigo: 'LOC-1',
-        codigoInterno: 'INT-1',
-        cidade: 'São Paulo',
-        endereco: 'Av. Paulista, 1000',
-        numeroPecas: 2,
-        statusExibicao: StatusExibicao.AprovacaoPendente,
-        dataCadastro: '2026-08-01T00:00:00Z',
-        dataAtualizacao: '2026-08-01T00:00:00Z',
-      },
-      {
-        id: 2,
-        codigo: 'LOC-2',
-        codigoInterno: null,
-        cidade: 'Santos',
-        endereco: 'Av. Ana Costa, 200',
-        numeroPecas: 0,
-        statusExibicao: StatusExibicao.Ativo,
-        dataCadastro: '2026-08-01T00:00:00Z',
-        dataAtualizacao: '2026-08-01T00:00:00Z',
-      },
-    ],
-    page: 1,
-    pageSize: 20,
-    totalItems: 2,
-    totalPages: 1,
-  };
+  const itens: LocalListItem[] = [
+    {
+      id: 1,
+      codigo: 'LOC-1',
+      descricao: 'Praça Central',
+      cidade: 'São Paulo',
+      uf: 'SP',
+      fonteOrigem: 1,
+      fonteTimestamp: '2026-08-01T00:00:00Z',
+      statusExibicao: StatusExibicao.AprovacaoPendente,
+    },
+    {
+      id: 2,
+      codigo: 'LOC-2',
+      descricao: 'Terminal Rodoviário',
+      cidade: 'Santos',
+      uf: 'SP',
+      fonteOrigem: 1,
+      fonteTimestamp: '2026-08-01T00:00:00Z',
+      statusExibicao: StatusExibicao.Ativo,
+    },
+  ];
 
   async function setup(): Promise<void> {
     localServiceSpy = jasmine.createSpyObj('LocalService', ['listLocais']);
@@ -53,7 +45,7 @@ describe('LocaisComponent', () => {
 
   it('exibe "Aguardando aprovação" para local com StatusExibicao.AprovacaoPendente', async () => {
     await setup();
-    localServiceSpy.listLocais.and.returnValue(of(response));
+    localServiceSpy.listLocais.and.returnValue(of(itens));
 
     fixture.detectChanges();
 
@@ -62,16 +54,17 @@ describe('LocaisComponent', () => {
     expect(text).toContain('Ativo');
   });
 
-  it('busca aplica o termo digitado ao chamar listLocais (isolamento fica a cargo do BFF/Host)', async () => {
+  it('busca filtra em memória por código/descrição/cidade (GET real não pagina nem filtra por querystring)', async () => {
     await setup();
-    localServiceSpy.listLocais.and.returnValue(of(response));
+    localServiceSpy.listLocais.and.returnValue(of(itens));
     fixture.detectChanges();
 
-    fixture.componentInstance.buscar('paulista');
+    fixture.componentInstance.buscar('Praça');
 
-    expect(localServiceSpy.listLocais).toHaveBeenCalledWith(
-      jasmine.objectContaining({ busca: 'paulista' })
-    );
+    expect(fixture.componentInstance.locais().length).toBe(1);
+    expect(fixture.componentInstance.locais()[0].codigo).toBe('LOC-1');
+    // Só uma chamada — a busca não refaz o GET, filtra o que já veio.
+    expect(localServiceSpy.listLocais).toHaveBeenCalledTimes(1);
   });
 
   it('em erro de carga, exibe estado de erro genérico sem expor dados parciais', async () => {

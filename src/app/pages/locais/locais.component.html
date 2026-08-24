@@ -7,9 +7,9 @@
   <div class="locais__filtros">
     <input
       type="search"
-      placeholder="Buscar por código, cidade ou endereço"
+      placeholder="Buscar por código, descrição ou cidade"
       #buscaInput
-      (change)="buscar(buscaInput.value)"
+      (input)="buscar(buscaInput.value)"
     />
   </div>
 
@@ -26,12 +26,10 @@
       <thead>
         <tr>
           <th>Código</th>
-          <th>Código Interno</th>
+          <th>Descrição</th>
           <th>Cidade</th>
-          <th>Endereço</th>
-          <th>Nº de Peças</th>
+          <th>UF</th>
           <th>Status</th>
-          <th>Atualização</th>
           <th>Ações</th>
         </tr>
       </thead>
@@ -39,10 +37,9 @@
         @for (local of locais(); track local.id) {
           <tr>
             <td>{{ local.codigo }}</td>
-            <td>{{ local.codigoInterno || '—' }}</td>
+            <td>{{ local.descricao || '—' }}</td>
             <td>{{ local.cidade }}</td>
-            <td>{{ local.endereco }}</td>
-            <td>{{ local.numeroPecas }}</td>
+            <td>{{ local.uf }}</td>
             <td>
               <span
                 class="badge"
@@ -53,7 +50,6 @@
                 {{ statusLabel[local.statusExibicao] }}
               </span>
             </td>
-            <td>{{ local.dataAtualizacao | date: 'dd/MM/yyyy' }}</td>
             <td>
               <a [routerLink]="['/locais', local.id]">Editar</a>
               <a [routerLink]="['/locais', local.id, 'pecas', 'nova']">+ Peça</a>

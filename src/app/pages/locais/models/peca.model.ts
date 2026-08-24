@@ -1,29 +1,30 @@
 import { StatusExibicao } from './status-exibicao.enum';
 
-/** Item da aba "Peças" do local (etapa 3 do wizard) e da listagem GET .../pecas. */
+/**
+ * Item de GET /api/wl/pecas — o backend real não tem rota escopada por
+ * local (nem pagina): devolve TODAS as peças da afiliada. A aba "Peças"
+ * do wizard de Local filtra por `idLocal` em memória (ver PecaService).
+ */
 export interface PecaListItem {
   id: number;
   codigo: string;
-  codigoInterno: string | null;
-  fotoUrl: string | null;
-  tipoSuporte: string;
-  formato: string;
+  idLocal: number;
+  localCodigo: string | null;
+  formatoDimensao: string | null;
   valorPadrao: number;
-  periodicidadePadrao: string;
-  statusExibicao: StatusExibicao;
+  fonteOrigem: number | null;
 }
 
 /**
- * Payload de PecaCadastroCommand.
+ * Payload de PecaCadastroCommand — shape FLAT usado pelo formulário.
  * `idLocal` vem sempre da rota (nunca de um campo editável do formulário) —
  * ver T1 do plano tático.
  *
  * O shape espelha PecaCadastroCommand do Core campo a campo — inclusive
  * onde o Core exige um objeto estruturado (Via, FormatoPeca,
  * EspecificacaoProducao) em vez do texto livre que uma primeira versão
- * deste formulário assumia. Sem isso o BFF não tem como montar os Value
- * Objects que Via/FormatoPeca exigem (com suas próprias validações:
- * Faixas 2–9, Velocidade 11–119 etc.).
+ * deste formulário assumia. `PecaService` traduz isso para o corpo
+ * aninhado que o comando realmente espera.
  */
 export interface PecaPayload {
   idLocal: number;
@@ -69,4 +70,64 @@ export interface PecaDetalhe extends PecaPayload {
   codigo: string;
   statusExibicao: StatusExibicao;
   fotoUrl: string | null;
+}
+
+/** Corpo aninhado que POST/PUT /api/wl/pecas realmente esperam — espelha PecaCadastroCommand. */
+export interface PecaCadastroComando {
+  idLocal: number;
+  idTipoSuporte: number;
+  codigoInterno: string | null;
+  periodicidadePadrao: number;
+  valorPadrao: number;
+  idFormato: number;
+  formato: { largura: number; altura: number; juncao: number };
+  especificacaoProducao: {
+    largura: number | null;
+    altura: number | null;
+    material: number | null;
+    especificacao: string | null;
+  };
+  idsSubstratoTipo: number[];
+  iluminacao: boolean;
+  semaforo: boolean;
+  anguloDeVisao: number;
+  via: { viaTipo: number; faixas: number; velociade: number; pedestre: number };
+  roteiroComercial: boolean;
+  alvara: boolean;
+  streetView: { url: string };
+  descricao: string | null;
+  restricao: string | null;
+}
+
+/** GET /api/wl/pecas/{id} — shape real (aninhado), enriquecido para alimentar o form de edição. */
+export interface PecaApiDetalhe {
+  id: number;
+  codigo: string;
+  codigoInterno: string | null;
+  idLocal: number;
+  localCodigo: string | null;
+  idTipoSuporte: number;
+  tipoSuporte: string | null;
+  idFormato: number | null;
+  formatoDimensao: string | null;
+  formato: { largura: number; altura: number; juncao: number } | null;
+  especificacaoProducao: {
+    largura: number | null;
+    altura: number | null;
+    material: number | null;
+    especificacao: string | null;
+  } | null;
+  periodicidadePadrao: number;
+  valorPadrao: number;
+  iluminacao: boolean;
+  semaforo: boolean;
+  anguloDeVisao: number;
+  via: { viaTipo: number; faixas: number; velociade: number; pedestre: number } | null;
+  roteiroComercial: boolean;
+  alvara: boolean;
+  streetView: string | null;
+  descricao: string | null;
+  restricao: string | null;
+  statusExibicao: StatusExibicao;
+  fonteOrigem: number | null;
 }

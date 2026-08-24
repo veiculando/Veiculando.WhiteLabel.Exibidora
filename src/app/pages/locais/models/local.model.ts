@@ -2,25 +2,26 @@ import { StatusExibicao } from './status-exibicao.enum';
 
 /**
  * Item da listagem GET /api/wl/locais.
- * Reflete apenas o que o BFF WhiteLabel projeta — nunca AfiliadaId
- * (o tenant é resolvido pelo Host, o cliente não o vê nem o envia).
+ * O backend real (sprint-9.0) não pagina nem filtra por querystring —
+ * devolve um array cru dos locais da afiliada. Busca/filtro, quando
+ * existirem na tela, são aplicados em memória (ver LocaisComponent).
  */
 export interface LocalListItem {
   id: number;
   codigo: string;
-  codigoInterno: string | null;
-  cidade: string;
-  endereco: string;
-  numeroPecas: number;
+  descricao: string | null;
+  cidade: string | null;
+  uf: string | null;
+  fonteOrigem: number | null;
+  fonteTimestamp: string | null;
   statusExibicao: StatusExibicao;
-  dataCadastro: string;
-  dataAtualizacao: string;
 }
 
 /**
- * Payload de "Dados do Local" (etapa 1 do wizard).
- * Contém SOMENTE endereço/identificação — nunca campos de demografia
- * (BDD "Salvar local preserva demografia").
+ * Payload de "Dados do Local" (etapa 1 do wizard) — shape FLAT usado
+ * pelo formulário. `LocalService` traduz isso para o corpo aninhado que
+ * LocalCadastroCommand (Core) realmente espera (endereco/geolocalizacao
+ * como objetos próprios) — ver `LocalService.paraComando`.
  */
 export interface LocalDadosPayload {
   idCidade: number;
@@ -37,26 +38,71 @@ export interface LocalDadosPayload {
   palavrasChave: string | null;
 }
 
-/** Detalhe completo de um Local — usado para pré-carregar o wizard. */
-export interface LocalDetalhe extends LocalDadosPayload {
+/** Detalhe completo de um Local (GET /api/wl/locais/{id}) — usado para pré-carregar o wizard. */
+export interface LocalDetalhe {
   id: number;
   codigo: string;
+  descricao: string | null;
+  idCidade: number;
+  cidade: string | null;
+  uf: string | null;
+  codigoInterno: string | null;
+  palavrasChave: string | null;
   statusExibicao: StatusExibicao;
-  cidade: string;
+  endereco: {
+    logradouro: string | null;
+    numero: string | null;
+    bairro: string | null;
+    complemento: string | null;
+    referencia: string | null;
+    cep: { numero: string | null } | null;
+  } | null;
+  geolocalizacao: { latitude: number; longitude: number } | null;
+  fonteOrigem: number | null;
+  fonteUsuarioId: number | null;
+  fonteTimestamp: string | null;
 }
 
-export interface LocalListFiltro {
-  busca?: string;
-  status?: StatusExibicao;
-  cidadeId?: number;
-  page?: number;
-  pageSize?: number;
+/**
+ * Corpo aninhado que POST/PUT /api/wl/locais realmente esperam —
+ * espelha LocalCadastroCommand do Core.
+ */
+export interface LocalCadastroComando {
+  idCidade: number;
+  codigoInterno: string | null;
+  descricao: string | null;
+  palavrasChave: string | null;
+  endereco: {
+    bairro: string | null;
+    logradouro: string;
+    numero: string | null;
+    complemento: string | null;
+    referencia: string | null;
+    cep: { numero: string | null };
+  };
+  geolocalizacao: { latitude: number; longitude: number };
 }
 
-export interface LocalListResponse {
-  items: LocalListItem[];
-  page: number;
-  pageSize: number;
-  totalItems: number;
-  totalPages: number;
+/**
+ * Resumo devolvido por POST/PUT após salvar — projeção estável do Core
+ * (ver Veiculando#105), não o Local inteiro. Suficiente para navegar
+ * para a tela de edição e refletir o status pós-aprovação (ADR-WL-004).
+ */
+export interface LocalCadastroResumo {
+  id: number;
+  codigo: string;
+  codigoInterno: string | null;
+  idAfiliada: number;
+  idCidade: number;
+  cidade: string | null;
+  descricao: string | null;
+  palavrasChave: string | null;
+  statusExibicao: StatusExibicao;
+  dataCadastro: string;
+  dataAtualizacao: string;
+}
+
+export interface LocalCadastroResponse {
+  success: boolean;
+  data: { local: LocalCadastroResumo } | null;
 }

@@ -66,7 +66,7 @@ export class LocalWizardComponent implements OnInit {
   private aplicarLocalCarregado(id: number, local: LocalDetalhe): void {
     this.idLocal.set(id);
     this.statusExibicao.set(local.statusExibicao);
-    this.dadosIniciais = { ...local };
+    this.dadosIniciais = paraDadosPayload(local);
     this.etapasHabilitadas.set([true, true, true]);
     this.carregando.set(false);
 
@@ -86,9 +86,10 @@ export class LocalWizardComponent implements OnInit {
     const id = this.idLocal();
     const salvo$ = id ? this.localService.updateLocal(id, payload) : this.localService.createLocal(payload);
 
-    salvo$.subscribe((local) => {
-      this.idLocal.set(local.id);
-      this.statusExibicao.set(local.statusExibicao);
+    salvo$.subscribe((resumo) => {
+      if (!resumo) return;
+      this.idLocal.set(resumo.id);
+      this.statusExibicao.set(resumo.statusExibicao);
       this.etapasHabilitadas.set([true, true, true]);
     });
   }
@@ -98,4 +99,22 @@ export class LocalWizardComponent implements OnInit {
     if (!id) return;
     this.publicoService.savePublico(id, payload).subscribe();
   }
+}
+
+/** GET /api/wl/locais/{id} devolve endereço/geolocalização aninhados; o form usa shape flat. */
+function paraDadosPayload(local: LocalDetalhe): LocalDadosPayload {
+  return {
+    idCidade: local.idCidade,
+    codigoInterno: local.codigoInterno,
+    descricao: local.descricao,
+    cep: local.endereco?.cep?.numero ?? null,
+    logradouro: local.endereco?.logradouro ?? '',
+    numero: local.endereco?.numero ?? null,
+    bairro: local.endereco?.bairro ?? null,
+    complemento: local.endereco?.complemento ?? null,
+    referencia: local.endereco?.referencia ?? null,
+    latitude: local.geolocalizacao?.latitude ?? 0,
+    longitude: local.geolocalizacao?.longitude ?? 0,
+    palavrasChave: local.palavrasChave,
+  };
 }

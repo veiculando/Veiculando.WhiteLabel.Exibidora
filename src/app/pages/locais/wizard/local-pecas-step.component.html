@@ -13,13 +13,8 @@
       <thead>
         <tr>
           <th>Código</th>
-          <th>Código Interno</th>
-          <th>Foto</th>
-          <th>Tipo de Suporte</th>
           <th>Formato</th>
           <th>Valor Padrão</th>
-          <th>Periodicidade</th>
-          <th>Status</th>
           <th>Ações</th>
         </tr>
       </thead>
@@ -27,27 +22,8 @@
         @for (peca of pecas(); track peca.id) {
           <tr>
             <td>{{ peca.codigo }}</td>
-            <td>{{ peca.codigoInterno || '—' }}</td>
-            <td>
-              @if (peca.fotoUrl) {
-                <img [src]="peca.fotoUrl" [alt]="'Foto da peça ' + peca.codigo" width="48" />
-              } @else {
-                <span>—</span>
-              }
-            </td>
-            <td>{{ peca.tipoSuporte }}</td>
-            <td>{{ peca.formato }}</td>
+            <td>{{ peca.formatoDimensao || '—' }}</td>
             <td>{{ peca.valorPadrao | currency: 'BRL' }}</td>
-            <td>{{ peca.periodicidadePadrao }}</td>
-            <td>
-              <span
-                class="badge"
-                [class.badge--pendente]="peca.statusExibicao === StatusExibicao.AprovacaoPendente"
-                [class.badge--ativo]="peca.statusExibicao === StatusExibicao.Ativo"
-              >
-                {{ statusLabel[peca.statusExibicao] }}
-              </span>
-            </td>
             <td>
               <a [routerLink]="['/locais', idLocal, 'pecas', peca.id]">Editar</a>
             </td>

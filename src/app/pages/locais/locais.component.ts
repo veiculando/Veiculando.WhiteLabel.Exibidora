@@ -13,6 +13,10 @@ import { STATUS_EXIBICAO_LABEL, StatusExibicao } from './models/status-exibicao.
  * "Aguardando aprovação" reflete StatusExibicao.AprovacaoPendente,
  * único indicador de fila de aprovação disponível (ADR-WL-004: não há
  * tela de aprovação nem AprovacaoLog na Exibidora).
+ *
+ * GET /api/wl/locais não pagina nem filtra por querystring (o BFF real
+ * devolve um array cru) — a busca abaixo é aplicada em memória sobre o
+ * que já foi carregado.
  */
 @Component({
   selector: 'app-locais',
@@ -23,34 +27,46 @@ import { STATUS_EXIBICAO_LABEL, StatusExibicao } from './models/status-exibicao.
 export class LocaisComponent implements OnInit {
   private readonly localService = inject(LocalService);
 
+  private todosOsLocais: LocalListItem[] = [];
+
   readonly locais = signal<LocalListItem[]>([]);
   readonly carregando = signal(false);
   readonly erro = signal(false);
   readonly statusLabel = STATUS_EXIBICAO_LABEL;
   readonly StatusExibicao = StatusExibicao;
 
-  private buscaAtual = '';
-
   ngOnInit(): void {
     this.carregar();
   }
 
   buscar(termo: string): void {
-    this.buscaAtual = termo;
-    this.carregar();
+    const termoNormalizado = termo.trim().toLowerCase();
+    if (!termoNormalizado) {
+      this.locais.set(this.todosOsLocais);
+      return;
+    }
+    this.locais.set(
+      this.todosOsLocais.filter((local) =>
+        [local.codigo, local.descricao, local.cidade]
+          .filter((campo): campo is string => !!campo)
+          .some((campo) => campo.toLowerCase().includes(termoNormalizado))
+      )
+    );
   }
 
   private carregar(): void {
     this.carregando.set(true);
     this.erro.set(false);
 
-    this.localService.listLocais({ busca: this.buscaAtual || undefined }).subscribe({
-      next: (resposta) => {
-        this.locais.set(resposta.items);
+    this.localService.listLocais().subscribe({
+      next: (locais) => {
+        this.todosOsLocais = locais;
+        this.locais.set(locais);
         this.carregando.set(false);
       },
       error: () => {
         // Nunca exibe dados parciais/estado anterior em caso de falha.
+        this.todosOsLocais = [];
         this.locais.set([]);
         this.carregando.set(false);
         this.erro.set(true);

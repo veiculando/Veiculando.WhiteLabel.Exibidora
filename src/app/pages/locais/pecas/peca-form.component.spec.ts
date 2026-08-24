@@ -85,7 +85,7 @@ describe('PecaFormComponent', () => {
 
   it('ao submeter em modo criação, chama pecaService.createPeca com idLocal fixo da rota', async () => {
     await setup({ idLocal: '9' });
-    pecaServiceSpy.createPeca.and.returnValue(of(pecaBase));
+    pecaServiceSpy.createPeca.and.returnValue(of(undefined));
 
     fixture.componentInstance.form.patchValue({
       idTipoSuporte: 1,
@@ -105,7 +105,7 @@ describe('PecaFormComponent', () => {
 
   it('não submete (nem chama o serviço) enquanto campos estruturados obrigatórios (Via, Formato) faltarem', async () => {
     await setup({ idLocal: '9' });
-    pecaServiceSpy.createPeca.and.returnValue(of(pecaBase));
+    pecaServiceSpy.createPeca.and.returnValue(of(undefined));
 
     fixture.componentInstance.form.patchValue({ idTipoSuporte: 1 });
     fixture.componentInstance.onSubmit();
@@ -117,7 +117,7 @@ describe('PecaFormComponent', () => {
     pecaServiceSpy = jasmine.createSpyObj('PecaService', ['getPeca', 'createPeca', 'updatePeca']);
     routerSpy = jasmine.createSpyObj('Router', ['navigate']);
     pecaServiceSpy.getPeca.and.returnValue(of({ ...pecaBase, id: 3, codigoInterno: 'PC-INT', valorPadrao: 200 }));
-    pecaServiceSpy.updatePeca.and.returnValue(of({} as any));
+    pecaServiceSpy.updatePeca.and.returnValue(of(undefined));
 
     await TestBed.configureTestingModule({
       imports: [PecaFormComponent],

@@ -25,7 +25,13 @@ export class LocalPublicoService {
     return this.http.get<LocalPublicoPayload>(this.urlFor(idLocal));
   }
 
-  savePublico(idLocal: number, payload: LocalPublicoPayload): Observable<LocalPublicoPayload> {
-    return this.http.put<LocalPublicoPayload>(this.urlFor(idLocal), payload);
+  /**
+   * PUT devolve `{success, data:{local:{...}}}` — a mesma projeção de
+   * Local usada por LocalService, não um LocalPublicoPayload (ver
+   * LocaisController.PutPublico no BFF). Nada aqui usa o corpo da
+   * resposta hoje, então o tipo fica deliberadamente `unknown`.
+   */
+  savePublico(idLocal: number, payload: LocalPublicoPayload): Observable<unknown> {
+    return this.http.put<unknown>(this.urlFor(idLocal), payload);
   }
 }

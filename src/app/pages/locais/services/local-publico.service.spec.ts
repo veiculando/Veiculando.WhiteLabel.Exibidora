@@ -39,7 +39,7 @@ describe('LocalPublicoService', () => {
     expect(req.request.body.logradouro).toBeUndefined();
     expect(req.request.body.latitude).toBeUndefined();
     expect(req.request.body.codigoInterno).toBeUndefined();
-    req.flush(payload);
+    req.flush({ success: true, data: { local: { id: 5 } } });
   });
 
   it('nunca envia arrays nulos — payload vazio tem todos os arrays como []', () => {

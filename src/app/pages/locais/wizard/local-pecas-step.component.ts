@@ -3,12 +3,17 @@ import { Component, Input, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { PecaService } from '../services/peca.service';
 import { PecaListItem } from '../models/peca.model';
-import { STATUS_EXIBICAO_LABEL, StatusExibicao } from '../models/status-exibicao.enum';
 
 /**
  * Etapa 3 do wizard — "Peças". Lista as peças do local e encaminha o
  * cadastro/edição para as rotas dedicadas de peça (T1/T2 do plano
  * tático), que já existem independentemente do wizard.
+ *
+ * GET /api/wl/pecas real não tem rota escopada por local — a listagem
+ * inteira da afiliada é filtrada em memória por idLocal em
+ * PecaService.listPecasByLocal — nem status/tipoSuporte/foto (a
+ * listagem real é enxuta; só o detalhe de uma peça específica traz
+ * esses campos).
  */
 @Component({
   selector: 'app-local-pecas-step',
@@ -23,8 +28,6 @@ export class LocalPecasStepComponent implements OnInit {
 
   readonly pecas = signal<PecaListItem[]>([]);
   readonly carregando = signal(false);
-  readonly statusLabel = STATUS_EXIBICAO_LABEL;
-  readonly StatusExibicao = StatusExibicao;
 
   ngOnInit(): void {
     if (!this.idLocal) return;
