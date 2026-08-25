@@ -142,10 +142,10 @@ import { PedidosReservaService } from '../../core/services/pedidos.service';
         white-space: nowrap;
       }
       .rejeitar {
-        color: #b3261e;
+        color: var(--danger);
       }
       .detalhe {
-        background: #faf9f6;
+        background: var(--surface-muted);
       }
       .detalhe__valor {
         margin: 0 0 12px;

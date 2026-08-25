@@ -76,7 +76,7 @@ import { DashboardService } from '../../core/services/dashboard.service';
         gap: 6px;
         padding: 18px;
         background: var(--white);
-        border: 1px solid #e1e3ea;
+        border: 1px solid var(--border);
         border-radius: var(--radius-sm);
       }
       .kpi__rotulo {
@@ -94,11 +94,11 @@ import { DashboardService } from '../../core/services/dashboard.service';
       .alerta {
         padding: 12px 16px;
         margin-bottom: 16px;
-        background: #fff4d6;
-        border: 1px solid #f0d79a;
+        background: var(--warning-bg);
+        border: 1px solid var(--warning-border);
         border-radius: var(--radius-sm);
         font-size: 0.875rem;
-        color: #6b4b00;
+        color: var(--warning);
       }
       .alerta a {
         color: var(--primary-color);

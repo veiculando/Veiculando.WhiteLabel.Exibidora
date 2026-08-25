@@ -48,7 +48,7 @@ import { AuthService } from '../../core/services/auth.service';
         padding: 28px;
         text-align: center;
         background: var(--white);
-        border: 1px solid #e1e3ea;
+        border: 1px solid var(--border);
         border-radius: var(--radius-md);
       }
       .negado__titulo {

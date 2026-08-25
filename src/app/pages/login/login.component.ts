@@ -23,36 +23,53 @@ import { AuthService } from '../../core/services/auth.service';
     imports: [ReactiveFormsModule, RouterLink],
     template: `
     <div class="login">
-      <form class="login__caixa" [formGroup]="form" (ngSubmit)="entrar()">
-        <h1 class="login__titulo">Painel Exibidora</h1>
-        <p class="login__subtitulo">Acesso do operador</p>
-    
-        <div class="wl-campo login__campo">
-          <label for="email">E-mail</label>
-          <input id="email" type="email" formControlName="email" autocomplete="username" />
-          @if (mostrarErro('email')) {
-            <span class="wl-campo__erro">Informe um e-mail válido.</span>
+      <div class="login__moldura">
+        <section class="login__marca" aria-label="Identidade da exibidora">
+          @if (brand()?.logoUrl && !logoComErro) {
+            <img
+              class="login__logo"
+              [src]="brand()?.logoUrl"
+              [alt]="'Logo ' + (brand()?.nomeExibicao ?? '')"
+              (error)="logoComErro = true"
+            />
           }
-        </div>
-    
-        <div class="wl-campo login__campo">
-          <label for="senha">Senha</label>
-          <input id="senha" type="password" formControlName="senha" autocomplete="current-password" />
-          @if (mostrarErro('senha')) {
-            <span class="wl-campo__erro">Informe a senha.</span>
+          <span class="login__eyebrow">Operação WhiteLabel</span>
+          <h1>{{ brand()?.nomeExibicao || 'Painel Exibidora' }}</h1>
+          <p>Inventário, programação e pedidos reunidos em uma única operação.</p>
+        </section>
+
+        <form class="login__caixa" [formGroup]="form" (ngSubmit)="entrar()">
+          <span class="login__detalhe" aria-hidden="true"></span>
+          <h2 class="login__titulo">Acesse o painel</h2>
+          <p class="login__subtitulo">Entre com as credenciais do seu operador.</p>
+
+          <div class="wl-campo login__campo">
+            <label for="email">E-mail</label>
+            <input id="email" type="email" formControlName="email" autocomplete="username" />
+            @if (mostrarErro('email')) {
+              <span class="wl-campo__erro">Informe um e-mail válido.</span>
+            }
+          </div>
+
+          <div class="wl-campo login__campo">
+            <label for="senha">Senha</label>
+            <input id="senha" type="password" formControlName="senha" autocomplete="current-password" />
+            @if (mostrarErro('senha')) {
+              <span class="wl-campo__erro">Informe a senha.</span>
+            }
+          </div>
+
+          @if (erro) {
+            <div class="wl-estado wl-estado--erro login__erro">{{ erro }}</div>
           }
-        </div>
-    
-        @if (erro) {
-          <div class="wl-estado wl-estado--erro login__erro">{{ erro }}</div>
-        }
 
-        <button class="wl-btn login__botao" type="submit" [disabled]="enviando">
-          {{ enviando ? 'Entrando…' : 'Entrar' }}
-        </button>
+          <button class="wl-btn login__botao" type="submit" [disabled]="enviando">
+            {{ enviando ? 'Entrando…' : 'Entrar' }}
+          </button>
 
-        <a class="wl-btn--link login__esqueci" routerLink="/login/esqueci-senha">Esqueci minha senha</a>
-      </form>
+          <a class="wl-btn--link login__esqueci" routerLink="/login/esqueci-senha">Esqueci minha senha</a>
+        </form>
+      </div>
 
       <p class="login__rodape">{{ brand()?.footerText || brand()?.nomeExibicao }}</p>
     </div>
@@ -66,25 +83,80 @@ import { AuthService } from '../../core/services/auth.service';
         align-items: center;
         justify-content: center;
         min-height: 100vh;
-        padding: 24px;
-        background: var(--paper-bg);
+        padding: 32px;
+        background:
+          linear-gradient(120deg, color-mix(in srgb, var(--primary-color) 7%, transparent), transparent 48%),
+          var(--paper-bg);
       }
-      .login__caixa {
-        width: 100%;
-        max-width: 380px;
-        padding: 28px;
+      .login__moldura {
+        display: grid;
+        grid-template-columns: minmax(0, 1.05fr) minmax(340px, 0.95fr);
+        width: min(920px, 100%);
+        overflow: hidden;
         background: var(--white);
-        border: 1px solid #e1e3ea;
+        border: 1px solid var(--border);
         border-radius: var(--radius-md);
         box-shadow: var(--shadow-base);
       }
+      .login__marca {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        min-height: 520px;
+        padding: 54px;
+        color: var(--white);
+        background: var(--header-footer-bg);
+      }
+      .login__logo {
+        width: auto;
+        max-width: 220px;
+        height: 72px;
+        margin-bottom: auto;
+        object-fit: contain;
+        object-position: left center;
+      }
+      .login__eyebrow {
+        margin-bottom: 14px;
+        color: var(--secondary-color);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+      .login__marca h1 {
+        margin: 0;
+        color: var(--white);
+        font-size: clamp(2.4rem, 5vw, 4rem);
+        font-weight: 600;
+        line-height: 0.98;
+      }
+      .login__marca p {
+        max-width: 390px;
+        margin: 20px 0 0;
+        color: color-mix(in srgb, var(--white) 76%, transparent);
+        font-size: 0.95rem;
+      }
+      .login__caixa {
+        position: relative;
+        align-self: center;
+        padding: 54px;
+        background: var(--white);
+      }
+      .login__detalhe {
+        display: block;
+        width: 52px;
+        height: 3px;
+        margin-bottom: 28px;
+        background: var(--secondary-color);
+      }
       .login__titulo {
         margin: 0;
-        font-size: 1.4rem;
+        font-size: 2rem;
+        font-weight: 600;
       }
       .login__subtitulo {
-        margin: 4px 0 20px;
-        font-size: 0.85rem;
+        margin: 6px 0 28px;
+        font-size: 0.9rem;
         color: var(--on-surface);
       }
       .login__campo {
@@ -96,7 +168,7 @@ import { AuthService } from '../../core/services/auth.service';
       }
       .login__botao {
         width: 100%;
-        padding: 10px;
+        padding: 11px;
       }
       .login__rodape {
         margin-top: 20px;
@@ -108,6 +180,25 @@ import { AuthService } from '../../core/services/auth.service';
         margin-top: 14px;
         text-align: center;
         font-size: 0.85rem;
+      }
+      @media (max-width: 760px) {
+        .login {
+          padding: 16px;
+        }
+        .login__moldura {
+          grid-template-columns: 1fr;
+        }
+        .login__marca {
+          min-height: 280px;
+          padding: 32px;
+        }
+        .login__logo {
+          height: 56px;
+          margin-bottom: 44px;
+        }
+        .login__caixa {
+          padding: 36px 32px;
+        }
       }
     `,
     ]
@@ -126,6 +217,7 @@ export class LoginComponent {
 
   enviando = false;
   erro: string | null = null;
+  logoComErro = false;
 
   mostrarErro(campo: 'email' | 'senha'): boolean {
     const controle = this.form.controls[campo];

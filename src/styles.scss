@@ -2,17 +2,43 @@
 @import 'ag-grid-community/styles/ag-grid.css';
 @import 'ag-grid-community/styles/ag-theme-quartz.css';
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--paper-bg);
+}
+
 body {
   margin: 0;
   padding: 0;
   background-color: var(--paper-bg);
   color: var(--charcoal);
   font-family: var(--font-ui);
+  line-height: 1.5;
+  text-rendering: optimizeLegibility;
 }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
   color: var(--primary-dark);
+  font-optical-sizing: auto;
+  letter-spacing: -0.02em;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--secondary-color) 70%, #ffffff);
+  outline-offset: 2px;
 }
 
 .btn-pill {
@@ -63,7 +89,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .wl-card {
   background: var(--white);
-  border: 1px solid #e1e3ea;
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 16px;
   margin-bottom: 16px;
@@ -96,7 +122,7 @@ h1, h2, h3, h4, h5, h6 {
 .wl-campo select,
 .wl-campo textarea {
   padding: 8px 10px;
-  border: 1px solid #d0d2dc;
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   font-family: var(--font-ui);
   font-size: 0.9rem;
@@ -121,6 +147,16 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.wl-btn:not(:disabled):hover {
+  background: var(--primary-dark);
+  border-color: var(--primary-dark);
+}
+
+.wl-btn:not(:disabled):active {
+  transform: translateY(1px);
 }
 
 .wl-btn:disabled {
@@ -133,10 +169,15 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--primary-color);
 }
 
+.wl-btn--secundario:not(:disabled):hover {
+  background: color-mix(in srgb, var(--primary-color) 7%, transparent);
+  color: var(--primary-dark);
+}
+
 .wl-btn--perigo {
   background: transparent;
-  border-color: #b3261e;
-  color: #b3261e;
+  border-color: var(--danger);
+  color: var(--danger);
 }
 
 .wl-btn--link {
@@ -160,7 +201,7 @@ h1, h2, h3, h4, h5, h6 {
 .wl-tabela td {
   padding: 10px 12px;
   text-align: left;
-  border-bottom: 1px solid #e1e3ea;
+  border-bottom: 1px solid var(--divider);
 }
 
 .wl-tabela th {
@@ -168,7 +209,7 @@ h1, h2, h3, h4, h5, h6 {
   text-transform: uppercase;
   letter-spacing: 0.4px;
   color: var(--on-surface);
-  background: #f4f2ee;
+  background: var(--surface-muted);
 }
 
 .wl-tabela--rolavel {
@@ -183,24 +224,24 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .wl-estado--carregando {
-  background: #f4f2ee;
+  background: var(--surface-muted);
   color: var(--on-surface);
 }
 
 .wl-estado--erro {
-  background: #fdecea;
-  border: 1px solid #f5c2bd;
-  color: #7a1710;
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-border);
+  color: var(--danger);
 }
 
 .wl-estado--sucesso {
-  background: #e8f5e9;
-  border: 1px solid #b7dfb9;
-  color: #1b5e20;
+  background: var(--success-bg);
+  border: 1px solid var(--success-border);
+  color: var(--success);
 }
 
 .wl-estado--vazio {
-  background: #f4f2ee;
+  background: var(--surface-muted);
   color: var(--on-surface);
   font-style: italic;
 }
@@ -211,16 +252,16 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: var(--radius-pill);
   font-size: 0.72rem;
   font-weight: 600;
-  background: #eceef3;
+  background: var(--surface-muted);
   color: var(--on-surface);
 }
 
 .wl-etiqueta--pendente {
-  background: #fff4d6;
-  color: #7a5600;
+  background: var(--warning-bg);
+  color: var(--warning);
 }
 
 .wl-etiqueta--ativo {
-  background: #e8f5e9;
-  color: #1b5e20;
+  background: var(--success-bg);
+  color: var(--success);
 }

@@ -25,13 +25,17 @@ import { PermissionService } from '../core/auth/permission.service';
     `,
     changeDetection: ChangeDetectionStrategy.Eager,
     styles: [`
-    .header-container { display: flex; justify-content: space-between; align-items: center; padding: 12px 24px; background: #1e1e2d; color: #fff; border-bottom: 3px solid var(--primary-color); }
+    .header-container { display: flex; justify-content: space-between; align-items: center; min-height: 68px; padding: 10px 24px; background: var(--header-footer-bg); color: var(--white); border-bottom: 3px solid var(--secondary-color); }
     .header-brand { display: flex; align-items: center; gap: 12px; }
-    .header-logo { height: 32px; }
-    .header-title { font-weight: 600; font-size: 1.1rem; }
+    .header-logo { width: auto; max-width: 150px; height: 42px; object-fit: contain; }
+    .header-title { font-family: var(--font-display); font-weight: 600; font-size: 1.15rem; }
     .header-user { display: flex; align-items: center; gap: 16px; }
-    .btn-logout { background: transparent; border: 1px solid #444; color: #fff; padding: 4px 12px; border-radius: 4px; cursor: pointer; }
-    .btn-logout:hover { background: #333; }
+    .user-name { font-size: 0.82rem; color: color-mix(in srgb, var(--white) 78%, transparent); }
+    .btn-logout { background: transparent; border: 1px solid color-mix(in srgb, var(--white) 35%, transparent); color: var(--white); padding: 6px 14px; border-radius: var(--radius-pill); cursor: pointer; }
+    .btn-logout:hover { border-color: var(--secondary-color); color: var(--secondary-color); }
+    @media (max-width: 640px) {
+      .header-title, .user-name { display: none; }
+    }
   `]
 })
 export class HeaderComponent {

@@ -19,9 +19,9 @@ import { filter } from 'rxjs/operators';
     `,
     changeDetection: ChangeDetectionStrategy.Eager,
     styles: [`
-    .breadcrumb-container { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: #6c757d; margin-bottom: 16px; }
-    .breadcrumb-item a { color: #8a0009; text-decoration: none; }
-    .current-page { font-weight: 600; color: #3f4254; text-transform: capitalize; }
+    .breadcrumb-container { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--on-surface); margin-bottom: 18px; }
+    .breadcrumb-item a { color: var(--primary-color); text-decoration: none; }
+    .current-page { font-weight: 600; color: var(--charcoal); text-transform: capitalize; }
   `]
 })
 export class BreadcrumbComponent {

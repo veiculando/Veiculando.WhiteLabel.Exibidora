@@ -140,11 +140,11 @@ import { LookupsService } from '../../core/services/lookups.service';
       .form__aviso {
         margin: 0 0 16px;
         padding: 10px 14px;
-        background: #fff4d6;
-        border: 1px solid #f0d79a;
+        background: var(--warning-bg);
+        border: 1px solid var(--warning-border);
         border-radius: var(--radius-sm);
         font-size: 0.85rem;
-        color: #6b4b00;
+        color: var(--warning);
       }
       .grade {
         display: grid;

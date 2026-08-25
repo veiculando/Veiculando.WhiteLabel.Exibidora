@@ -264,7 +264,7 @@ import { UsuariosService } from '../../core/services/usuarios.service';
         margin-bottom: 16px;
       }
       .permissoes {
-        border: 1px solid #e1e3ea;
+        border: 1px solid var(--border);
         border-radius: var(--radius-sm);
         padding: 12px 16px;
         margin: 0 0 16px;
@@ -298,10 +298,10 @@ import { UsuariosService } from '../../core/services/usuarios.service';
         white-space: nowrap;
       }
       .excluir {
-        color: #b3261e;
+        color: var(--danger);
       }
       .edicao {
-        background: #faf9f6;
+        background: var(--surface-muted);
       }
       .edicao__nota {
         margin: 0 0 12px;

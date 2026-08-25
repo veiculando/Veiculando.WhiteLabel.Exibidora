@@ -12,7 +12,7 @@ import { BrandingService } from '../core/branding/branding.service';
   `,
     changeDetection: ChangeDetectionStrategy.Eager,
     styles: [`
-    .footer-container { text-align: center; padding: 12px; font-size: 0.8rem; color: #6c757d; border-top: 1px solid #e1e3ea; background: #fff; margin-top: auto; }
+    .footer-container { text-align: center; padding: 14px; font-size: 0.76rem; color: var(--on-surface); border-top: 1px solid var(--divider); background: var(--white); margin-top: auto; }
   `]
 })
 export class FooterComponent {

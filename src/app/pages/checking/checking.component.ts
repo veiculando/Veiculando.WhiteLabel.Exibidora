@@ -161,9 +161,9 @@ import { CheckingService, LIMITE_FOTO_CHECKING_BYTES } from '../../core/services
       }
       .aviso-geo {
         margin-bottom: 16px;
-        background: #fff4d6;
-        border: 1px solid #f0d79a;
-        color: #6b4b00;
+        background: var(--warning-bg);
+        border: 1px solid var(--warning-border);
+        color: var(--warning);
         font-size: 0.85rem;
       }
       .enviando {
