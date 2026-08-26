@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { mensagemDeErro } from '../../core/http/api-error';
 import { ItemChecking, PiAutorizada } from '../../core/models/wl.models';
-import { CheckingService, LIMITE_FOTO_CHECKING_BYTES } from '../../core/services/checking.service';
+import { CheckingService } from '../../core/services/checking.service';
 
 /**
  * Checking de veiculação — card `9dd345d3`.
@@ -95,10 +95,10 @@ import { CheckingService, LIMITE_FOTO_CHECKING_BYTES } from '../../core/services
             {{ pi.dataCadastro | date: 'dd/MM/yyyy' }}
           </span>
         </div>
-        <div class="wl-estado aviso-geo">
-          As fotos são validadas quanto à geolocalização de captura. Um arquivo sem
-          esses dados pode ser marcado como <em>Erro de geolocalização</em> pela
-          equipe de conferência.
+        <div class="wl-estado aviso-geo" role="status">
+          O envio de fotos está temporariamente indisponível neste preview enquanto
+          a persistência no File Server é concluída. Nenhum arquivo será selecionado
+          ou enviado por esta tela.
         </div>
         @if (carregandoItens) {
           <div class="wl-estado wl-estado--carregando">
@@ -132,15 +132,9 @@ import { CheckingService, LIMITE_FOTO_CHECKING_BYTES } from '../../core/services
                       <span class="wl-etiqueta">{{ item.statusChecking || item.status }}</span>
                     </td>
                     <td>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        [disabled]="enviandoItem === item.idPedidoItem"
-                        (change)="enviarFoto(item, $event)"
-                        />
-                        @if (enviandoItem === item.idPedidoItem) {
-                          <span class="enviando">enviando…</span>
-                        }
+                      <button class="wl-btn wl-btn--secundario" type="button" disabled>
+                        Envio indisponível
+                      </button>
                       </td>
                     </tr>
                   }
@@ -148,7 +142,6 @@ import { CheckingService, LIMITE_FOTO_CHECKING_BYTES } from '../../core/services
               </table>
             </div>
           }
-          <p class="limite">Tamanho máximo por foto: {{ limiteMb }} MB.</p>
         }
       </div>
     `,
@@ -166,23 +159,11 @@ import { CheckingService, LIMITE_FOTO_CHECKING_BYTES } from '../../core/services
         color: var(--warning);
         font-size: 0.85rem;
       }
-      .enviando {
-        margin-left: 8px;
-        font-size: 0.75rem;
-        color: var(--on-surface);
-      }
-      .limite {
-        margin-top: 12px;
-        font-size: 0.75rem;
-        color: var(--on-surface);
-      }
     `,
     ]
 })
 export class CheckingComponent implements OnInit {
   private service = inject(CheckingService);
-
-  readonly limiteMb = Math.round(LIMITE_FOTO_CHECKING_BYTES / (1024 * 1024));
 
   pis: PiAutorizada[] = [];
   piSelecionada: PiAutorizada | null = null;
@@ -190,7 +171,6 @@ export class CheckingComponent implements OnInit {
 
   carregandoPis = false;
   carregandoItens = false;
-  enviandoItem: number | null = null;
   erro: string | null = null;
   aviso: string | null = null;
 
@@ -240,42 +220,4 @@ export class CheckingComponent implements OnInit {
     this.aviso = null;
   }
 
-  enviarFoto(item: ItemChecking, evento: Event): void {
-    const input = evento.target as HTMLInputElement;
-    const arquivo = input.files?.[0];
-    if (!arquivo) return;
-
-    this.erro = null;
-    this.aviso = null;
-
-    // Validação local antes do upload: o BFF recusa acima de 15MB, mas sem esta
-    // checagem o operador aguardaria a subida inteira para receber o 400.
-    if (arquivo.size > LIMITE_FOTO_CHECKING_BYTES) {
-      this.erro = `A foto tem ${this.emMb(arquivo.size)} MB e o limite é ${this.limiteMb} MB. Escolha um arquivo menor.`;
-      input.value = '';
-      return;
-    }
-
-    this.enviandoItem = item.idPedidoItem;
-
-    this.service.enviarFoto(item.idPedidoItem, arquivo).subscribe({
-      next: (resposta) => {
-        this.enviandoItem = null;
-        input.value = '';
-        // Recarrega os itens para o status refletir o envio. O aviso é definido
-        // DEPOIS porque `abrirPi` limpa as mensagens da tela ao recomeçar.
-        if (this.piSelecionada) this.abrirPi(this.piSelecionada);
-        this.aviso = resposta.message;
-      },
-      error: (erro: unknown) => {
-        this.enviandoItem = null;
-        this.erro = mensagemDeErro(erro, 'Não foi possível enviar a foto.');
-        input.value = '';
-      },
-    });
-  }
-
-  private emMb(bytes: number): string {
-    return (bytes / (1024 * 1024)).toFixed(1);
-  }
 }
