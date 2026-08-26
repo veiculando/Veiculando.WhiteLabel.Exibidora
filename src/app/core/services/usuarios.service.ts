@@ -18,16 +18,15 @@ export class UsuariosService {
   }
 
   /**
-   * `POST /api/wl/usuarios`. O BFF hasheia a senha com BCrypt e valida as
-   * permissoes contra `WlPermissoesValidas` — um identificador fora da
-   * whitelist volta como 400 com a lista das invalidas.
+   * `POST /api/wl/usuarios`. O BFF cria o operador pendente e envia um convite
+   * de primeiro acesso; a senha nunca é escolhida pelo administrador.
    */
   criar(dto: UsuarioWlCreate): Observable<{ id: number; message: string }> {
     return this.http.post<{ id: number; message: string }>(this.base, dto);
   }
 
   /**
-   * `PUT /api/wl/usuarios/{id}` — atualiza dados cadastrais, permissoes e senha.
+   * `PUT /api/wl/usuarios/{id}` — atualiza dados cadastrais e permissoes.
    *
    * A atualizacao e parcial por campo: o que for omitido do payload e
    * preservado no servidor, entao enviar so `permissoes` nao zera o cargo.

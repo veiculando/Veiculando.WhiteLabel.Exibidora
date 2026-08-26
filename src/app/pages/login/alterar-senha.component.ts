@@ -22,13 +22,19 @@ import { AuthService } from '../../core/services/auth.service';
     <div class="login">
       <div class="login__caixa">
         <h1 class="login__titulo">{{ brand()?.nomeExibicao || 'Painel Exibidora' }}</h1>
-        <p class="login__subtitulo">Redefinir senha</p>
+        <p class="login__subtitulo">{{ primeiroAcesso ? 'Criar senha de primeiro acesso' : 'Redefinir senha' }}</p>
 
         @if (linkInvalido) {
           <div class="wl-estado wl-estado--erro login__erro">
-            Link de redefinição inválido. Solicite uma nova recuperação de senha.
+            {{ primeiroAcesso
+              ? 'Convite inválido. Solicite um novo convite ao administrador.'
+              : 'Link de redefinição inválido. Solicite uma nova recuperação de senha.' }}
           </div>
-          <a class="wl-btn login__botao login__voltar" routerLink="/login/esqueci-senha">Solicitar novo link</a>
+          @if (primeiroAcesso) {
+            <a class="wl-btn login__botao login__voltar" routerLink="/login">Voltar para o login</a>
+          } @else {
+            <a class="wl-btn login__botao login__voltar" routerLink="/login/esqueci-senha">Solicitar novo link</a>
+          }
         } @else if (mensagemSucesso) {
           <div class="wl-estado wl-estado--sucesso login__erro">{{ mensagemSucesso }}</div>
           <a class="wl-btn login__botao login__voltar" routerLink="/login">Ir para o login</a>
@@ -55,7 +61,7 @@ import { AuthService } from '../../core/services/auth.service';
             }
 
             <button class="wl-btn login__botao" type="submit" [disabled]="enviando">
-              {{ enviando ? 'Salvando…' : 'Redefinir senha' }}
+              {{ enviando ? 'Salvando…' : (primeiroAcesso ? 'Criar senha' : 'Redefinir senha') }}
             </button>
 
             <a class="wl-btn--link login__esqueci" routerLink="/login">Voltar para o login</a>
@@ -133,6 +139,7 @@ export class AlterarSenhaComponent {
   private route = inject(ActivatedRoute);
 
   readonly brand = inject(BrandingService).branding;
+  readonly primeiroAcesso: boolean;
 
   /** `null` só depois de checar a query string — nunca reescritos após isso. */
   private readonly email: string | null;
@@ -154,6 +161,7 @@ export class AlterarSenhaComponent {
 
   constructor() {
     const params = this.route.snapshot.queryParamMap;
+    this.primeiroAcesso = this.route.snapshot.data['primeiroAcesso'] === true;
     this.email = params.get('email');
     this.token = params.get('token');
     // Sem os dois, não há o que redefinir — a tela nem mostra o formulário.
@@ -181,13 +189,17 @@ export class AlterarSenhaComponent {
 
     this.enviando = true;
 
-    this.auth
-      .alterarSenha({
+    const requisicao = {
         email: this.email,
         token: this.token,
         novaSenha: this.form.getRawValue().novaSenha,
-      })
-      .subscribe({
+      };
+
+    const operacao = this.primeiroAcesso
+      ? this.auth.primeiroAcesso(requisicao)
+      : this.auth.alterarSenha(requisicao);
+
+    operacao.subscribe({
         next: (resposta) => {
           this.enviando = false;
           this.mensagemSucesso = resposta.message;
@@ -196,7 +208,9 @@ export class AlterarSenhaComponent {
           this.enviando = false;
           this.erro = mensagemDeErro(
             erro,
-            'Link de recuperação inválido ou expirado. Solicite uma nova recuperação de senha.'
+            this.primeiroAcesso
+              ? 'Convite inválido, expirado ou já utilizado. Solicite um novo convite ao administrador.'
+              : 'Link de recuperação inválido ou expirado. Solicite uma nova recuperação de senha.'
           );
         },
       });

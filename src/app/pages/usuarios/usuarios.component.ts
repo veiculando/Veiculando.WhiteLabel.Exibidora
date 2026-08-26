@@ -22,15 +22,8 @@ import { UsuariosService } from '../../core/services/usuarios.service';
  * as permissões inválidas nomeadas. A lista aqui é para o operador não precisar
  * digitar identificadores.
  *
- * A edição altera dados cadastrais, permissões e senha. Nem sempre foi assim: o
- * `Update` do BFF aceitava nome, cargo, departamento, telefone e senha no DTO
- * mas aplicava só `AtualizarPermissoes`, descartando o resto sem erro — o
- * operador salvava e o dado voltava como antes. Corrigido ainda na Sprint 9.0,
- * junto com o formulário completo desta tela.
- *
- * A atualização é parcial por campo: o que não vier no payload é preservado no
- * servidor. Por isso a senha só viaja quando preenchida — string vazia seria
- * lida como tentativa de troca.
+ * A senha é criada pelo próprio operador no convite de primeiro acesso; o
+ * administrador nunca conhece nem define a credencial do convidado.
  *
  * O e-mail é imutável: identifica o operador na instância e faz parte do índice
  * único `UK_WlUsuario_Email_Afiliada`.
@@ -78,13 +71,6 @@ import { UsuariosService } from '../../core/services/usuarios.service';
               }
             </div>
             <div class="wl-campo">
-              <label for="senha">Senha *</label>
-              <input id="senha" type="password" formControlName="senha" autocomplete="new-password" />
-              @if (invalido('senha')) {
-                <span class="wl-campo__erro">Mínimo de 8 caracteres.</span>
-              }
-            </div>
-            <div class="wl-campo">
               <label for="cargo">Cargo</label>
               <input id="cargo" type="text" formControlName="cargo" />
             </div>
@@ -113,7 +99,7 @@ import { UsuariosService } from '../../core/services/usuarios.service';
             </fieldset>
             <div class="acoes-form">
               <button class="wl-btn" type="submit" [disabled]="salvando">
-                {{ salvando ? 'Salvando…' : 'Cadastrar' }}
+                {{ salvando ? 'Enviando…' : 'Criar e enviar convite' }}
               </button>
               <button class="wl-btn wl-btn--secundario" type="button" (click)="cancelarCriacao()">
                 Cancelar
@@ -141,6 +127,7 @@ import { UsuariosService } from '../../core/services/usuarios.service';
                   <th>Nome</th>
                   <th>E-mail</th>
                   <th>Cargo</th>
+                  <th>Acesso</th>
                   <th>Último acesso</th>
                   <th>Permissões</th>
                   <th>Ações</th>
@@ -152,6 +139,9 @@ import { UsuariosService } from '../../core/services/usuarios.service';
                     <td>{{ usuario.nome }}</td>
                     <td>{{ usuario.email }}</td>
                     <td>{{ usuario.cargo || '—' }}</td>
+                    <td>
+                      <span class="wl-etiqueta">{{ usuario.statusConvite === 'Aceito' ? 'Ativo' : 'Convite pendente' }}</span>
+                    </td>
                     <td>
                       {{ usuario.dataUltimoLogin ? (usuario.dataUltimoLogin | date: 'dd/MM/yyyy HH:mm') : 'nunca' }}
                     </td>
@@ -176,7 +166,7 @@ import { UsuariosService } from '../../core/services/usuarios.service';
                   </tr>
                   @if (editando === usuario.id) {
                     <tr>
-                      <td colspan="6" class="edicao">
+                      <td colspan="7" class="edicao">
                         <form [formGroup]="formEdicao">
                           <div class="grade">
                             <div class="wl-campo">
@@ -198,21 +188,6 @@ import { UsuariosService } from '../../core/services/usuarios.service';
                               <label [attr.for]="'tel-' + usuario.id">Telefone comercial</label>
                               <input [id]="'tel-' + usuario.id" type="text" formControlName="telefoneComercial" />
                             </div>
-                            <div class="wl-campo">
-                              <label [attr.for]="'senha-' + usuario.id">Nova senha</label>
-                              <input
-                                [id]="'senha-' + usuario.id"
-                                type="password"
-                                formControlName="senha"
-                                autocomplete="new-password"
-                                placeholder="deixe em branco para manter"
-                                />
-                                @if (invalidoEdicao('senha')) {
-                                  <span class="wl-campo__erro">
-                                    Mínimo de 8 caracteres.
-                                  </span>
-                                }
-                              </div>
                             </div>
                           </form>
                           <p class="edicao__nota">
@@ -341,22 +316,16 @@ export class UsuariosComponent implements OnInit {
   formCriacao = this.fb.nonNullable.group({
     nome: ['', [Validators.required]],
     email: ['', [Validators.required, Validators.email]],
-    senha: ['', [Validators.required, Validators.minLength(8)]],
     cargo: [''],
     departamento: [''],
     telefoneComercial: [''],
   });
 
-  /**
-   * Edição. A senha é opcional — sem `Validators.required` — mas, se preenchida,
-   * respeita o mesmo mínimo do cadastro, que o BFF também valida.
-   */
   formEdicao = this.fb.nonNullable.group({
     nome: ['', [Validators.required]],
     cargo: [''],
     departamento: [''],
     telefoneComercial: [''],
-    senha: ['', [Validators.minLength(8)]],
   });
 
   ngOnInit(): void {
@@ -383,7 +352,7 @@ export class UsuariosComponent implements OnInit {
     return PERMISSOES_WL_ROTULOS[permissao as PermissaoWl] ?? permissao;
   }
 
-  invalido(campo: 'nome' | 'email' | 'senha'): boolean {
+  invalido(campo: 'nome' | 'email'): boolean {
     const controle = this.formCriacao.controls[campo];
     return controle.invalid && (controle.dirty || controle.touched);
   }
@@ -425,7 +394,6 @@ export class UsuariosComponent implements OnInit {
       .criar({
         nome: valores.nome,
         email: valores.email,
-        senha: valores.senha,
         cargo: valores.cargo || null,
         departamento: valores.departamento || null,
         telefoneComercial: valores.telefoneComercial || null,
@@ -460,14 +428,11 @@ export class UsuariosComponent implements OnInit {
     this.aviso = null;
     this.permissoesEdicao = new Set(usuario.permissoes);
 
-    // A senha começa vazia e assim permanece se o administrador não quiser
-    // trocá-la — o BFF preserva a atual quando o campo não vem preenchido.
     this.formEdicao.reset({
       nome: usuario.nome ?? '',
       cargo: usuario.cargo ?? '',
       departamento: usuario.departamento ?? '',
       telefoneComercial: usuario.telefoneComercial ?? '',
-      senha: '',
     });
   }
 
@@ -498,9 +463,6 @@ export class UsuariosComponent implements OnInit {
         cargo: v.cargo || null,
         departamento: v.departamento || null,
         telefoneComercial: v.telefoneComercial || null,
-        // Só viaja quando preenchida: enviar string vazia faria o servidor
-        // tratar como tentativa de troca.
-        ...(v.senha ? { senha: v.senha } : {}),
         permissoes: [...this.permissoesEdicao],
       })
       .subscribe({

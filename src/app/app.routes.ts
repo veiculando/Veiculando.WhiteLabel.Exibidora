@@ -50,6 +50,13 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/login/alterar-senha.component').then((m) => m.AlterarSenhaComponent),
   },
+  {
+    path: 'login/primeiro-acesso',
+    title: 'Criar senha — Painel Exibidora',
+    data: { primeiroAcesso: true },
+    loadComponent: () =>
+      import('./pages/login/alterar-senha.component').then((m) => m.AlterarSenhaComponent),
+  },
 
   // Rota de acesso negado
   {
