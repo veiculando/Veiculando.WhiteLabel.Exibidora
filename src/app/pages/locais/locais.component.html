@@ -13,6 +13,8 @@
     />
   </div>
 
+  @if (erroAcao()) { <p role="alert">{{ erroAcao() }}</p> }
+  @if (sucesso()) { <p role="status">{{ sucesso() }}</p> }
   @if (carregando()) {
     <p class="locais__estado">Carregando locais…</p>
   } @else if (erro()) {
@@ -56,9 +58,9 @@
               <button
                 type="button"
                 (click)="excluir(local)"
-                [disabled]="excluindoId() === local.id"
+                [disabled]="excluindoId() !== null"
               >
-                {{ excluindoId() === local.id ? 'Excluindo…' : 'Excluir' }}
+                {{ excluindoId() === local.id ? 'Atualizando…' : rotuloAcao(local) }}
               </button>
             </td>
           </tr>

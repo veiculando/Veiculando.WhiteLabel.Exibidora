@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { of, throwError } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { provideRouter } from '@angular/router';
@@ -70,8 +70,49 @@ describe('LocalWizardComponent', () => {
     expect(fixture.componentInstance.etapasHabilitadas()).toEqual([true, false, false]);
   });
 
+  it('confirma por GET os campos persistidos e só então mostra sucesso', async () => {
+    await setup({ id: '7' });
+    localServiceSpy.getLocal.mockReturnValue(of(localCarregado));
+    publicoServiceSpy.getPublico.mockReturnValue(of(emptyLocalPublicoPayload()));
+    localServiceSpy.updateLocal.mockReturnValue(of(null));
+    fixture.detectChanges();
+    fixture.componentInstance.onSalvarDados(fixture.componentInstance.dadosIniciais!);
+    fixture.detectChanges();
+    expect(localServiceSpy.getLocal).toHaveBeenCalledTimes(2);
+    expect(fixture.nativeElement.textContent).toContain('Dados do local salvos e conferidos');
+  });
+
+  it('não confirma sucesso se o GET retorna dados diferentes e preserva o formulário', async () => {
+    await setup({ id: '7' });
+    localServiceSpy.getLocal.mockReturnValue(of(localCarregado));
+    publicoServiceSpy.getPublico.mockReturnValue(of(emptyLocalPublicoPayload()));
+    localServiceSpy.updateLocal.mockReturnValue(of(null));
+    fixture.detectChanges();
+    fixture.componentInstance.onSalvarDados({ ...fixture.componentInstance.dadosIniciais!, logradouro: 'Alterado' });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('não confirmou');
+    expect(fixture.nativeElement.querySelector('app-local-dados-step')).not.toBeNull();
+  });
+
+  it('bloqueia envio duplicado enquanto aguarda a gravação', async () => {
+    await setup({ id: '7' });
+    localServiceSpy.getLocal.mockReturnValue(of(localCarregado));
+    publicoServiceSpy.getPublico.mockReturnValue(of(emptyLocalPublicoPayload()));
+    const pendente = new Subject<null>();
+    localServiceSpy.updateLocal.mockReturnValue(pendente);
+    fixture.detectChanges();
+    const payload = fixture.componentInstance.dadosIniciais!;
+    fixture.componentInstance.onSalvarDados(payload);
+    fixture.componentInstance.onSalvarDados(payload);
+    expect(localServiceSpy.updateLocal).toHaveBeenCalledTimes(1);
+    pendente.complete();
+  });
+
   it('ao salvar Dados do Local em modo criação, chama createLocal e habilita as demais etapas', async () => {
     await setup({});
+    localServiceSpy.getLocal.mockReturnValue(of({ ...localCarregado, id: 10, idCidade: 1,
+      codigoInterno: null, endereco: { ...localCarregado.endereco!, logradouro: 'Rua A' },
+      geolocalizacao: { latitude: -23.5, longitude: -46.6 }, statusExibicao: StatusExibicao.AprovacaoPendente }));
     localServiceSpy.createLocal.mockReturnValue(
       of({
         id: 10,

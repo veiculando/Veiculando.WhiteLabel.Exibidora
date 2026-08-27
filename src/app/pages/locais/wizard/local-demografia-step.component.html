@@ -1,5 +1,5 @@
 <form class="local-demografia-step" [formGroup]="form" (ngSubmit)="onSubmit()">
-  <fieldset>
+  <fieldset [disabled]="salvando">
     <legend>Dados Demográficos</legend>
 
     <label>
@@ -32,5 +32,5 @@
     pontos de interesse podem ser detalhados após o cadastro inicial.
   </p>
 
-  <button type="submit" class="btn btn--primary">Salvar Dados Demográficos</button>
+  <button type="submit" class="btn btn--primary" [disabled]="salvando">{{ salvando ? 'Salvando…' : 'Salvar Dados Demográficos' }}</button>
 </form>

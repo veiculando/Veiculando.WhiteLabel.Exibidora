@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, OnChanges, Output, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { LocalDadosPayload } from '../models/local.model';
 
@@ -20,6 +20,8 @@ import { LocalDadosPayload } from '../models/local.model';
 })
 export class LocalDadosStepComponent implements OnChanges {
   @Input() valorInicial: LocalDadosPayload | null = null;
+  @Input() salvando = false;
+  private readonly element: ElementRef<HTMLElement> = inject(ElementRef);
   @Output() salvar = new EventEmitter<LocalDadosPayload>();
 
   private readonly fb = new FormBuilder();
@@ -29,7 +31,7 @@ export class LocalDadosStepComponent implements OnChanges {
     codigoInterno: this.fb.control<string | null>(null),
     descricao: this.fb.control<string | null>(null),
     cep: this.fb.control<string | null>(null),
-    logradouro: this.fb.control<string>('', Validators.required),
+    logradouro: this.fb.control<string>('', [Validators.required, Validators.pattern(/\S/)]),
     numero: this.fb.control<string | null>(null),
     bairro: this.fb.control<string | null>(null),
     complemento: this.fb.control<string | null>(null),
@@ -55,8 +57,10 @@ export class LocalDadosStepComponent implements OnChanges {
   }
 
   onSubmit(): void {
+    if (this.salvando) return;
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.element.nativeElement.querySelector<HTMLElement>('input.ng-invalid, textarea.ng-invalid')?.focus();
       return;
     }
     this.salvar.emit(this.form.getRawValue() as LocalDadosPayload);

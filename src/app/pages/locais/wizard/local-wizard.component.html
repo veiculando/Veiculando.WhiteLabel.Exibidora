@@ -12,6 +12,9 @@
         <span class="badge">{{ statusLabel[statusExibicao()!] }}</span>
       }
     </header>
+    @if (mensagem()) { <p role="status">{{ mensagem() }}</p> }
+    @if (erroSalvar()) { <p role="alert">{{ erroSalvar() }}</p> }
+    @if (salvando()) { <p role="status">Salvando e conferindo dados…</p> }
 
     <nav class="local-wizard__abas">
       <button type="button" [disabled]="!etapasHabilitadas()[0]" (click)="irParaEtapa(0)">
@@ -27,10 +30,10 @@
 
     @switch (etapaAtual()) {
       @case (0) {
-        <app-local-dados-step [valorInicial]="dadosIniciais" (salvar)="onSalvarDados($event)" />
+        <app-local-dados-step [valorInicial]="dadosIniciais" [salvando]="salvando()" (salvar)="onSalvarDados($event)" />
       }
       @case (1) {
-        <app-local-demografia-step [valorInicial]="demografiaInicial" (salvar)="onSalvarDemografia($event)" />
+        <app-local-demografia-step [valorInicial]="demografiaInicial" [salvando]="salvando()" (salvar)="onSalvarDemografia($event)" />
       }
       @case (2) {
         @if (idLocal()) {
