@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { mensagemDeErro } from '../../core/http/api-error';
@@ -37,10 +38,10 @@ import { UsuariosService } from '../../core/services/usuarios.service';
       <p class="wl-page__descricao">Contas de acesso ao painel e suas permissões.</p>
     
       @if (erro) {
-        <div class="wl-estado wl-estado--erro">{{ erro }}</div>
+        <div class="wl-estado wl-estado--erro" role="alert">{{ erro }}</div>
       }
       @if (aviso) {
-        <div class="wl-estado wl-estado--sucesso">{{ aviso }}</div>
+        <div class="wl-estado wl-estado--sucesso" role="status">{{ aviso }}</div>
       }
     
       <div class="wl-toolbar">
@@ -156,6 +157,12 @@ import { UsuariosService } from '../../core/services/usuarios.service';
                       }
                     </td>
                     <td class="acoes">
+                      @if (usuario.statusConvite === 'Pendente') {
+                        <button class="wl-btn wl-btn--link" type="button"
+                          [disabled]="reenviando !== null" (click)="reenviarConvite(usuario)">
+                          {{ reenviando === usuario.id ? 'Enviando…' : 'Reenviar convite' }}
+                        </button>
+                      }
                       <button class="wl-btn wl-btn--link" type="button" (click)="abrirEdicao(usuario)">
                         {{ editando === usuario.id ? 'Fechar' : 'Editar' }}
                       </button>
@@ -304,6 +311,7 @@ export class UsuariosComponent implements OnInit {
   usuarios: UsuarioWl[] = [];
   carregando = false;
   salvando = false;
+  reenviando: number | null = null;
   erro: string | null = null;
   aviso: string | null = null;
 
@@ -332,9 +340,9 @@ export class UsuariosComponent implements OnInit {
     this.carregar();
   }
 
-  carregar(): void {
+  carregar(limparErro = true): void {
     this.carregando = true;
-    this.erro = null;
+    if (limparErro) this.erro = null;
 
     this.service.listar().subscribe({
       next: (usuarios) => {
@@ -379,6 +387,7 @@ export class UsuariosComponent implements OnInit {
   }
 
   criar(): void {
+    if (this.salvando) return;
     this.erro = null;
     this.aviso = null;
 
@@ -409,12 +418,34 @@ export class UsuariosComponent implements OnInit {
         },
         error: (erro: unknown) => {
           this.salvando = false;
+          if (erro instanceof HttpErrorResponse && erro.error?.conviteEnviado === false && erro.error?.id) {
+            this.cancelarCriacao();
+            this.carregar(false);
+          }
           this.erro = mensagemDeErro(erro, 'Não foi possível cadastrar o operador.');
         },
       });
   }
 
   // ------------------------------------------------------------ edição
+
+  reenviarConvite(usuario: UsuarioWl): void {
+    if (this.reenviando !== null || usuario.statusConvite !== 'Pendente') return;
+    this.reenviando = usuario.id;
+    this.erro = null;
+    this.aviso = null;
+    this.service.reenviarConvite(usuario.id).subscribe({
+      next: (resposta) => {
+        this.reenviando = null;
+        this.aviso = resposta.message;
+        this.carregar();
+      },
+      error: (erro: unknown) => {
+        this.reenviando = null;
+        this.erro = mensagemDeErro(erro, 'Não foi possível reenviar o convite. Tente novamente.');
+      },
+    });
+  }
 
   abrirEdicao(usuario: UsuarioWl): void {
     if (this.editando === usuario.id) {

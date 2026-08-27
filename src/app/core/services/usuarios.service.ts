@@ -17,6 +17,10 @@ export class UsuariosService {
     return this.http.get<UsuarioWl>(`${this.base}/${id}`);
   }
 
+  reenviarConvite(id: number): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.base}/${id}/reenviar-convite`, {});
+  }
+
   /**
    * `POST /api/wl/usuarios`. O BFF cria o operador pendente e envia um convite
    * de primeiro acesso; a senha nunca é escolhida pelo administrador.
