@@ -28,8 +28,17 @@
             <td>{{ statusLabel[peca.statusExibicao] }}</td>
             <td>
               <a [routerLink]="['/locais', idLocal, 'pecas', peca.id]">Editar</a>
+              <button type="button" class="wl-btn wl-btn--link" (click)="fotoPecaId.set(peca.id)">Gerenciar foto</button>
             </td>
           </tr>
+          @if (fotoPecaId() === peca.id) {
+            <tr><td colspan="5">
+              <app-photo-upload
+                [uploadUrl]="bffUrl + '/pecas/locais/' + idLocal + '/pecas/' + peca.id + '/foto'"
+                [listUrl]="bffUrl + '/pecas/locais/' + idLocal + '/pecas/' + peca.id + '/fotos'"
+                [limiteMb]="10" titulo="Foto da peça" />
+            </td></tr>
+          }
         }
       </tbody>
     </table>

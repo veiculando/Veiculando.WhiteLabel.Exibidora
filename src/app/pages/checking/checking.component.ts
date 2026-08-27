@@ -3,6 +3,8 @@ import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/cor
 import { mensagemDeErro } from '../../core/http/api-error';
 import { ItemChecking, PiAutorizada } from '../../core/models/wl.models';
 import { CheckingService } from '../../core/services/checking.service';
+import { PhotoUploadComponent } from '../../shared/photo-upload.component';
+import { environment } from '../../../environments/environment';
 
 /**
  * Checking de veiculação — card `9dd345d3`.
@@ -27,7 +29,7 @@ import { CheckingService } from '../../core/services/checking.service';
  */
 @Component({
     selector: 'app-checking',
-    imports: [CommonModule],
+    imports: [CommonModule, PhotoUploadComponent],
     template: `
     <div class="wl-page">
       <h1 class="wl-page__titulo">Checking de veiculação</h1>
@@ -96,9 +98,8 @@ import { CheckingService } from '../../core/services/checking.service';
           </span>
         </div>
         <div class="wl-estado aviso-geo" role="status">
-          O envio de fotos está temporariamente indisponível neste preview enquanto
-          a persistência no File Server é concluída. Nenhum arquivo será selecionado
-          ou enviado por esta tela.
+          Fotos enviadas do computador ficam salvas, mas não comprovam a posição
+          de captura. O checking pode exigir revisão de geolocalização antes da aprovação.
         </div>
         @if (carregandoItens) {
           <div class="wl-estado wl-estado--carregando">
@@ -132,9 +133,11 @@ import { CheckingService } from '../../core/services/checking.service';
                       <span class="wl-etiqueta">{{ item.statusChecking || item.status }}</span>
                     </td>
                     <td>
-                      <button class="wl-btn wl-btn--secundario" type="button" disabled>
-                        Envio indisponível
-                      </button>
+                      <app-photo-upload
+                        [uploadUrl]="bffUrl + '/checking/enviar-foto/' + item.idPedidoItem"
+                        [listUrl]="bffUrl + '/checking/item/' + item.idPedidoItem + '/fotos'"
+                        [limiteMb]="15" titulo="Comprovação do item"
+                        (confirmado)="atualizarStatus()" />
                       </td>
                     </tr>
                   }
@@ -163,6 +166,7 @@ import { CheckingService } from '../../core/services/checking.service';
     ]
 })
 export class CheckingComponent implements OnInit {
+  readonly bffUrl = environment.bffUrl;
   private service = inject(CheckingService);
 
   pis: PiAutorizada[] = [];
@@ -218,6 +222,21 @@ export class CheckingComponent implements OnInit {
     this.itens = [];
     this.erro = null;
     this.aviso = null;
+  }
+
+  atualizarStatus(): void {
+    const pi = this.piSelecionada;
+    if (!pi) return;
+    this.service.itensDaPi(pi.codigo).subscribe({
+      next: itens => {
+        // Preserva os componentes de upload e sua confirmação após a releitura.
+        for (const item of this.itens) {
+          const novo = itens.find(x => x.idPedidoItem === item.idPedidoItem);
+          if (novo) Object.assign(item, novo);
+        }
+      },
+      error: erro => this.erro = mensagemDeErro(erro, 'Foto salva; não foi possível atualizar a situação do item.'),
+    });
   }
 
 }
