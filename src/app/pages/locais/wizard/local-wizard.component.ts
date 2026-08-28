@@ -42,6 +42,7 @@ export class LocalWizardComponent implements OnInit {
   readonly statusLabel = STATUS_EXIBICAO_LABEL;
   readonly carregando = signal(false);
   readonly naoEncontrado = signal(false);
+  readonly erroCarregarLocal = signal('');
   readonly salvando = signal(false);
   readonly mensagem = signal('');
   readonly erroSalvar = signal('');
@@ -55,18 +56,27 @@ export class LocalWizardComponent implements OnInit {
   etapasHabilitadas = signal<[boolean, boolean, boolean]>([true, false, false]);
 
   ngOnInit(): void {
+    this.carregarLocal();
+  }
+
+  carregarLocal(): void {
     const idParam = this.route.snapshot.paramMap.get('id');
-    if (!idParam) return; // modo criação: nada a carregar
+    if (!idParam || this.carregando()) return; // modo criação: nada a carregar
 
     const id = Number(idParam);
     this.carregando.set(true);
+    this.naoEncontrado.set(false);
+    this.erroCarregarLocal.set('');
 
     this.localService.getLocal(id).subscribe({
       next: (local) => this.aplicarLocalCarregado(id, local),
       error: (err: HttpErrorResponse) => {
         this.carregando.set(false);
-        // 404 (IDOR bloqueado no Core) — nunca expõe estado parcial.
-        this.naoEncontrado.set(true);
+        // Somente 404 oculta existência/tenant; rede/5xx devem permitir retry.
+        if (err.status === 404) this.naoEncontrado.set(true);
+        else this.erroCarregarLocal.set(err.status === 403
+          ? 'Você não tem permissão para acessar este local.'
+          : 'Não foi possível carregar o local. Tente novamente.');
       },
     });
   }

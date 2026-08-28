@@ -5,6 +5,9 @@
     </p>
   } @else if (carregando()) {
     <p class="local-wizard__estado">Carregando local…</p>
+  } @else if (erroCarregarLocal()) {
+    <p class="local-wizard__estado local-wizard__estado--erro" role="alert">{{ erroCarregarLocal() }}</p>
+    <button type="button" (click)="carregarLocal()">Tentar carregar local</button>
   } @else {
     <header class="local-wizard__header">
       <h1>{{ idLocal() ? 'Editar local' : 'Novo local' }}</h1>

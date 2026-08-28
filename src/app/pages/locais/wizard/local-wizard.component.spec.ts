@@ -222,6 +222,33 @@ describe('LocalWizardComponent', () => {
     expect(publicoServiceSpy.savePublico).not.toHaveBeenCalled();
   });
 
+  it.each([0, 500, 503])('falha de leitura %s não significa local inexistente e permite nova tentativa', async status => {
+    await setup({ id: '7' });
+    localServiceSpy.getLocal.mockReturnValue(throwError(() => new HttpErrorResponse({ status })));
+    fixture.detectChanges();
+    expect(fixture.componentInstance.naoEncontrado()).toBe(false);
+    expect(fixture.nativeElement.textContent).toContain('Não foi possível carregar o local');
+    expect(fixture.nativeElement.querySelector('app-local-dados-step')).toBeNull();
+    expect(publicoServiceSpy.getPublico).not.toHaveBeenCalled();
+    localServiceSpy.getLocal.mockReturnValue(of(localCarregado));
+    const retry = Array.from(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>)
+      .find(button => button.textContent?.includes('Tentar carregar local'))!;
+    retry.click();
+    fixture.detectChanges();
+    expect(localServiceSpy.getLocal).toHaveBeenCalledTimes(2);
+    expect(fixture.componentInstance.idLocal()).toBe(7);
+    expect(fixture.nativeElement.querySelector('app-local-dados-step')).not.toBeNull();
+  });
+
+  it('leitura negada mostra falta de permissão sem afirmar que o local não existe', async () => {
+    await setup({ id: '7' });
+    localServiceSpy.getLocal.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 403 })));
+    fixture.detectChanges();
+    expect(fixture.componentInstance.naoEncontrado()).toBe(false);
+    expect(fixture.nativeElement.textContent).toContain('Você não tem permissão para acessar este local');
+    expect(fixture.nativeElement.querySelector('app-local-dados-step')).toBeNull();
+  });
+
   it('quando o local pertence a outro tenant (404), exibe "não encontrado" e não tenta renderizar o formulário', async () => {
     await setup({ id: '999' });
     localServiceSpy.getLocal.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 404 })));
