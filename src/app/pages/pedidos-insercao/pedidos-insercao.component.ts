@@ -3,6 +3,7 @@ import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/cor
 import { mensagemDeErro } from '../../core/http/api-error';
 import { PedidoInsercaoListItem } from '../../core/models/wl.models';
 import { PedidosInsercaoService } from '../../core/services/pedidos.service';
+import { PaginadorComponent } from '../../shared/paginador.component';
 
 /**
  * Pedidos de inserção — card `c2a44cbc`.
@@ -18,7 +19,7 @@ import { PedidosInsercaoService } from '../../core/services/pedidos.service';
  */
 @Component({
     selector: 'app-pedidos-insercao',
-    imports: [CommonModule],
+    imports: [CommonModule, PaginadorComponent],
     template: `
     <div class="wl-page">
       <h1 class="wl-page__titulo">Pedidos de inserção</h1>
@@ -79,6 +80,15 @@ import { PedidosInsercaoService } from '../../core/services/pedidos.service';
             </tbody>
           </table>
         </div>
+
+        <app-paginador
+          [page]="page"
+          [pageSize]="pageSize"
+          [total]="total"
+          [totalPaginas]="totalPaginas"
+          [carregando]="carregando"
+          (pagina)="carregar($event)"
+        />
       }
     </div>
     `,
@@ -101,21 +111,32 @@ export class PedidosInsercaoComponent implements OnInit {
   /** Código da PI cujo PDF está sendo baixado, para desabilitar só aquele botão. */
   baixando: string | null = null;
 
+  page = 1;
+  pageSize = 25;
+  total = 0;
+  totalPaginas = 0;
+
   ngOnInit(): void {
     this.carregar();
   }
 
-  carregar(): void {
+  carregar(page = this.page): void {
     this.carregando = true;
     this.erro = null;
 
-    this.service.listar().subscribe({
-      next: (pedidos) => {
-        this.pedidos = pedidos;
+    this.service.listar({ page, pageSize: this.pageSize }).subscribe({
+      next: (pagina) => {
+        this.pedidos = pagina.itens;
+        this.page = pagina.page;
+        // O servidor pode devolver um pageSize menor que o pedido (teto de 100).
+        this.pageSize = pagina.pageSize;
+        this.total = pagina.total;
+        this.totalPaginas = pagina.totalPaginas;
         this.carregando = false;
       },
       error: (erro: unknown) => {
         this.carregando = false;
+        this.pedidos = [];
         this.erro = mensagemDeErro(erro, 'Não foi possível carregar os pedidos de inserção.');
       },
     });

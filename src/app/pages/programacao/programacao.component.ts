@@ -1,6 +1,7 @@
 
 import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { PaginadorComponent } from '../../shared/paginador.component';
 import { mensagemDeErro } from '../../core/http/api-error';
 import { LocalListItem, PeriodoLookup, ProgramacaoItem } from '../../core/models/wl.models';
 import { LocaisService } from '../../core/services/locais.service';
@@ -29,7 +30,7 @@ interface LinhaGrade {
  */
 @Component({
     selector: 'app-programacao',
-    imports: [FormsModule],
+    imports: [FormsModule, PaginadorComponent],
     template: `
     <div class="wl-page">
       <h1 class="wl-page__titulo">Grade de programação</h1>
@@ -60,7 +61,7 @@ interface LinhaGrade {
           </select>
         </div>
     
-        <button class="wl-btn" type="button" [disabled]="carregando" (click)="carregar()">
+        <button class="wl-btn" type="button" [disabled]="carregando" (click)="aplicarFiltro()">
           {{ carregando ? 'Consultando…' : 'Consultar' }}
         </button>
       </div>
@@ -116,6 +117,15 @@ interface LinhaGrade {
             </tbody>
           </table>
         </div>
+
+        <app-paginador
+          [page]="page"
+          [pageSize]="pageSize"
+          [total]="total"
+          [totalPaginas]="totalPaginas"
+          [carregando]="carregando"
+          (pagina)="carregar($event)"
+        />
       }
     </div>
     `,
@@ -146,6 +156,11 @@ export class ProgramacaoComponent implements OnInit {
   carregando = false;
   erro: string | null = null;
 
+  page = 1;
+  pageSize = 25;
+  total = 0;
+  totalPaginas = 0;
+
   ngOnInit(): void {
     this.locaisService.listar().subscribe({
       next: (locais) => (this.locais = locais),
@@ -158,22 +173,36 @@ export class ProgramacaoComponent implements OnInit {
     this.carregar();
   }
 
-  carregar(): void {
+  carregar(page = this.page): void {
     this.carregando = true;
     this.erro = null;
 
-    this.service.listar({ idPeriodo: this.idPeriodo, idLocal: this.idLocal }).subscribe({
-      next: (itens) => {
-        this.montarGrade(itens);
-        this.carregando = false;
-      },
-      error: (erro: unknown) => {
-        this.carregando = false;
-        this.linhas = [];
-        this.colunas = [];
-        this.erro = mensagemDeErro(erro, 'Não foi possível carregar a grade de programação.');
-      },
-    });
+    this.service
+      .listar({ idPeriodo: this.idPeriodo, idLocal: this.idLocal }, { page, pageSize: this.pageSize })
+      .subscribe({
+        next: (pagina) => {
+          this.montarGrade(pagina.itens);
+          this.page = pagina.page;
+          this.pageSize = pagina.pageSize;
+          // `total` conta PECAS, nao celulas: a pagina e de linhas da grade.
+          this.total = pagina.total;
+          this.totalPaginas = pagina.totalPaginas;
+          this.carregando = false;
+        },
+        error: (erro: unknown) => {
+          this.carregando = false;
+          this.linhas = [];
+          this.colunas = [];
+          this.total = 0;
+          this.totalPaginas = 0;
+          this.erro = mensagemDeErro(erro, 'Não foi possível carregar a grade de programação.');
+        },
+      });
+  }
+
+  /** Trocar filtro volta para a primeira pagina — a pagina 3 do filtro antigo nao significa nada no novo. */
+  aplicarFiltro(): void {
+    this.carregar(1);
   }
 
   /** Pivota a lista plana do BFF em linhas (peça) × colunas (período). */

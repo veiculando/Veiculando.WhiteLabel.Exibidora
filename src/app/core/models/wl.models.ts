@@ -216,6 +216,29 @@ export interface NomeadoLookup {
 
 // ---------------------------------------------------------------- Programacao
 
+/**
+ * Envelope de paginação das listagens do BFF.
+ *
+ * As listagens de PI, reserva e programação devolviam a coleção inteira. O
+ * servidor agora limita a página (teto de 100) e devolve o total para a UI
+ * montar o rodapé — o `pageSize` que volta pode ser menor que o pedido.
+ */
+export interface PaginaWl<T> {
+  itens: T[];
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPaginas: number;
+}
+
+/** Parâmetros de paginação aceitos pelas listagens. */
+export interface PaginaFiltro {
+  page?: number;
+  pageSize?: number;
+  sort?: string;
+  desc?: boolean;
+}
+
 export interface ProgramacaoFiltro {
   idPeriodo?: number | null;
   idLocal?: number | null;
@@ -271,6 +294,26 @@ export interface PedidoReservaItemDetalhe {
   pecaCodigo: string | null;
   localCodigo: string | null;
   status: string;
+}
+
+/**
+ * Decisão de um item na resposta ao pedido.
+ *
+ * O BFF exige uma entrada por item pendente — nem a mais, nem a menos. Omitir
+ * um item o deixaria pendente para sempre com o pedido já marcado como
+ * respondido, então a validação é do servidor e a UI precisa enviar todos.
+ */
+export interface PedidoReservaItemDecisao {
+  idItemPedidoReserva: number;
+  aceitar: boolean;
+  /** Peças oferecidas como alternativa na recusa; precisam ser desta exibidora. */
+  idsPecaSugerida?: number[];
+}
+
+export interface PedidoReservaRespostaResultado {
+  message: string;
+  aceitos: number;
+  rejeitados: number;
 }
 
 export interface PedidoReservaDetalhe {

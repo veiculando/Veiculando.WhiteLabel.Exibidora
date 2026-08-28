@@ -30,26 +30,56 @@ describe('PedidosInsercaoComponent', () => {
     const componente = fixture.componentInstance;
     componente.ngOnInit();
 
-    httpMock.expectOne(base).flush([
-      {
-        id: 1,
-        codigo: 'PI-1',
-        dataCadastro: '2026-08-01',
-        status: 'Ativo',
-        agencia: 'Agencia X',
-        anunciante: 'Cliente Y',
-        valorLiquidoVeiculacao: 100,
-      },
-    ]);
+    httpMock.expectOne((r) => r.url === base).flush({
+      itens: [
+        {
+          id: 1,
+          codigo: 'PI-1',
+          dataCadastro: '2026-08-01',
+          status: 'Ativo',
+          agencia: 'Agencia X',
+          anunciante: 'Cliente Y',
+          valorLiquidoVeiculacao: 100,
+        },
+      ],
+      page: 1,
+      pageSize: 25,
+      total: 1,
+      totalPaginas: 1,
+    });
 
     return componente;
   }
 
-  it('lista PIs em GET {bffUrl}/pedidos-insercao', () => {
+  it('lista PIs paginadas em GET {bffUrl}/pedidos-insercao', () => {
     const componente = criar();
 
     expect(componente.pedidos.length).toBe(1);
     expect(componente.pedidos[0].codigo).toBe('PI-1');
+    expect(componente.total).toBe(1);
+  });
+
+  it('respeita o pageSize devolvido pelo servidor, nao o pedido', () => {
+    const componente = TestBed.createComponent(PedidosInsercaoComponent).componentInstance;
+    componente.pageSize = 5000;
+    componente.ngOnInit();
+
+    httpMock
+      .expectOne((r) => r.url === base)
+      .flush({ itens: [], page: 1, pageSize: 100, total: 0, totalPaginas: 0 });
+
+    expect(componente.pageSize).toBe(100);
+  });
+
+  it('navegar de pagina pede a pagina nova', () => {
+    const componente = criar();
+
+    componente.carregar(2);
+    httpMock
+      .expectOne((r) => r.url === base && r.params.get('page') === '2')
+      .flush({ itens: [], page: 2, pageSize: 25, total: 30, totalPaginas: 2 });
+
+    expect(componente.page).toBe(2);
   });
 
   it('baixa o PDF pelo BFF em mesma origem, como blob, sem tocar o FileServer', () => {
