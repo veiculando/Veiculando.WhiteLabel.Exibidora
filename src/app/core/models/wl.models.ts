@@ -307,6 +307,8 @@ export interface UsuarioWl {
   telefoneComercial: string | null;
   dataUltimoLogin: string | null;
   statusConvite: 'Pendente' | 'Aceito';
+  excluido: boolean;
+  dataExclusao: string | null;
   permissoes: string[];
 }
 

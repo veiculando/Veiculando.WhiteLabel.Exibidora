@@ -9,8 +9,10 @@ export class UsuariosService {
   private http = inject(HttpClient);
   private readonly base = `${environment.bffUrl}/usuarios`;
 
-  listar(): Observable<UsuarioWl[]> {
-    return this.http.get<UsuarioWl[]>(this.base);
+  listar(incluirExcluidos = false): Observable<UsuarioWl[]> {
+    return this.http.get<UsuarioWl[]>(this.base, {
+      params: incluirExcluidos ? { incluirExcluidos: 'true' } : {},
+    });
   }
 
   obter(id: number): Observable<UsuarioWl> {

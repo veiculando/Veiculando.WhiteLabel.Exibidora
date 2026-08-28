@@ -40,11 +40,22 @@ import { UsuariosService } from '../../core/services/usuarios.service';
       @if (erro) {
         <div class="wl-estado wl-estado--erro" role="alert">{{ erro }}</div>
       }
+      @if (erroCarregamento) {
+        <button class="wl-btn wl-btn--secundario" type="button" (click)="carregar()">
+          Tentar novamente
+        </button>
+      }
       @if (aviso) {
         <div class="wl-estado wl-estado--sucesso" role="status">{{ aviso }}</div>
       }
     
       <div class="wl-toolbar">
+        <label class="permissao" for="mostrar-excluidos">
+          <input id="mostrar-excluidos" type="checkbox" [checked]="mostrarExcluidos"
+            [disabled]="carregando || salvando || reenviando !== null"
+            (change)="alternarExcluidos()" aria-describedby="nota-exclusao" />
+          Mostrar excluídos
+        </label>
         @if (!criando) {
           <button class="wl-btn" type="button" (click)="abrirCriacao()">
             Novo operador
@@ -52,6 +63,11 @@ import { UsuariosService } from '../../core/services/usuarios.service';
         }
       </div>
     
+      <p id="nota-exclusao" class="edicao__nota">
+        Após a exclusão, o acesso é bloqueado e o e-mail permanece reservado.
+        Marque “Mostrar excluídos” para consultar o histórico.
+      </p>
+
       <!-- --------------------------------------------- Criação -->
       @if (criando) {
         <form class="wl-card" [formGroup]="formCriacao" (ngSubmit)="criar()">
@@ -141,7 +157,12 @@ import { UsuariosService } from '../../core/services/usuarios.service';
                     <td>{{ usuario.email }}</td>
                     <td>{{ usuario.cargo || '—' }}</td>
                     <td>
-                      <span class="wl-etiqueta">{{ usuario.statusConvite === 'Aceito' ? 'Ativo' : 'Convite pendente' }}</span>
+                      <span class="wl-etiqueta">{{ usuario.excluido ? 'Excluído' : (usuario.statusConvite === 'Aceito' ? 'Ativo' : 'Convite pendente') }}</span>
+                      @if (usuario.excluido) {
+                        <div class="sem-permissao">
+                          Excluído em {{ usuario.dataExclusao ? (usuario.dataExclusao | date: 'dd/MM/yyyy HH:mm') : 'data não registrada' }}
+                        </div>
+                      }
                     </td>
                     <td>
                       {{ usuario.dataUltimoLogin ? (usuario.dataUltimoLogin | date: 'dd/MM/yyyy HH:mm') : 'nunca' }}
@@ -157,6 +178,9 @@ import { UsuariosService } from '../../core/services/usuarios.service';
                       }
                     </td>
                     <td class="acoes">
+                      @if (usuario.excluido) {
+                        <span class="sem-permissao">Somente consulta</span>
+                      } @else {
                       @if (usuario.statusConvite === 'Pendente') {
                         <button class="wl-btn wl-btn--link" type="button"
                           [disabled]="reenviando !== null" (click)="reenviarConvite(usuario)">
@@ -169,9 +193,10 @@ import { UsuariosService } from '../../core/services/usuarios.service';
                       <button class="wl-btn wl-btn--link excluir" type="button" (click)="excluir(usuario)">
                         Excluir
                       </button>
+                      }
                     </td>
                   </tr>
-                  @if (editando === usuario.id) {
+                  @if (!usuario.excluido && editando === usuario.id) {
                     <tr>
                       <td colspan="7" class="edicao">
                         <form [formGroup]="formEdicao">
@@ -309,6 +334,8 @@ export class UsuariosComponent implements OnInit {
   readonly permissoes = PERMISSOES_WL;
 
   usuarios: UsuarioWl[] = [];
+  mostrarExcluidos = false;
+  erroCarregamento = false;
   carregando = false;
   salvando = false;
   reenviando: number | null = null;
@@ -342,15 +369,18 @@ export class UsuariosComponent implements OnInit {
 
   carregar(limparErro = true): void {
     this.carregando = true;
+    this.erroCarregamento = false;
+    this.usuarios = [];
     if (limparErro) this.erro = null;
 
-    this.service.listar().subscribe({
+    this.service.listar(this.mostrarExcluidos).subscribe({
       next: (usuarios) => {
         this.usuarios = usuarios;
         this.carregando = false;
       },
       error: (erro: unknown) => {
         this.carregando = false;
+        this.erroCarregamento = true;
         this.erro = mensagemDeErro(erro, 'Não foi possível carregar os operadores.');
       },
     });
@@ -358,6 +388,13 @@ export class UsuariosComponent implements OnInit {
 
   rotulo(permissao: string): string {
     return PERMISSOES_WL_ROTULOS[permissao as PermissaoWl] ?? permissao;
+  }
+
+  alternarExcluidos(): void {
+    if (this.carregando || this.salvando || this.reenviando !== null) return;
+    this.mostrarExcluidos = !this.mostrarExcluidos;
+    this.editando = null;
+    this.carregar();
   }
 
   invalido(campo: 'nome' | 'email'): boolean {
@@ -430,7 +467,7 @@ export class UsuariosComponent implements OnInit {
   // ------------------------------------------------------------ edição
 
   reenviarConvite(usuario: UsuarioWl): void {
-    if (this.reenviando !== null || usuario.statusConvite !== 'Pendente') return;
+    if (usuario.excluido || this.reenviando !== null || usuario.statusConvite !== 'Pendente') return;
     this.reenviando = usuario.id;
     this.erro = null;
     this.aviso = null;
@@ -448,6 +485,7 @@ export class UsuariosComponent implements OnInit {
   }
 
   abrirEdicao(usuario: UsuarioWl): void {
+    if (usuario.excluido) return;
     if (this.editando === usuario.id) {
       this.editando = null;
       return;
@@ -477,6 +515,7 @@ export class UsuariosComponent implements OnInit {
   }
 
   salvarEdicao(usuario: UsuarioWl): void {
+    if (usuario.excluido || this.salvando) return;
     this.erro = null;
     this.aviso = null;
 
@@ -513,6 +552,7 @@ export class UsuariosComponent implements OnInit {
   // ------------------------------------------------------------ exclusão
 
   excluir(usuario: UsuarioWl): void {
+    if (usuario.excluido) return;
     if (!confirm(`Excluir o operador ${usuario.email}? Ele perde o acesso ao painel imediatamente.`)) {
       return;
     }
@@ -522,6 +562,7 @@ export class UsuariosComponent implements OnInit {
 
     this.service.excluir(usuario.id).subscribe({
       next: () => {
+        this.editando = null;
         this.aviso = `Operador ${usuario.email} excluído.`;
         this.carregar();
       },
