@@ -48,4 +48,18 @@ export class PedidosInsercaoService {
   obter(codigo: string): Observable<PedidoInsercaoListItem> {
     return this.http.get<PedidoInsercaoListItem>(`${this.base}/${encodeURIComponent(codigo)}`);
   }
+
+  /**
+   * `GET /api/wl/pedidos-insercao/{codigo}/pdf`.
+   *
+   * O PDF vem pelo BFF, em mesma origem. Nao existe mais `pdfUrl` no payload:
+   * aquele campo carregava o host do FileServer ate o browser, e o FileServer
+   * nao autentica ninguem nem filtra por afiliada. O recorte de tenant so
+   * existe no BFF, entao e por ele que o arquivo tem de passar.
+   */
+  pdf(codigo: string): Observable<Blob> {
+    return this.http.get(`${this.base}/${encodeURIComponent(codigo)}/pdf`, {
+      responseType: 'blob',
+    });
+  }
 }

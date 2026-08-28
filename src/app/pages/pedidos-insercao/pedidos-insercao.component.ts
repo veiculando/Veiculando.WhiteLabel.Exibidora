@@ -7,10 +7,14 @@ import { PedidosInsercaoService } from '../../core/services/pedidos.service';
 /**
  * Pedidos de inserção — card `c2a44cbc`.
  *
- * Listagem com as colunas **Anunciante** e **Agência** e link para o PDF de
- * detalhe. O `pdfUrl` é montado pelo BFF a partir de `FILE_SERVER_URL` e aponta
- * para o FileServer legado; abre em nova aba com `rel="noopener"` para não expor
- * o `window.opener` do painel à página de destino.
+ * Listagem com as colunas **Anunciante** e **Agência** e acesso ao PDF de
+ * detalhe.
+ *
+ * O PDF é baixado do BFF em mesma origem e aberto a partir de um blob local.
+ * Não é mais um `<a href>` para o FileServer: aquele link levava o host de um
+ * serviço sem `[Authorize]` e sem filtro por afiliada até o browser. Como o
+ * download passa pelo interceptor de JWT, o botão precisa ser um handler — um
+ * `href` não carregaria o token.
  */
 @Component({
     selector: 'app-pedidos-insercao',
@@ -61,7 +65,14 @@ import { PedidosInsercaoService } from '../../core/services/pedidos.service';
                   <td><span class="wl-etiqueta">{{ pedido.status }}</span></td>
                   <td>{{ pedido.valorLiquidoVeiculacao | currency: 'BRL' : 'symbol' : '1.2-2' }}</td>
                   <td>
-                    <a [href]="pedido.pdfUrl" target="_blank" rel="noopener">Abrir PDF</a>
+                    <button
+                      class="wl-btn wl-btn--link"
+                      type="button"
+                      [disabled]="baixando === pedido.codigo"
+                      (click)="abrirPdf(pedido.codigo)"
+                    >
+                      {{ baixando === pedido.codigo ? 'Abrindo…' : 'Abrir PDF' }}
+                    </button>
                   </td>
                 </tr>
               }
@@ -87,6 +98,9 @@ export class PedidosInsercaoComponent implements OnInit {
   carregando = false;
   erro: string | null = null;
 
+  /** Código da PI cujo PDF está sendo baixado, para desabilitar só aquele botão. */
+  baixando: string | null = null;
+
   ngOnInit(): void {
     this.carregar();
   }
@@ -103,6 +117,31 @@ export class PedidosInsercaoComponent implements OnInit {
       error: (erro: unknown) => {
         this.carregando = false;
         this.erro = mensagemDeErro(erro, 'Não foi possível carregar os pedidos de inserção.');
+      },
+    });
+  }
+
+  abrirPdf(codigo: string): void {
+    if (this.baixando) return;
+
+    this.baixando = codigo;
+    this.erro = null;
+
+    this.service.pdf(codigo).subscribe({
+      next: (blob) => {
+        this.baixando = null;
+
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
+
+        // O objectURL segura o blob em memória até ser revogado. A aba nova já
+        // leu o conteúdo quando o timer dispara; revogar na hora abortaria o
+        // carregamento em alguns browsers.
+        setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      },
+      error: (erro: unknown) => {
+        this.baixando = null;
+        this.erro = mensagemDeErro(erro, 'Não foi possível abrir o PDF deste pedido.');
       },
     });
   }

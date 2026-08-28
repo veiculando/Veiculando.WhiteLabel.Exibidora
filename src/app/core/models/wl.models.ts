@@ -292,8 +292,6 @@ export interface PedidoInsercaoListItem {
   agencia: string | null;
   anunciante: string | null;
   valorLiquidoVeiculacao: number | null;
-  /** Montado pelo BFF a partir de `FILE_SERVER_URL`; abrir em nova aba. */
-  pdfUrl: string;
 }
 
 // ---------------------------------------------------------------- Usuarios
