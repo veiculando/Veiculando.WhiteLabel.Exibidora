@@ -37,8 +37,19 @@ describe('LocalDadosStepComponent', () => {
     fixture.componentInstance.salvar.subscribe(() => (chamado = true));
 
     fixture.componentInstance.onSubmit();
+    fixture.detectChanges();
 
     expect(chamado).toBe(false);
+    const erros = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLElement>('[role="alert"]'),
+      (elemento) => elemento.textContent?.trim(),
+    );
+    expect(erros).toEqual([
+      'Informe a cidade.',
+      'Informe o logradouro.',
+      'Informe a latitude.',
+      'Informe a longitude.',
+    ]);
   });
 
   it('pré-carrega valores existentes via @Input valorInicial', () => {

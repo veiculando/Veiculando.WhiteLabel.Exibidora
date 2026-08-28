@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { mensagemDeErro } from '../../core/http/api-error';
@@ -22,15 +23,8 @@ import { UsuariosService } from '../../core/services/usuarios.service';
  * as permissões inválidas nomeadas. A lista aqui é para o operador não precisar
  * digitar identificadores.
  *
- * A edição altera dados cadastrais, permissões e senha. Nem sempre foi assim: o
- * `Update` do BFF aceitava nome, cargo, departamento, telefone e senha no DTO
- * mas aplicava só `AtualizarPermissoes`, descartando o resto sem erro — o
- * operador salvava e o dado voltava como antes. Corrigido ainda na Sprint 9.0,
- * junto com o formulário completo desta tela.
- *
- * A atualização é parcial por campo: o que não vier no payload é preservado no
- * servidor. Por isso a senha só viaja quando preenchida — string vazia seria
- * lida como tentativa de troca.
+ * A senha é criada pelo próprio operador no convite de primeiro acesso; o
+ * administrador nunca conhece nem define a credencial do convidado.
  *
  * O e-mail é imutável: identifica o operador na instância e faz parte do índice
  * único `UK_WlUsuario_Email_Afiliada`.
@@ -44,13 +38,24 @@ import { UsuariosService } from '../../core/services/usuarios.service';
       <p class="wl-page__descricao">Contas de acesso ao painel e suas permissões.</p>
     
       @if (erro) {
-        <div class="wl-estado wl-estado--erro">{{ erro }}</div>
+        <div class="wl-estado wl-estado--erro" role="alert">{{ erro }}</div>
+      }
+      @if (erroCarregamento) {
+        <button class="wl-btn wl-btn--secundario" type="button" (click)="carregar()">
+          Tentar novamente
+        </button>
       }
       @if (aviso) {
-        <div class="wl-estado wl-estado--sucesso">{{ aviso }}</div>
+        <div class="wl-estado wl-estado--sucesso" role="status">{{ aviso }}</div>
       }
     
       <div class="wl-toolbar">
+        <label class="permissao" for="mostrar-excluidos">
+          <input id="mostrar-excluidos" type="checkbox" [checked]="mostrarExcluidos"
+            [disabled]="carregando || salvando || reenviando !== null"
+            (change)="alternarExcluidos()" aria-describedby="nota-exclusao" />
+          Mostrar excluídos
+        </label>
         @if (!criando) {
           <button class="wl-btn" type="button" (click)="abrirCriacao()">
             Novo operador
@@ -58,6 +63,11 @@ import { UsuariosService } from '../../core/services/usuarios.service';
         }
       </div>
     
+      <p id="nota-exclusao" class="edicao__nota">
+        Após a exclusão, o acesso é bloqueado e o e-mail permanece reservado.
+        Marque “Mostrar excluídos” para consultar o histórico.
+      </p>
+
       <!-- --------------------------------------------- Criação -->
       @if (criando) {
         <form class="wl-card" [formGroup]="formCriacao" (ngSubmit)="criar()">
@@ -75,13 +85,6 @@ import { UsuariosService } from '../../core/services/usuarios.service';
               <input id="email" type="email" formControlName="email" />
               @if (invalido('email')) {
                 <span class="wl-campo__erro">Informe um e-mail válido.</span>
-              }
-            </div>
-            <div class="wl-campo">
-              <label for="senha">Senha *</label>
-              <input id="senha" type="password" formControlName="senha" autocomplete="new-password" />
-              @if (invalido('senha')) {
-                <span class="wl-campo__erro">Mínimo de 8 caracteres.</span>
               }
             </div>
             <div class="wl-campo">
@@ -113,7 +116,7 @@ import { UsuariosService } from '../../core/services/usuarios.service';
             </fieldset>
             <div class="acoes-form">
               <button class="wl-btn" type="submit" [disabled]="salvando">
-                {{ salvando ? 'Salvando…' : 'Cadastrar' }}
+                {{ salvando ? 'Enviando…' : 'Criar e enviar convite' }}
               </button>
               <button class="wl-btn wl-btn--secundario" type="button" (click)="cancelarCriacao()">
                 Cancelar
@@ -141,6 +144,7 @@ import { UsuariosService } from '../../core/services/usuarios.service';
                   <th>Nome</th>
                   <th>E-mail</th>
                   <th>Cargo</th>
+                  <th>Acesso</th>
                   <th>Último acesso</th>
                   <th>Permissões</th>
                   <th>Ações</th>
@@ -152,6 +156,14 @@ import { UsuariosService } from '../../core/services/usuarios.service';
                     <td>{{ usuario.nome }}</td>
                     <td>{{ usuario.email }}</td>
                     <td>{{ usuario.cargo || '—' }}</td>
+                    <td>
+                      <span class="wl-etiqueta">{{ usuario.excluido ? 'Excluído' : (usuario.statusConvite === 'Aceito' ? 'Ativo' : 'Convite pendente') }}</span>
+                      @if (usuario.excluido) {
+                        <div class="sem-permissao">
+                          Excluído em {{ usuario.dataExclusao ? (usuario.dataExclusao | date: 'dd/MM/yyyy HH:mm') : 'data não registrada' }}
+                        </div>
+                      }
+                    </td>
                     <td>
                       {{ usuario.dataUltimoLogin ? (usuario.dataUltimoLogin | date: 'dd/MM/yyyy HH:mm') : 'nunca' }}
                     </td>
@@ -166,17 +178,27 @@ import { UsuariosService } from '../../core/services/usuarios.service';
                       }
                     </td>
                     <td class="acoes">
+                      @if (usuario.excluido) {
+                        <span class="sem-permissao">Somente consulta</span>
+                      } @else {
+                      @if (usuario.statusConvite === 'Pendente') {
+                        <button class="wl-btn wl-btn--link" type="button"
+                          [disabled]="reenviando !== null" (click)="reenviarConvite(usuario)">
+                          {{ reenviando === usuario.id ? 'Enviando…' : 'Reenviar convite' }}
+                        </button>
+                      }
                       <button class="wl-btn wl-btn--link" type="button" (click)="abrirEdicao(usuario)">
                         {{ editando === usuario.id ? 'Fechar' : 'Editar' }}
                       </button>
                       <button class="wl-btn wl-btn--link excluir" type="button" (click)="excluir(usuario)">
                         Excluir
                       </button>
+                      }
                     </td>
                   </tr>
-                  @if (editando === usuario.id) {
+                  @if (!usuario.excluido && editando === usuario.id) {
                     <tr>
-                      <td colspan="6" class="edicao">
+                      <td colspan="7" class="edicao">
                         <form [formGroup]="formEdicao">
                           <div class="grade">
                             <div class="wl-campo">
@@ -198,21 +220,6 @@ import { UsuariosService } from '../../core/services/usuarios.service';
                               <label [attr.for]="'tel-' + usuario.id">Telefone comercial</label>
                               <input [id]="'tel-' + usuario.id" type="text" formControlName="telefoneComercial" />
                             </div>
-                            <div class="wl-campo">
-                              <label [attr.for]="'senha-' + usuario.id">Nova senha</label>
-                              <input
-                                [id]="'senha-' + usuario.id"
-                                type="password"
-                                formControlName="senha"
-                                autocomplete="new-password"
-                                placeholder="deixe em branco para manter"
-                                />
-                                @if (invalidoEdicao('senha')) {
-                                  <span class="wl-campo__erro">
-                                    Mínimo de 8 caracteres.
-                                  </span>
-                                }
-                              </div>
                             </div>
                           </form>
                           <p class="edicao__nota">
@@ -327,8 +334,11 @@ export class UsuariosComponent implements OnInit {
   readonly permissoes = PERMISSOES_WL;
 
   usuarios: UsuarioWl[] = [];
+  mostrarExcluidos = false;
+  erroCarregamento = false;
   carregando = false;
   salvando = false;
+  reenviando: number | null = null;
   erro: string | null = null;
   aviso: string | null = null;
 
@@ -341,39 +351,36 @@ export class UsuariosComponent implements OnInit {
   formCriacao = this.fb.nonNullable.group({
     nome: ['', [Validators.required]],
     email: ['', [Validators.required, Validators.email]],
-    senha: ['', [Validators.required, Validators.minLength(8)]],
     cargo: [''],
     departamento: [''],
     telefoneComercial: [''],
   });
 
-  /**
-   * Edição. A senha é opcional — sem `Validators.required` — mas, se preenchida,
-   * respeita o mesmo mínimo do cadastro, que o BFF também valida.
-   */
   formEdicao = this.fb.nonNullable.group({
     nome: ['', [Validators.required]],
     cargo: [''],
     departamento: [''],
     telefoneComercial: [''],
-    senha: ['', [Validators.minLength(8)]],
   });
 
   ngOnInit(): void {
     this.carregar();
   }
 
-  carregar(): void {
+  carregar(limparErro = true): void {
     this.carregando = true;
-    this.erro = null;
+    this.erroCarregamento = false;
+    this.usuarios = [];
+    if (limparErro) this.erro = null;
 
-    this.service.listar().subscribe({
+    this.service.listar(this.mostrarExcluidos).subscribe({
       next: (usuarios) => {
         this.usuarios = usuarios;
         this.carregando = false;
       },
       error: (erro: unknown) => {
         this.carregando = false;
+        this.erroCarregamento = true;
         this.erro = mensagemDeErro(erro, 'Não foi possível carregar os operadores.');
       },
     });
@@ -383,7 +390,14 @@ export class UsuariosComponent implements OnInit {
     return PERMISSOES_WL_ROTULOS[permissao as PermissaoWl] ?? permissao;
   }
 
-  invalido(campo: 'nome' | 'email' | 'senha'): boolean {
+  alternarExcluidos(): void {
+    if (this.carregando || this.salvando || this.reenviando !== null) return;
+    this.mostrarExcluidos = !this.mostrarExcluidos;
+    this.editando = null;
+    this.carregar();
+  }
+
+  invalido(campo: 'nome' | 'email'): boolean {
     const controle = this.formCriacao.controls[campo];
     return controle.invalid && (controle.dirty || controle.touched);
   }
@@ -410,6 +424,7 @@ export class UsuariosComponent implements OnInit {
   }
 
   criar(): void {
+    if (this.salvando) return;
     this.erro = null;
     this.aviso = null;
 
@@ -425,7 +440,6 @@ export class UsuariosComponent implements OnInit {
       .criar({
         nome: valores.nome,
         email: valores.email,
-        senha: valores.senha,
         cargo: valores.cargo || null,
         departamento: valores.departamento || null,
         telefoneComercial: valores.telefoneComercial || null,
@@ -441,6 +455,10 @@ export class UsuariosComponent implements OnInit {
         },
         error: (erro: unknown) => {
           this.salvando = false;
+          if (erro instanceof HttpErrorResponse && erro.error?.conviteEnviado === false && erro.error?.id) {
+            this.cancelarCriacao();
+            this.carregar(false);
+          }
           this.erro = mensagemDeErro(erro, 'Não foi possível cadastrar o operador.');
         },
       });
@@ -448,7 +466,26 @@ export class UsuariosComponent implements OnInit {
 
   // ------------------------------------------------------------ edição
 
+  reenviarConvite(usuario: UsuarioWl): void {
+    if (usuario.excluido || this.reenviando !== null || usuario.statusConvite !== 'Pendente') return;
+    this.reenviando = usuario.id;
+    this.erro = null;
+    this.aviso = null;
+    this.service.reenviarConvite(usuario.id).subscribe({
+      next: (resposta) => {
+        this.reenviando = null;
+        this.aviso = resposta.message;
+        this.carregar();
+      },
+      error: (erro: unknown) => {
+        this.reenviando = null;
+        this.erro = mensagemDeErro(erro, 'Não foi possível reenviar o convite. Tente novamente.');
+      },
+    });
+  }
+
   abrirEdicao(usuario: UsuarioWl): void {
+    if (usuario.excluido) return;
     if (this.editando === usuario.id) {
       this.editando = null;
       return;
@@ -460,14 +497,11 @@ export class UsuariosComponent implements OnInit {
     this.aviso = null;
     this.permissoesEdicao = new Set(usuario.permissoes);
 
-    // A senha começa vazia e assim permanece se o administrador não quiser
-    // trocá-la — o BFF preserva a atual quando o campo não vem preenchido.
     this.formEdicao.reset({
       nome: usuario.nome ?? '',
       cargo: usuario.cargo ?? '',
       departamento: usuario.departamento ?? '',
       telefoneComercial: usuario.telefoneComercial ?? '',
-      senha: '',
     });
   }
 
@@ -481,6 +515,7 @@ export class UsuariosComponent implements OnInit {
   }
 
   salvarEdicao(usuario: UsuarioWl): void {
+    if (usuario.excluido || this.salvando) return;
     this.erro = null;
     this.aviso = null;
 
@@ -498,9 +533,6 @@ export class UsuariosComponent implements OnInit {
         cargo: v.cargo || null,
         departamento: v.departamento || null,
         telefoneComercial: v.telefoneComercial || null,
-        // Só viaja quando preenchida: enviar string vazia faria o servidor
-        // tratar como tentativa de troca.
-        ...(v.senha ? { senha: v.senha } : {}),
         permissoes: [...this.permissoesEdicao],
       })
       .subscribe({
@@ -520,6 +552,7 @@ export class UsuariosComponent implements OnInit {
   // ------------------------------------------------------------ exclusão
 
   excluir(usuario: UsuarioWl): void {
+    if (usuario.excluido) return;
     if (!confirm(`Excluir o operador ${usuario.email}? Ele perde o acesso ao painel imediatamente.`)) {
       return;
     }
@@ -529,6 +562,7 @@ export class UsuariosComponent implements OnInit {
 
     this.service.excluir(usuario.id).subscribe({
       next: () => {
+        this.editando = null;
         this.aviso = `Operador ${usuario.email} excluído.`;
         this.carregar();
       },

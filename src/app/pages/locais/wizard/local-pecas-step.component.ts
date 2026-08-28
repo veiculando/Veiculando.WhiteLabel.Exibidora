@@ -4,6 +4,8 @@ import { RouterLink } from '@angular/router';
 import { PecaService } from '../services/peca.service';
 import { PecaListItem } from '../models/peca.model';
 import { STATUS_EXIBICAO_LABEL } from '../models/status-exibicao.enum';
+import { PhotoUploadComponent } from '../../../shared/photo-upload.component';
+import { environment } from '../../../../environments/environment';
 
 /**
  * Etapa 3 do wizard — "Peças". Lista as peças do local e encaminha o
@@ -19,10 +21,12 @@ import { STATUS_EXIBICAO_LABEL } from '../models/status-exibicao.enum';
 @Component({
   selector: 'app-local-pecas-step',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, PhotoUploadComponent],
   templateUrl: './local-pecas-step.component.html',
 })
 export class LocalPecasStepComponent implements OnInit {
+  readonly bffUrl = environment.bffUrl;
+  readonly fotoPecaId = signal<number | null>(null);
   @Input({ required: true }) idLocal!: number;
 
   private readonly pecaService = inject(PecaService);

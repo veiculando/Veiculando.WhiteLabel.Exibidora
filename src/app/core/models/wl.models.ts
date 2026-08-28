@@ -37,6 +37,13 @@ export interface AlterarSenhaRequest {
   novaSenha: string;
 }
 
+/** `POST /api/wl/auth/primeiro-acesso`. */
+export interface PrimeiroAcessoRequest {
+  email: string;
+  token: string;
+  novaSenha: string;
+}
+
 export interface OperadorLogado {
   id: number;
   nome: string;
@@ -285,8 +292,6 @@ export interface PedidoInsercaoListItem {
   agencia: string | null;
   anunciante: string | null;
   valorLiquidoVeiculacao: number | null;
-  /** Montado pelo BFF a partir de `FILE_SERVER_URL`; abrir em nova aba. */
-  pdfUrl: string;
 }
 
 // ---------------------------------------------------------------- Usuarios
@@ -299,13 +304,15 @@ export interface UsuarioWl {
   departamento: string | null;
   telefoneComercial: string | null;
   dataUltimoLogin: string | null;
+  statusConvite: 'Pendente' | 'Aceito';
+  excluido: boolean;
+  dataExclusao: string | null;
   permissoes: string[];
 }
 
 export interface UsuarioWlCreate {
   nome: string;
   email: string;
-  senha: string;
   cargo?: string | null;
   departamento?: string | null;
   telefoneComercial?: string | null;
@@ -319,14 +326,11 @@ export interface UsuarioWlCreate {
  * servidor. Por isso todos os campos são opcionais — uma tela que edite apenas
  * permissões não zera o cargo do operador.
  *
- * `senha` só deve ser enviada quando o administrador realmente quer trocá-la;
- * vazia ou ausente, a senha atual é mantida.
  */
 export interface UsuarioWlUpdate {
   nome?: string;
   cargo?: string | null;
   departamento?: string | null;
   telefoneComercial?: string | null;
-  senha?: string;
   permissoes?: string[];
 }

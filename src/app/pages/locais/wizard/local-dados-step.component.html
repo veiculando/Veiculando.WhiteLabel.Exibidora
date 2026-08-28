@@ -1,5 +1,5 @@
 <form class="local-dados-step" [formGroup]="form" (ngSubmit)="onSubmit()">
-  <fieldset>
+  <fieldset [disabled]="salvando">
     <legend>Dados do Local</legend>
 
     <label>
@@ -10,6 +10,9 @@
     <label>
       Cidade
       <input type="number" formControlName="idCidade" required />
+      @if (form.controls.idCidade.touched && form.controls.idCidade.invalid) {
+        <span class="wl-campo__erro" role="alert">Informe a cidade.</span>
+      }
     </label>
 
     <label>
@@ -20,6 +23,9 @@
     <label>
       Logradouro
       <input type="text" formControlName="logradouro" required />
+      @if (form.controls.logradouro.touched && form.controls.logradouro.invalid) {
+        <span class="wl-campo__erro" role="alert">Informe o logradouro.</span>
+      }
     </label>
 
     <label>
@@ -45,11 +51,17 @@
     <label>
       Latitude
       <input type="number" formControlName="latitude" required />
+      @if (form.controls.latitude.touched && form.controls.latitude.invalid) {
+        <span class="wl-campo__erro" role="alert">Informe a latitude.</span>
+      }
     </label>
 
     <label>
       Longitude
       <input type="number" formControlName="longitude" required />
+      @if (form.controls.longitude.touched && form.controls.longitude.invalid) {
+        <span class="wl-campo__erro" role="alert">Informe a longitude.</span>
+      }
     </label>
 
     <label>
@@ -63,5 +75,5 @@
     </label>
   </fieldset>
 
-  <button type="submit" class="btn btn--primary">Salvar Dados do Local</button>
+  <button type="submit" class="btn btn--primary" [disabled]="salvando">{{ salvando ? 'Salvando…' : 'Salvar Dados do Local' }}</button>
 </form>

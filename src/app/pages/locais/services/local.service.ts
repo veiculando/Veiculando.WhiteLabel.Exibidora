@@ -50,6 +50,10 @@ export class LocalService {
     return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }
 
+  alterarStatus(id: number, acao: 'cancelar' | 'inativar' | 'reativar', timeStamp?: string): Observable<unknown> {
+    return this.http.post(`${this.baseUrl}/${id}/${acao}`, { timeStamp });
+  }
+
   /** Traduz o payload flat do formulário para LocalCadastroCommand (Core). */
   private paraComando(payload: LocalDadosPayload): LocalCadastroComando {
     return {

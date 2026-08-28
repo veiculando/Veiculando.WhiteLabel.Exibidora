@@ -172,4 +172,21 @@ describe('AuthService', () => {
 
         expect(SecureStorage.getToken(environment.tokenKey)).toBeNull();
     });
+
+    it('primeiroAcesso envia o token de convite sem persisti-lo no storage', () => {
+        service
+            .primeiroAcesso({ email: 'convidado@exemplo.com', token: 'convite-bruto', novaSenha: 'NovaSenha456' })
+            .subscribe();
+
+        const requisicao = http.expectOne(`${environment.bffUrl}/auth/primeiro-acesso`);
+        expect(requisicao.request.body).toEqual({
+            email: 'convidado@exemplo.com',
+            token: 'convite-bruto',
+            novaSenha: 'NovaSenha456',
+        });
+        requisicao.flush({ message: 'Senha criada com sucesso.' });
+
+        expect(SecureStorage.getToken(environment.tokenKey)).toBeNull();
+        expect(localStorage.getItem('convite-bruto')).toBeNull();
+    });
 });

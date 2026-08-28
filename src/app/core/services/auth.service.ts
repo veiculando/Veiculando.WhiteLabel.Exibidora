@@ -12,6 +12,7 @@ import {
   LoginResponse,
   MensagemResposta,
   OperadorLogado,
+  PrimeiroAcessoRequest,
 } from '../models/wl.models';
 
 /**
@@ -64,6 +65,11 @@ export class AuthService {
    */
   alterarSenha(request: AlterarSenhaRequest): Observable<MensagemResposta> {
     return this.http.post<MensagemResposta>(`${this.base}/alterar-senha`, request);
+  }
+
+  /** Conclui o convite de uso único sem persistir o token em storage. */
+  primeiroAcesso(request: PrimeiroAcessoRequest): Observable<MensagemResposta> {
+    return this.http.post<MensagemResposta>(`${this.base}/primeiro-acesso`, request);
   }
 
   logout(): void {

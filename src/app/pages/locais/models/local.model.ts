@@ -7,6 +7,7 @@ import { StatusExibicao } from './status-exibicao.enum';
  * existirem na tela, são aplicados em memória (ver LocaisComponent).
  */
 export interface LocalListItem {
+  timeStamp?: string;
   id: number;
   codigo: string;
   descricao: string | null;

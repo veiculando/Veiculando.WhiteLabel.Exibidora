@@ -25,6 +25,7 @@ import { LocalPublicoPayload, emptyLocalPublicoPayload } from '../models/local-p
 })
 export class LocalDemografiaStepComponent implements OnChanges {
   @Input() valorInicial: LocalPublicoPayload | null = null;
+  @Input() salvando = false;
   @Output() salvar = new EventEmitter<LocalPublicoPayload>();
 
   private readonly fb = new FormBuilder();
@@ -58,6 +59,7 @@ export class LocalDemografiaStepComponent implements OnChanges {
   }
 
   onSubmit(): void {
+    if (this.salvando) return;
     const payload: LocalPublicoPayload = {
       ...this.form.getRawValue(),
       faixaEtaria: this.faixaEtaria,

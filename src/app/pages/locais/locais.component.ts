@@ -3,6 +3,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { LocalService } from './services/local.service';
 import { LocalListItem } from './models/local.model';
+import { mensagemDeErro } from '../../core/http/api-error';
 import { STATUS_EXIBICAO_LABEL, StatusExibicao } from './models/status-exibicao.enum';
 
 /**
@@ -33,6 +34,8 @@ export class LocaisComponent implements OnInit {
   readonly carregando = signal(false);
   readonly excluindoId = signal<number | null>(null);
   readonly erro = signal(false);
+  readonly erroAcao = signal('');
+  readonly sucesso = signal('');
   readonly statusLabel = STATUS_EXIBICAO_LABEL;
   readonly StatusExibicao = StatusExibicao;
 
@@ -56,22 +59,33 @@ export class LocaisComponent implements OnInit {
   }
 
   excluir(local: LocalListItem): void {
-    if (!window.confirm(`Excluir o local ${local.codigo}?`)) {
+    if (this.excluindoId() !== null) return;
+    const acao = this.rotuloAcao(local);
+    if (!window.confirm(`${acao}: ${local.codigo}?${local.statusExibicao === StatusExibicao.Inativo ? ' O local voltará a aguardar aprovação.' : ''}`)) {
       return;
     }
 
     this.excluindoId.set(local.id);
-    this.erro.set(false);
-    this.localService.deleteLocal(local.id).subscribe({
+    this.erroAcao.set('');
+    this.sucesso.set('');
+    const operacao = local.statusExibicao === StatusExibicao.Ativo ? 'inativar'
+      : local.statusExibicao === StatusExibicao.Inativo ? 'reativar' : 'cancelar';
+    this.localService.alterarStatus(local.id, operacao, local.timeStamp).subscribe({
       next: () => {
         this.excluindoId.set(null);
+        this.sucesso.set('Situação do local atualizada.');
         this.carregar();
       },
-      error: () => {
+      error: err => {
         this.excluindoId.set(null);
-        this.erro.set(true);
+        this.erroAcao.set(mensagemDeErro(err));
       },
     });
+  }
+
+  rotuloAcao(local: LocalListItem): string {
+    return local.statusExibicao === StatusExibicao.Ativo ? 'Inativar'
+      : local.statusExibicao === StatusExibicao.Inativo ? 'Reativar' : 'Cancelar cadastro';
   }
 
   private carregar(): void {

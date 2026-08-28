@@ -1,14 +1,16 @@
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
+import { finalize, switchMap, tap } from 'rxjs';
+import { mensagemDeErro } from '../../../core/http/api-error';
 import { LocalDadosStepComponent } from './local-dados-step.component';
 import { LocalDemografiaStepComponent } from './local-demografia-step.component';
 import { LocalPecasStepComponent } from './local-pecas-step.component';
 import { LocalService } from '../services/local.service';
 import { LocalPublicoService } from '../services/local-publico.service';
 import { LocalDadosPayload, LocalDetalhe } from '../models/local.model';
-import { LocalPublicoPayload, emptyLocalPublicoPayload } from '../models/local-publico.model';
+import { LocalPublicoPayload } from '../models/local-publico.model';
 import { STATUS_EXIBICAO_LABEL, StatusExibicao } from '../models/status-exibicao.enum';
 
 type Etapa = 0 | 1 | 2;
@@ -30,6 +32,7 @@ type Etapa = 0 | 1 | 2;
 })
 export class LocalWizardComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
+  private readonly location = inject(Location);
   private readonly localService = inject(LocalService);
   private readonly publicoService = inject(LocalPublicoService);
 
@@ -39,6 +42,12 @@ export class LocalWizardComponent implements OnInit {
   readonly statusLabel = STATUS_EXIBICAO_LABEL;
   readonly carregando = signal(false);
   readonly naoEncontrado = signal(false);
+  readonly erroCarregarLocal = signal('');
+  readonly salvando = signal(false);
+  readonly mensagem = signal('');
+  readonly erroSalvar = signal('');
+  readonly carregandoDemografia = signal(false);
+  readonly erroCarregarDemografia = signal('');
 
   dadosIniciais: LocalDadosPayload | null = null;
   demografiaInicial: LocalPublicoPayload | null = null;
@@ -47,18 +56,27 @@ export class LocalWizardComponent implements OnInit {
   etapasHabilitadas = signal<[boolean, boolean, boolean]>([true, false, false]);
 
   ngOnInit(): void {
+    this.carregarLocal();
+  }
+
+  carregarLocal(): void {
     const idParam = this.route.snapshot.paramMap.get('id');
-    if (!idParam) return; // modo criação: nada a carregar
+    if (!idParam || this.carregando()) return; // modo criação: nada a carregar
 
     const id = Number(idParam);
     this.carregando.set(true);
+    this.naoEncontrado.set(false);
+    this.erroCarregarLocal.set('');
 
     this.localService.getLocal(id).subscribe({
       next: (local) => this.aplicarLocalCarregado(id, local),
       error: (err: HttpErrorResponse) => {
         this.carregando.set(false);
-        // 404 (IDOR bloqueado no Core) — nunca expõe estado parcial.
-        this.naoEncontrado.set(true);
+        // Somente 404 oculta existência/tenant; rede/5xx devem permitir retry.
+        if (err.status === 404) this.naoEncontrado.set(true);
+        else this.erroCarregarLocal.set(err.status === 403
+          ? 'Você não tem permissão para acessar este local.'
+          : 'Não foi possível carregar o local. Tente novamente.');
       },
     });
   }
@@ -67,38 +85,104 @@ export class LocalWizardComponent implements OnInit {
     this.idLocal.set(id);
     this.statusExibicao.set(local.statusExibicao);
     this.dadosIniciais = paraDadosPayload(local);
-    this.etapasHabilitadas.set([true, true, true]);
+    this.etapasHabilitadas.set([true, false, true]);
     this.carregando.set(false);
+    this.carregarDemografia();
+  }
 
-    this.publicoService.getPublico(id).subscribe({
-      next: (publico) => (this.demografiaInicial = publico),
-      error: () => (this.demografiaInicial = emptyLocalPublicoPayload()),
+  carregarDemografia(): void {
+    const id = this.idLocal();
+    if (!id || this.carregandoDemografia()) return;
+    this.carregandoDemografia.set(true);
+    this.erroCarregarDemografia.set('');
+    this.etapasHabilitadas.update(etapas => [etapas[0], false, etapas[2]]);
+    this.publicoService.getPublico(id).pipe(
+      finalize(() => this.carregandoDemografia.set(false)),
+    ).subscribe({
+      next: publico => {
+        this.demografiaInicial = publico;
+        this.etapasHabilitadas.update(etapas => [etapas[0], true, etapas[2]]);
+      },
+      error: () => this.erroCarregarDemografia.set('Não foi possível carregar os dados demográficos. Tente novamente antes de editar.'),
     });
   }
 
   irParaEtapa(etapa: Etapa): void {
-    if (this.etapasHabilitadas()[etapa]) {
+    if (!this.salvando() && this.etapasHabilitadas()[etapa]) {
       this.etapaAtual.set(etapa);
     }
   }
 
   onSalvarDados(payload: LocalDadosPayload): void {
+    if (this.salvando()) return;
+    this.salvando.set(true);
+    this.erroSalvar.set('');
+    this.mensagem.set('');
     const id = this.idLocal();
     const salvo$ = id ? this.localService.updateLocal(id, payload) : this.localService.createLocal(payload);
-
-    salvo$.subscribe((resumo) => {
-      if (!resumo) return;
-      this.idLocal.set(resumo.id);
-      this.statusExibicao.set(resumo.statusExibicao);
-      this.etapasHabilitadas.set([true, true, true]);
+    salvo$.pipe(
+      switchMap(resumo => {
+        const salvoId = resumo?.id ?? id;
+        if (!salvoId) throw new Error('O servidor não confirmou o cadastro. Confira a listagem antes de tentar novamente.');
+        // Guardar o ID antes do GET evita criar outro registro se a conferência falhar.
+        this.idLocal.set(salvoId);
+        if (!id) this.location.replaceState(`/locais/${salvoId}`);
+        return this.localService.getLocal(salvoId);
+      }),
+      tap(local => {
+        if (!dadosConferem(payload, paraDadosPayload(local))) {
+          throw new Error('O servidor não confirmou todos os dados informados. Revise o local antes de continuar.');
+        }
+        this.dadosIniciais = paraDadosPayload(local);
+        this.statusExibicao.set(local.statusExibicao);
+        this.etapasHabilitadas.set([true, this.etapasHabilitadas()[1], true]);
+        if (!id) this.carregarDemografia();
+        this.mensagem.set('Dados do local salvos e conferidos.');
+      }),
+      finalize(() => this.salvando.set(false)),
+    ).subscribe({
+      error: err => this.erroSalvar.set(mensagemErro(err)),
     });
   }
 
   onSalvarDemografia(payload: LocalPublicoPayload): void {
     const id = this.idLocal();
-    if (!id) return;
-    this.publicoService.savePublico(id, payload).subscribe();
+    if (!id || this.salvando() || !this.etapasHabilitadas()[1]) return;
+    this.salvando.set(true);
+    this.erroSalvar.set('');
+    this.mensagem.set('');
+    this.publicoService.savePublico(id, payload).pipe(
+      switchMap(() => this.publicoService.getPublico(id)),
+      tap(publico => {
+        if (!dadosConferem(payload, publico)) throw new Error('O servidor não confirmou os dados demográficos. Revise antes de continuar.');
+        this.demografiaInicial = publico;
+        this.mensagem.set('Dados demográficos salvos e conferidos.');
+      }),
+      finalize(() => this.salvando.set(false)),
+    ).subscribe({ error: err => this.erroSalvar.set(mensagemErro(err)) });
   }
+}
+
+function mensagemErro(err: unknown): string {
+  if (err instanceof HttpErrorResponse) {
+    if (err.status === 409) return 'O local foi alterado por outra operação. Recarregue antes de tentar novamente.';
+    if (err.status === 403) return 'Você não tem permissão para salvar este local.';
+    if (err.status === 404) return 'Local não encontrado. Confira a listagem.';
+    if (err.status === 400) return mensagemDeErro(err, 'Revise os campos informados. O servidor recusou os dados.');
+    return 'Não foi possível confirmar o salvamento. Confira a listagem antes de tentar novamente.';
+  }
+  return err instanceof Error ? err.message : 'Não foi possível confirmar o salvamento.';
+}
+
+/** Compara todo campo editável; normaliza apenas vazio/null, CEP e a precisão SQL das coordenadas. */
+function dadosConferem<T extends object>(esperado: T, recebido: T): boolean {
+  return (Object.keys(esperado) as (keyof T)[]).every(chave => {
+    const a = esperado[chave], b = recebido[chave];
+    if (chave === 'cep') return String(a ?? '').replace(/\D/g, '') === String(b ?? '').replace(/\D/g, '');
+    if (chave === 'latitude' || chave === 'longitude') return Math.abs(Number(a) - Number(b)) < 0.000001;
+    if (Array.isArray(a) && Array.isArray(b)) return JSON.stringify([...a].sort()) === JSON.stringify([...b].sort());
+    return String(a ?? '').trim() === String(b ?? '').trim();
+  });
 }
 
 /** GET /api/wl/locais/{id} devolve endereço/geolocalização aninhados; o form usa shape flat. */

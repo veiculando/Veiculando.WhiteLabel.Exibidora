@@ -39,6 +39,7 @@ describe('LocaisComponent', () => {
     localServiceSpy = {
       listLocais: vi.fn(),
       deleteLocal: vi.fn(),
+      alterarStatus: vi.fn(),
     } as unknown as Mocked<LocalService>;
     await TestBed.configureTestingModule({
       imports: [LocaisComponent],
@@ -56,6 +57,8 @@ describe('LocaisComponent', () => {
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
     expect(text).toContain('Aguardando aprovação');
     expect(text).toContain('Ativo');
+    expect(text).toContain('Cancelar cadastro');
+    expect(text).toContain('Inativar');
   });
 
   it('busca filtra em memória por código/descrição/cidade (GET real não pagina nem filtra por querystring)', async () => {
@@ -87,14 +90,14 @@ describe('LocaisComponent', () => {
   it('exclui um local confirmado e recarrega a listagem', async () => {
     await setup();
     localServiceSpy.listLocais.mockReturnValue(of(itens));
-    localServiceSpy.deleteLocal.mockReturnValue(of(void 0));
+    localServiceSpy.alterarStatus.mockReturnValue(of(void 0));
     vi.spyOn(window, 'confirm').mockReturnValue(true);
     fixture.detectChanges();
 
     fixture.componentInstance.excluir(itens[0]);
 
-    expect(localServiceSpy.deleteLocal).toHaveBeenCalledTimes(1);
-    expect(localServiceSpy.deleteLocal).toHaveBeenCalledWith(1);
+    expect(localServiceSpy.alterarStatus).toHaveBeenCalledTimes(1);
+    expect(localServiceSpy.alterarStatus).toHaveBeenCalledWith(1, 'cancelar', undefined);
     expect(localServiceSpy.listLocais).toHaveBeenCalledTimes(2);
     expect(fixture.componentInstance.excluindoId()).toBeNull();
   });

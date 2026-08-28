@@ -64,7 +64,7 @@ describe('app.routes', () => {
     it('rotas publicas ficam fora da area protegida', () => {
         // /login e /acesso-negado nao podem herdar o guard: quem chega nelas ou nao
         // tem sessao, ou foi barrado por permissao. Guard ali seria um loop.
-        ['login', 'acesso-negado'].forEach((caminho) => {
+        ['login', 'login/esqueci-senha', 'login/alterar-senha', 'login/primeiro-acesso', 'acesso-negado'].forEach((caminho) => {
             const rota = routes.find((r) => r.path === caminho);
             expect(rota, `/${caminho} deveria ser rota de topo`).toBeTruthy();
             expect(rota!.canActivate).toBeUndefined();
