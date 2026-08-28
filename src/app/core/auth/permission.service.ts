@@ -9,13 +9,26 @@ import { environment } from '../../../environments/environment';
 export class PermissionService {
   private jwtHelper = inject(JwtHelperService);
 
+  /**
+   * Claims do token de sessão, ou `null` se não há token utilizável.
+   *
+   * `isTokenExpired` precisa estar DENTRO do try. Ele lança
+   * `"The inspected token doesn't appear to be a JWT"` quando o valor não tem
+   * três partes — e estava fora da guarda, com só o `decodeToken` protegido.
+   *
+   * O caminho é real: `SecureStorage.getToken` decifra o que estiver no
+   * localStorage, e um valor corrompido (storage adulterado, resto de outra
+   * versão do app) às vezes decifra para uma string não-vazia que não é um JWT.
+   * Aí `has()` lançava em vez de devolver `false`, e a exceção sobe no
+   * `authGuard` e na renderização do menu — o painel quebra em branco por causa
+   * de um resto no storage do visitante.
+   */
   private getDecodedToken(): Record<string, any> | null {
-    const tokenKey = environment.tokenKey;
-    const token = SecureStorage.getToken(tokenKey);
-    if (!token || this.jwtHelper.isTokenExpired(token)) {
-      return null;
-    }
+    const token = SecureStorage.getToken(environment.tokenKey);
+    if (!token) return null;
+
     try {
+      if (this.jwtHelper.isTokenExpired(token)) return null;
       return this.jwtHelper.decodeToken(token);
     } catch {
       return null;
