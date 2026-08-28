@@ -10,7 +10,7 @@ import { LocalPecasStepComponent } from './local-pecas-step.component';
 import { LocalService } from '../services/local.service';
 import { LocalPublicoService } from '../services/local-publico.service';
 import { LocalDadosPayload, LocalDetalhe } from '../models/local.model';
-import { LocalPublicoPayload, emptyLocalPublicoPayload } from '../models/local-publico.model';
+import { LocalPublicoPayload } from '../models/local-publico.model';
 import { STATUS_EXIBICAO_LABEL, StatusExibicao } from '../models/status-exibicao.enum';
 
 type Etapa = 0 | 1 | 2;
@@ -45,6 +45,8 @@ export class LocalWizardComponent implements OnInit {
   readonly salvando = signal(false);
   readonly mensagem = signal('');
   readonly erroSalvar = signal('');
+  readonly carregandoDemografia = signal(false);
+  readonly erroCarregarDemografia = signal('');
 
   dadosIniciais: LocalDadosPayload | null = null;
   demografiaInicial: LocalPublicoPayload | null = null;
@@ -73,12 +75,25 @@ export class LocalWizardComponent implements OnInit {
     this.idLocal.set(id);
     this.statusExibicao.set(local.statusExibicao);
     this.dadosIniciais = paraDadosPayload(local);
-    this.etapasHabilitadas.set([true, true, true]);
+    this.etapasHabilitadas.set([true, false, true]);
     this.carregando.set(false);
+    this.carregarDemografia();
+  }
 
-    this.publicoService.getPublico(id).subscribe({
-      next: (publico) => (this.demografiaInicial = publico),
-      error: () => (this.demografiaInicial = emptyLocalPublicoPayload()),
+  carregarDemografia(): void {
+    const id = this.idLocal();
+    if (!id || this.carregandoDemografia()) return;
+    this.carregandoDemografia.set(true);
+    this.erroCarregarDemografia.set('');
+    this.etapasHabilitadas.update(etapas => [etapas[0], false, etapas[2]]);
+    this.publicoService.getPublico(id).pipe(
+      finalize(() => this.carregandoDemografia.set(false)),
+    ).subscribe({
+      next: publico => {
+        this.demografiaInicial = publico;
+        this.etapasHabilitadas.update(etapas => [etapas[0], true, etapas[2]]);
+      },
+      error: () => this.erroCarregarDemografia.set('Não foi possível carregar os dados demográficos. Tente novamente antes de editar.'),
     });
   }
 
@@ -110,7 +125,8 @@ export class LocalWizardComponent implements OnInit {
         }
         this.dadosIniciais = paraDadosPayload(local);
         this.statusExibicao.set(local.statusExibicao);
-        this.etapasHabilitadas.set([true, true, true]);
+        this.etapasHabilitadas.set([true, this.etapasHabilitadas()[1], true]);
+        if (!id) this.carregarDemografia();
         this.mensagem.set('Dados do local salvos e conferidos.');
       }),
       finalize(() => this.salvando.set(false)),
@@ -121,7 +137,7 @@ export class LocalWizardComponent implements OnInit {
 
   onSalvarDemografia(payload: LocalPublicoPayload): void {
     const id = this.idLocal();
-    if (!id || this.salvando()) return;
+    if (!id || this.salvando() || !this.etapasHabilitadas()[1]) return;
     this.salvando.set(true);
     this.erroSalvar.set('');
     this.mensagem.set('');

@@ -47,7 +47,7 @@ describe('LocalWizardComponent', () => {
       updateLocal: vi.fn(),
     } as unknown as Mocked<LocalService>;
     publicoServiceSpy = {
-      getPublico: vi.fn(),
+      getPublico: vi.fn().mockReturnValue(of(emptyLocalPublicoPayload())),
       savePublico: vi.fn(),
     } as unknown as Mocked<LocalPublicoService>;
 
@@ -193,6 +193,33 @@ describe('LocalWizardComponent', () => {
 
     expect(publicoServiceSpy.savePublico).toHaveBeenCalledWith(7, emptyLocalPublicoPayload());
     expect(localServiceSpy.updateLocal).not.toHaveBeenCalled();
+  });
+
+  it('não transforma falha de demografia em formulário vazio e permite tentar novamente', async () => {
+    await setup({ id: '7' });
+    localServiceSpy.getLocal.mockReturnValue(of(localCarregado));
+    publicoServiceSpy.getPublico.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 503 })));
+    fixture.detectChanges();
+    expect(fixture.componentInstance.demografiaInicial).toBeNull();
+    expect(fixture.componentInstance.etapasHabilitadas()[1]).toBe(false);
+    expect(fixture.nativeElement.textContent).toContain('Não foi possível carregar os dados demográficos');
+    publicoServiceSpy.getPublico.mockReturnValue(of({ ...emptyLocalPublicoPayload(), audiencia: 12345 }));
+    const retry = Array.from(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>)
+      .find(button => button.textContent?.includes('Tentar carregar demografia'))!;
+    retry.click();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.demografiaInicial?.audiencia).toBe(12345);
+    expect(fixture.componentInstance.etapasHabilitadas()[1]).toBe(true);
+  });
+
+  it('não habilita a edição demográfica enquanto a consulta inicial está pendente', async () => {
+    await setup({ id: '7' });
+    localServiceSpy.getLocal.mockReturnValue(of(localCarregado));
+    publicoServiceSpy.getPublico.mockReturnValue(new Subject());
+    fixture.detectChanges();
+    expect(fixture.componentInstance.etapasHabilitadas()[1]).toBe(false);
+    fixture.componentInstance.onSalvarDemografia(emptyLocalPublicoPayload());
+    expect(publicoServiceSpy.savePublico).not.toHaveBeenCalled();
   });
 
   it('quando o local pertence a outro tenant (404), exibe "não encontrado" e não tenta renderizar o formulário', async () => {

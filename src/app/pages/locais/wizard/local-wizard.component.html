@@ -15,6 +15,11 @@
     @if (mensagem()) { <p role="status">{{ mensagem() }}</p> }
     @if (erroSalvar()) { <p role="alert">{{ erroSalvar() }}</p> }
     @if (salvando()) { <p role="status">Salvando e conferindo dados…</p> }
+    @if (carregandoDemografia()) { <p role="status">Carregando dados demográficos…</p> }
+    @if (erroCarregarDemografia()) {
+      <p role="alert">{{ erroCarregarDemografia() }}</p>
+      <button type="button" [disabled]="carregandoDemografia() || salvando()" (click)="carregarDemografia()">Tentar carregar demografia</button>
+    }
 
     <nav class="local-wizard__abas">
       <button type="button" [disabled]="!etapasHabilitadas()[0]" (click)="irParaEtapa(0)">
