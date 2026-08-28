@@ -71,8 +71,35 @@ describe('PermissionService', () => {
         expect(service.has('PecaGerenciar')).toBe(false);
     });
 
-    it('token corrompido no storage nao derruba a aplicacao', () => {
+    it('lixo nao cifrado no storage nao derruba a aplicacao', () => {
         localStorage.setItem(environment.tokenKey, 'isto-nao-e-um-token-cifrado');
+
+        expect(() => service.has('PecaGerenciar')).not.toThrow();
+        expect(service.has('PecaGerenciar')).toBe(false);
+    });
+
+    /**
+     * O caso acima e ambiguo de proposito: decifrar lixo com AES ora estoura no
+     * `toString(Utf8)` (e o SecureStorage devolve null, caminho facil), ora
+     * devolve uma string qualquer nao-vazia. So o segundo ramo alcanca o
+     * `isTokenExpired`, e ele dependia do ambiente — verde local, vermelho no CI.
+     *
+     * Este cifra um valor que NAO e JWT, entao a decifragem sempre da certo e o
+     * ramo perigoso e sempre exercitado: o `isTokenExpired` recebe uma string de
+     * uma parte so e lanca. Enquanto ele esteve fora do try/catch, `has()`
+     * propagava a excecao para o authGuard e para a renderizacao do menu.
+     */
+    it('token cifrado que nao e um JWT nao propaga excecao', () => {
+        SecureStorage.setToken(environment.tokenKey, 'nao-sou-um-jwt');
+
+        expect(() => service.has('PecaGerenciar')).not.toThrow();
+        expect(service.has('PecaGerenciar')).toBe(false);
+        expect(() => service.getOperatorName()).not.toThrow();
+        expect(service.getOperatorName()).toBe('Operador WL');
+    });
+
+    it('JWT malformado com partes a mais tambem e tratado', () => {
+        SecureStorage.setToken(environment.tokenKey, 'a.b.c.d.e');
 
         expect(() => service.has('PecaGerenciar')).not.toThrow();
         expect(service.has('PecaGerenciar')).toBe(false);
