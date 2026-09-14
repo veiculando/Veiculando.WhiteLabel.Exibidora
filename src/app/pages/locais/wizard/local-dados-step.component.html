@@ -1,0 +1,79 @@
+<form class="local-dados-step" [formGroup]="form" (ngSubmit)="onSubmit()">
+  <fieldset [disabled]="salvando">
+    <legend>Dados do Local</legend>
+
+    <label>
+      CEP
+      <input type="text" formControlName="cep" placeholder="00000-000" />
+    </label>
+
+    <label>
+      Cidade
+      <input type="number" formControlName="idCidade" required />
+      @if (form.controls.idCidade.touched && form.controls.idCidade.invalid) {
+        <span class="wl-campo__erro" role="alert">Informe a cidade.</span>
+      }
+    </label>
+
+    <label>
+      Código interno
+      <input type="text" formControlName="codigoInterno" />
+    </label>
+
+    <label>
+      Logradouro
+      <input type="text" formControlName="logradouro" required />
+      @if (form.controls.logradouro.touched && form.controls.logradouro.invalid) {
+        <span class="wl-campo__erro" role="alert">Informe o logradouro.</span>
+      }
+    </label>
+
+    <label>
+      Número
+      <input type="text" formControlName="numero" />
+    </label>
+
+    <label>
+      Bairro
+      <input type="text" formControlName="bairro" />
+    </label>
+
+    <label>
+      Complemento
+      <input type="text" formControlName="complemento" />
+    </label>
+
+    <label>
+      Ponto de referência
+      <input type="text" formControlName="referencia" />
+    </label>
+
+    <label>
+      Latitude
+      <input type="number" formControlName="latitude" required />
+      @if (form.controls.latitude.touched && form.controls.latitude.invalid) {
+        <span class="wl-campo__erro" role="alert">Informe a latitude.</span>
+      }
+    </label>
+
+    <label>
+      Longitude
+      <input type="number" formControlName="longitude" required />
+      @if (form.controls.longitude.touched && form.controls.longitude.invalid) {
+        <span class="wl-campo__erro" role="alert">Informe a longitude.</span>
+      }
+    </label>
+
+    <label>
+      Descrição
+      <textarea formControlName="descricao"></textarea>
+    </label>
+
+    <label>
+      Palavras-chave / observações
+      <textarea formControlName="palavrasChave"></textarea>
+    </label>
+  </fieldset>
+
+  <button type="submit" class="btn btn--primary" [disabled]="salvando">{{ salvando ? 'Salvando…' : 'Salvar Dados do Local' }}</button>
+</form>

@@ -1,0 +1,181 @@
+<form class="peca-form" [formGroup]="form" (ngSubmit)="onSubmit()">
+  <h1>{{ idPeca ? 'Editar peça' : 'Nova peça' }}</h1>
+
+  <fieldset class="peca-form__foto">
+    <legend>Foto da peça</legend>
+
+    @if (fotoUrl) {
+      <img [src]="fotoUrl" alt="Foto atual da peça" width="120" />
+    } @else {
+      <p>Nenhuma foto cadastrada.</p>
+    }
+
+    <button type="button" data-testid="upload-foto-btn" [disabled]="uploadFotoIndisponivel">
+      Enviar foto
+    </button>
+    @if (uploadFotoIndisponivel) {
+      <p class="peca-form__aviso" role="note">
+        Envio de foto indisponível no momento. A foto existente é somente leitura.
+      </p>
+    }
+  </fieldset>
+
+  <fieldset>
+    <legend>Dados da peça</legend>
+
+    <label>
+      Tipo de suporte
+      <input type="number" formControlName="idTipoSuporte" required />
+    </label>
+
+    <label>
+      Código interno
+      <input type="text" formControlName="codigoInterno" />
+    </label>
+
+    <label>
+      Periodicidade padrão
+      <input type="number" formControlName="periodicidadePadrao" required />
+    </label>
+
+    <label>
+      Valor padrão
+      <input type="number" formControlName="valorPadrao" required />
+    </label>
+  </fieldset>
+
+  <fieldset>
+    <legend>Formato</legend>
+
+    <label>
+      Formato (catálogo)
+      <input type="number" formControlName="idFormato" required />
+    </label>
+
+    <label>
+      Largura (m)
+      <input type="number" formControlName="formatoLargura" required />
+    </label>
+
+    <label>
+      Altura (m)
+      <input type="number" formControlName="formatoAltura" required />
+    </label>
+
+    <label>
+      Junção
+      <select formControlName="formatoJuncao">
+        <option [ngValue]="0">Não</option>
+        <option [ngValue]="1">Dupla</option>
+        <option [ngValue]="2">Tripla</option>
+      </select>
+    </label>
+  </fieldset>
+
+  <fieldset>
+    <legend>Especificação de produção</legend>
+
+    <label>
+      Largura (m)
+      <input type="number" formControlName="especificacaoLargura" />
+    </label>
+
+    <label>
+      Altura (m)
+      <input type="number" formControlName="especificacaoAltura" />
+    </label>
+
+    <label>
+      Material
+      <select formControlName="especificacaoMaterial">
+        <option [ngValue]="null">Não informado</option>
+        <option [ngValue]="1">Papel</option>
+        <option [ngValue]="2">Lona</option>
+        <option [ngValue]="3">Adesivo</option>
+      </select>
+    </label>
+
+    <label>
+      Especificação (texto)
+      <input type="text" formControlName="especificacaoTexto" />
+    </label>
+  </fieldset>
+
+  <fieldset>
+    <legend>Via</legend>
+
+    <label>
+      Tipo de via
+      <select formControlName="viaTipo">
+        <option [ngValue]="0">Simples</option>
+        <option [ngValue]="1">Dupla</option>
+        <option [ngValue]="2">Provisória</option>
+      </select>
+    </label>
+
+    <label>
+      Faixas (2 a 9)
+      <input type="number" formControlName="viaFaixas" min="2" max="9" required />
+    </label>
+
+    <label>
+      Velocidade (11 a 119 km/h)
+      <input type="number" formControlName="viaVelocidade" min="11" max="119" required />
+    </label>
+
+    <label>
+      Pedestre
+      <select formControlName="viaPedestre">
+        <option [ngValue]="0">Não</option>
+        <option [ngValue]="1">Sim</option>
+        <option [ngValue]="2">Apenas pedestre</option>
+      </select>
+    </label>
+  </fieldset>
+
+  <fieldset>
+    <legend>Demais dados</legend>
+
+    <label>
+      <input type="checkbox" formControlName="iluminacao" />
+      Iluminação
+    </label>
+
+    <label>
+      <input type="checkbox" formControlName="semaforo" />
+      Semáforo
+    </label>
+
+    <label>
+      Ângulo de visão (graus)
+      <input type="number" formControlName="anguloDeVisao" required />
+    </label>
+
+    <label>
+      <input type="checkbox" formControlName="roteiroComercial" />
+      Roteiro comercial
+    </label>
+
+    <label>
+      <input type="checkbox" formControlName="alvara" />
+      Alvará
+    </label>
+
+    <label>
+      Street View (URL)
+      <input type="text" formControlName="streetView" />
+    </label>
+
+    <label>
+      Descrição
+      <textarea formControlName="descricao"></textarea>
+    </label>
+
+    <label>
+      Restrição
+      <textarea formControlName="restricao"></textarea>
+    </label>
+  </fieldset>
+
+  <button type="submit" class="btn btn--primary">Salvar peça</button>
+</form>

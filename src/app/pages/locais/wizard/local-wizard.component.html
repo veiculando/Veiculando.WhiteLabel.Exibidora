@@ -1,0 +1,53 @@
+<section class="local-wizard">
+  @if (naoEncontrado()) {
+    <p class="local-wizard__estado local-wizard__estado--erro" role="alert">
+      Local não encontrado.
+    </p>
+  } @else if (carregando()) {
+    <p class="local-wizard__estado">Carregando local…</p>
+  } @else if (erroCarregarLocal()) {
+    <p class="local-wizard__estado local-wizard__estado--erro" role="alert">{{ erroCarregarLocal() }}</p>
+    <button type="button" (click)="carregarLocal()">Tentar carregar local</button>
+  } @else {
+    <header class="local-wizard__header">
+      <h1>{{ idLocal() ? 'Editar local' : 'Novo local' }}</h1>
+      @if (statusExibicao() !== null) {
+        <span class="badge">{{ statusLabel[statusExibicao()!] }}</span>
+      }
+    </header>
+    @if (mensagem()) { <p role="status">{{ mensagem() }}</p> }
+    @if (erroSalvar()) { <p role="alert">{{ erroSalvar() }}</p> }
+    @if (salvando()) { <p role="status">Salvando e conferindo dados…</p> }
+    @if (carregandoDemografia()) { <p role="status">Carregando dados demográficos…</p> }
+    @if (erroCarregarDemografia()) {
+      <p role="alert">{{ erroCarregarDemografia() }}</p>
+      <button type="button" [disabled]="carregandoDemografia() || salvando()" (click)="carregarDemografia()">Tentar carregar demografia</button>
+    }
+
+    <nav class="local-wizard__abas">
+      <button type="button" [disabled]="!etapasHabilitadas()[0]" (click)="irParaEtapa(0)">
+        1. Dados do Local
+      </button>
+      <button type="button" [disabled]="!etapasHabilitadas()[1]" (click)="irParaEtapa(1)">
+        2. Dados Demográficos
+      </button>
+      <button type="button" [disabled]="!etapasHabilitadas()[2]" (click)="irParaEtapa(2)">
+        3. Peças
+      </button>
+    </nav>
+
+    @switch (etapaAtual()) {
+      @case (0) {
+        <app-local-dados-step [valorInicial]="dadosIniciais" [salvando]="salvando()" (salvar)="onSalvarDados($event)" />
+      }
+      @case (1) {
+        <app-local-demografia-step [valorInicial]="demografiaInicial" [salvando]="salvando()" (salvar)="onSalvarDemografia($event)" />
+      }
+      @case (2) {
+        @if (idLocal()) {
+          <app-local-pecas-step [idLocal]="idLocal()!" />
+        }
+      }
+    }
+  }
+</section>

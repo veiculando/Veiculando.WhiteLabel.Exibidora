@@ -2,17 +2,43 @@
 @import 'ag-grid-community/styles/ag-grid.css';
 @import 'ag-grid-community/styles/ag-theme-quartz.css';
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--paper-bg);
+}
+
 body {
   margin: 0;
   padding: 0;
   background-color: var(--paper-bg);
   color: var(--charcoal);
   font-family: var(--font-ui);
+  line-height: 1.5;
+  text-rendering: optimizeLegibility;
 }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
   color: var(--primary-dark);
+  font-optical-sizing: auto;
+  letter-spacing: -0.02em;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--secondary-color) 70%, #ffffff);
+  outline-offset: 2px;
 }
 
 .btn-pill {
@@ -36,4 +62,206 @@ h1, h2, h3, h4, h5, h6 {
 .ag-theme-quartz {
   --ag-active-color: var(--primary-color);
   --ag-font-family: var(--font-ui);
+}
+
+/* ------------------------------------------------------------------ *
+ * Utilitarios funcionais das paginas (TP-R4 / ADR-WL-010)
+ *
+ * ADR-WL-010 e "Logic-First, Functional-UI-Only": o Design System Aurum entra
+ * em sprint posterior. Estas classes existem para que as 9 paginas nao repitam
+ * o mesmo bloco de `styles` inline — sao estruturais, nao decorativas.
+ * ------------------------------------------------------------------ */
+
+.wl-page {
+  padding: 24px;
+}
+
+.wl-page__titulo {
+  margin: 0 0 4px;
+  font-size: 1.5rem;
+}
+
+.wl-page__descricao {
+  margin: 0 0 20px;
+  color: var(--on-surface);
+  font-size: 0.9rem;
+}
+
+.wl-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.wl-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+  margin-bottom: 16px;
+}
+
+.wl-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 180px;
+}
+
+.wl-campo > label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--on-surface);
+}
+
+.wl-campo input,
+.wl-campo select,
+.wl-campo textarea {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  background: var(--white);
+  color: var(--charcoal);
+}
+
+.wl-campo__erro {
+  font-size: 0.75rem;
+  color: var(--primary-color);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.wl-btn {
+  padding: 8px 16px;
+  border: 1px solid var(--primary-color);
+  border-radius: var(--radius-sm);
+  background: var(--primary-color);
+  color: var(--white);
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.wl-btn:not(:disabled):hover {
+  background: var(--primary-dark);
+  border-color: var(--primary-dark);
+}
+
+.wl-btn:not(:disabled):active {
+  transform: translateY(1px);
+}
+
+.wl-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.wl-btn--secundario {
+  background: transparent;
+  color: var(--primary-color);
+}
+
+.wl-btn--secundario:not(:disabled):hover {
+  background: color-mix(in srgb, var(--primary-color) 7%, transparent);
+  color: var(--primary-dark);
+}
+
+.wl-btn--perigo {
+  background: transparent;
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.wl-btn--link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--primary-color);
+  text-decoration: underline;
+  cursor: pointer;
+  font: inherit;
+}
+
+.wl-tabela {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  background: var(--white);
+}
+
+.wl-tabela th,
+.wl-tabela td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--divider);
+}
+
+.wl-tabela th {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--on-surface);
+  background: var(--surface-muted);
+}
+
+.wl-tabela--rolavel {
+  display: block;
+  overflow-x: auto;
+}
+
+.wl-estado {
+  padding: 16px;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+}
+
+.wl-estado--carregando {
+  background: var(--surface-muted);
+  color: var(--on-surface);
+}
+
+.wl-estado--erro {
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-border);
+  color: var(--danger);
+}
+
+.wl-estado--sucesso {
+  background: var(--success-bg);
+  border: 1px solid var(--success-border);
+  color: var(--success);
+}
+
+.wl-estado--vazio {
+  background: var(--surface-muted);
+  color: var(--on-surface);
+  font-style: italic;
+}
+
+.wl-etiqueta {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: var(--surface-muted);
+  color: var(--on-surface);
+}
+
+.wl-etiqueta--pendente {
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+
+.wl-etiqueta--ativo {
+  background: var(--success-bg);
+  color: var(--success);
 }

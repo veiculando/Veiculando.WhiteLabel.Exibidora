@@ -1,17 +1,20 @@
-import { ApplicationConfig } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { provideHttpClient, withInterceptors, withXhr } from '@angular/common/http';
+import { ApplicationConfig, inject, provideAppInitializer } from '@angular/core';
+import { provideRouter, withComponentInputBinding } from '@angular/router';
+import { JWT_OPTIONS, JwtHelperService } from '@auth0/angular-jwt';
 import { routes } from './app.routes';
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
-import { jwtInterceptor } from '../core/auth/jwt.interceptor';
-import { JwtHelperService, JWT_OPTIONS } from '@auth0/angular-jwt';
+import { jwtInterceptor } from './core/auth/jwt.interceptor';
+import { BrandingService } from './core/branding/branding.service';
+import { authErrorInterceptor } from './core/http/auth-error.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideRouter(routes),
-    provideHttpClient(
-      withInterceptors([jwtInterceptor])
+    provideRouter(routes, withComponentInputBinding()),
+    provideHttpClient(withXhr(),
+      withInterceptors([authErrorInterceptor, jwtInterceptor])
     ),
-    { provide: JWT_OPTIONS, useValue: JWT_OPTIONS },
-    JwtHelperService
-  ]
+    provideAppInitializer(() => inject(BrandingService).load()),
+    { provide: JWT_OPTIONS, useValue: {} },
+    JwtHelperService,
+  ],
 };
