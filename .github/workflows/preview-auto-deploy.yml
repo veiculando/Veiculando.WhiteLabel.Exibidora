@@ -5,6 +5,10 @@ on:
     workflows: [Docker]
     types: [completed]
 
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
   deploy:
     # So promove um build concluido da master. PRs e dispatches manuais nao
