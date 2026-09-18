@@ -2,6 +2,8 @@
 import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { AurumButtonComponent } from '../../shared/aurum/aurum-button.component';
+import { AurumCardComponent } from '../../shared/aurum/aurum-card.component';
 
 /**
  * Destino de quem tem token válido mas não tem a permissão exigida.
@@ -16,20 +18,20 @@ import { AuthService } from '../../core/services/auth.service';
  */
 @Component({
     selector: 'app-acesso-negado',
-    imports: [RouterLink],
+    imports: [RouterLink, AurumCardComponent, AurumButtonComponent],
     template: `
     <div class="negado">
-      <div class="negado__caixa">
+      <aurum-card class="negado__caixa">
         <h1 class="negado__titulo">Acesso negado</h1>
         <p class="negado__texto">
           Sua conta está autenticada, mas não tem permissão para acessar esta área.
           Fale com o administrador da exibidora se você precisa desse acesso.
         </p>
         <div class="negado__acoes">
-          <a class="wl-btn" routerLink="/dashboard">Ir para o Dashboard</a>
-          <button class="wl-btn wl-btn--secundario" type="button" (click)="sair()">Sair</button>
+          <a class="negado__link-primario" routerLink="/dashboard">Ir para o Dashboard</a>
+          <aurum-button variante="outline" (click)="sair()">Sair</aurum-button>
         </div>
-      </div>
+      </aurum-card>
     </div>
   `,
     changeDetection: ChangeDetectionStrategy.Eager,
@@ -45,11 +47,7 @@ import { AuthService } from '../../core/services/auth.service';
       }
       .negado__caixa {
         max-width: 460px;
-        padding: 28px;
         text-align: center;
-        background: var(--white);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-md);
       }
       .negado__titulo {
         margin: 0 0 8px;
@@ -64,9 +62,26 @@ import { AuthService } from '../../core/services/auth.service';
         display: flex;
         gap: 12px;
         justify-content: center;
+        align-items: center;
       }
-      .negado__acoes a {
+      .negado__link-primario {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--radius-pill);
+        padding: 10px 20px;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        background: var(--primary-color);
+        color: var(--white);
         text-decoration: none;
+        box-shadow: var(--shadow-base);
+      }
+      .negado__link-primario:hover {
+        background: var(--primary-dark);
+        box-shadow: var(--shadow-hover);
       }
     `,
     ]
