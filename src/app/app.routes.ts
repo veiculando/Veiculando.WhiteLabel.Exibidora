@@ -7,12 +7,20 @@ import { authGuard } from './core/auth/auth.guard';
  * Permissões granulares são configuradas via `data.permission` em cada rota protegida.
  * O `authGuard` lê essa propriedade e valida contra as claims do JWT (ADR-WL-007).
  *
- * Whitelist de permissões válidas (espelham WlPermissoesValidas do domínio):
+ * Whitelist de permissões válidas (espelha WlPermissoesValidas do domínio,
+ * item a item — lista canônica, VEI-RD-93. "Checking" foi reconciliado para
+ * "CheckingGerenciar", único nome sem verbo no repo até então; usuários com a
+ * claim antiga são migrados via RenomearCheckingEGrantProgramacaoVisualizar):
  *  - 'PecaGerenciar'
- *  - 'Checking'
+ *  - 'CheckingGerenciar'
  *  - 'PedidoReservaGerenciar'
  *  - 'PedidoInsercaoGerenciar'
  *  - 'UsuarioAfiliadaGerenciar'
+ *  - 'ClienteGerenciar'
+ *  - 'PedidoCriar'
+ *  - 'ProgramacaoVisualizar'
+ *  - 'FinanceiroVisualizar'
+ *  - 'RelatorioExportar'
  *
  * Toda a área autenticada é filha do `ShellComponent` (header/sidebar/breadcrumb/
  * footer); /login e /acesso-negado ficam fora dele por serem públicas.
@@ -92,13 +100,18 @@ export const routes: Routes = [
       {
         path: 'programacao',
         title: 'Programação',
+        // Antes exigia só sessão (guard do pai). Passa a exigir ProgramacaoVisualizar
+        // (VEI-RD-93) — quem já acessava é migrado via
+        // RenomearCheckingEGrantProgramacaoVisualizar, não perde acesso no deploy.
+        data: { permission: 'ProgramacaoVisualizar' },
+        canActivate: [authGuard],
         loadComponent: () =>
           import('./pages/programacao/programacao.component').then((m) => m.ProgramacaoComponent),
       },
       {
         path: 'checking',
         title: 'Checking',
-        data: { permission: 'Checking' },
+        data: { permission: 'CheckingGerenciar' },
         canActivate: [authGuard],
         loadComponent: () =>
           import('./pages/checking/checking.component').then((m) => m.CheckingComponent),

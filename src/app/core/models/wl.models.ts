@@ -56,26 +56,42 @@ export interface OperadorLogado {
 }
 
 /**
- * Whitelist de permissoes — espelha `WlPermissoesValidas` no dominio.
- * Sao os 5 identificadores exatos aceitos pelo BFF em `POST/PUT /api/wl/usuarios`;
- * qualquer outro valor volta como 400.
+ * Whitelist de permissoes — espelha `WlPermissoesValidas` no dominio, item a
+ * item (lista canonica, VEI-RD-93). Sao os identificadores exatos aceitos
+ * pelo BFF em `POST/PUT /api/wl/usuarios`; qualquer outro valor volta como 400.
+ *
+ * "Checking" foi reconciliado para "CheckingGerenciar" — unico nome sem verbo
+ * no repo ate entao (convencao <Entidade><Verbo>). Usuarios com a claim
+ * antiga sao migrados via RenomearCheckingEGrantProgramacaoVisualizar no
+ * dominio; nenhuma acao e necessaria aqui alem de nao oferecer mais
+ * "Checking" na tela.
  */
 export const PERMISSOES_WL = [
   'PecaGerenciar',
-  'Checking',
+  'CheckingGerenciar',
   'PedidoReservaGerenciar',
   'PedidoInsercaoGerenciar',
   'UsuarioAfiliadaGerenciar',
+  'ClienteGerenciar',
+  'PedidoCriar',
+  'ProgramacaoVisualizar',
+  'FinanceiroVisualizar',
+  'RelatorioExportar',
 ] as const;
 
 export type PermissaoWl = (typeof PERMISSOES_WL)[number];
 
 export const PERMISSOES_WL_ROTULOS: Record<PermissaoWl, string> = {
   PecaGerenciar: 'Gerenciar locais e peças',
-  Checking: 'Enviar checking',
+  CheckingGerenciar: 'Enviar checking',
   PedidoReservaGerenciar: 'Gerenciar pedidos de reserva',
   PedidoInsercaoGerenciar: 'Consultar pedidos de inserção',
   UsuarioAfiliadaGerenciar: 'Gerenciar operadores',
+  ClienteGerenciar: 'Gerenciar anunciantes',
+  PedidoCriar: 'Criar pedidos (prospecção)',
+  ProgramacaoVisualizar: 'Visualizar programação',
+  FinanceiroVisualizar: 'Visualizar financeiro',
+  RelatorioExportar: 'Exportar relatórios',
 };
 
 // ---------------------------------------------------------------- Dashboard
