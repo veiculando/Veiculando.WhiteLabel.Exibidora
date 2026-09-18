@@ -12,7 +12,7 @@ export type AurumButtonVariante = 'wine' | 'gold' | 'outline' | 'ghost';
   selector: 'aurum-button',
   imports: [],
   template: `
-    <button type="button" [class]="'aurum-button aurum-button--' + variante" [disabled]="desabilitado">
+    <button [type]="tipo" [class]="'aurum-button aurum-button--' + variante" [disabled]="desabilitado">
       <ng-content />
     </button>
   `,
@@ -73,5 +73,6 @@ export type AurumButtonVariante = 'wine' | 'gold' | 'outline' | 'ghost';
 })
 export class AurumButtonComponent {
   @Input() variante: AurumButtonVariante = 'wine';
+  @Input() tipo: 'button' | 'submit' = 'button';
   @Input() desabilitado = false;
 }

@@ -49,4 +49,34 @@ describe('AurumButtonComponent', () => {
     expect(btn.classList.contains('aurum-button--ghost')).toBe(true);
     expect(btn.classList.contains('aurum-button--wine')).toBe(false);
   });
+
+  it('type e "button" por padrao, para nao submeter formularios sem querer', () => {
+    fixture.detectChanges();
+    const btn = (fixture.nativeElement as HTMLElement).querySelector('button')!;
+    expect(btn.getAttribute('type')).toBe('button');
+  });
+});
+
+@Component({
+  imports: [AurumButtonComponent],
+  template: `<form (ngSubmit)="enviado = true"><aurum-button tipo="submit">Entrar</aurum-button></form>`,
+})
+class HostSubmitComponent {
+  enviado = false;
+}
+
+describe('AurumButtonComponent como submit de formulario', () => {
+  it('tipo="submit" propaga type=submit no button nativo dentro de um form', () => {
+    // A simulacao completa (clique -> submit do form -> ngSubmit) depende de
+    // HTMLFormElement.requestSubmit(), que o jsdom deste harness nao
+    // implementa - limitacao do ambiente de teste, nao do componente. Em
+    // qualquer browser real, type="submit" dentro de um <form> aciona o
+    // submit nativamente; o que cabe testar aqui e que o atributo propaga.
+    TestBed.configureTestingModule({ imports: [HostSubmitComponent] });
+    const fixture = TestBed.createComponent(HostSubmitComponent);
+    fixture.detectChanges();
+
+    const btn = (fixture.nativeElement as HTMLElement).querySelector('button')!;
+    expect(btn.getAttribute('type')).toBe('submit');
+  });
 });
