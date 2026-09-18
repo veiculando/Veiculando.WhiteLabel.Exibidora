@@ -76,27 +76,13 @@ textarea {
 }
 
 /* ------------------------------------------------------------------ *
- * Utilitarios funcionais das paginas (TP-R4 / ADR-WL-010)
+ * Utilitarios funcionais remanescentes (TP-R4 / ADR-WL-010)
  *
- * ADR-WL-010 e "Logic-First, Functional-UI-Only": o Design System Aurum entra
- * em sprint posterior. Estas classes existem para que as 9 paginas nao repitam
- * o mesmo bloco de `styles` inline — sao estruturais, nao decorativas.
+ * O Design System Aurum entrou na Sprint 10.0: o cabecalho de pagina agora e
+ * <aurum-page-header>, e as utilitarias .wl-page* que existiam so para ele
+ * ficaram sem uso e foram removidas. O que sobra aqui e estrutural, nao
+ * decorativo, e sai conforme as telas migram para os primitives.
  * ------------------------------------------------------------------ */
-
-.wl-page {
-  padding: 24px;
-}
-
-.wl-page__titulo {
-  margin: 0 0 4px;
-  font-size: 1.5rem;
-}
-
-.wl-page__descricao {
-  margin: 0 0 20px;
-  color: var(--on-surface);
-  font-size: 0.9rem;
-}
 
 .wl-card {
   background: var(--white);
