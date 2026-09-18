@@ -9,7 +9,7 @@ import { AurumButtonComponent } from './aurum-button.component';
   >`,
 })
 class HostComponent {
-  variante: 'wine' | 'gold' | 'outline' | 'ghost' = 'wine';
+  variante: 'wine' | 'gold' | 'outline' | 'ghost' | 'perigo' = 'wine';
   desabilitado = false;
   cliques = 0;
 }
@@ -48,6 +48,13 @@ describe('AurumButtonComponent', () => {
     const btn = (fixture.nativeElement as HTMLElement).querySelector('button')!;
     expect(btn.classList.contains('aurum-button--ghost')).toBe(true);
     expect(btn.classList.contains('aurum-button--wine')).toBe(false);
+  });
+
+  it('variante perigo usa o tom --danger, para acoes destrutivas (ex.: excluir)', () => {
+    fixture.componentInstance.variante = 'perigo';
+    fixture.detectChanges();
+    const btn = (fixture.nativeElement as HTMLElement).querySelector('button')!;
+    expect(btn.classList.contains('aurum-button--perigo')).toBe(true);
   });
 
   it('type e "button" por padrao, para nao submeter formularios sem querer', () => {

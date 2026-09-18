@@ -1,9 +1,12 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 
-export type AurumButtonVariante = 'wine' | 'gold' | 'outline' | 'ghost';
+export type AurumButtonVariante = 'wine' | 'gold' | 'outline' | 'ghost' | 'perigo';
 
 /**
- * Botão pill (999px, uppercase) — 113 ocorrências no Figma, quatro variantes.
+ * Botão pill (999px, uppercase) — 113 ocorrências no Figma, nas quatro
+ * variantes do design system (wine/gold/outline/ghost), mais `perigo` —
+ * mesma forma do `ghost`, tom `--danger`, para ações destrutivas (ex.:
+ * excluir), espelhando os tons de `aurum-status-pill`.
  * Sem `@Output` próprio: o `<button>` nativo por dentro faz o clique borbulhar
  * através do host (sem shadow DOM), então `(click)` no elemento de quem
  * hospeda funciona direto, e `[disabled]` bloqueia o clique nativamente.
@@ -78,6 +81,13 @@ export type AurumButtonVariante = 'wine' | 'gold' | 'outline' | 'ghost';
       }
       .aurum-button--ghost:not(:disabled):hover {
         background: var(--surface-muted);
+      }
+      .aurum-button--perigo {
+        background: transparent;
+        color: var(--danger);
+      }
+      .aurum-button--perigo:not(:disabled):hover {
+        background: var(--danger-bg);
       }
     `,
   ],
