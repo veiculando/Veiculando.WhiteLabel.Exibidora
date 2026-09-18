@@ -5,6 +5,8 @@ import { mensagemDeErro } from '../../core/http/api-error';
 import { CidadeLookup, LocalDetalhe, LocalFormPayload } from '../../core/models/wl.models';
 import { LocaisService } from '../../core/services/locais.service';
 import { LookupsService } from '../../core/services/lookups.service';
+import { AurumButtonComponent } from '../../shared/aurum/aurum-button.component';
+import { AurumCardComponent } from '../../shared/aurum/aurum-card.component';
 
 /**
  * Cadastro e edição de local.
@@ -18,9 +20,10 @@ import { LookupsService } from '../../core/services/lookups.service';
  */
 @Component({
     selector: 'app-local-form',
-    imports: [ReactiveFormsModule],
+    imports: [ReactiveFormsModule, AurumCardComponent, AurumButtonComponent],
     template: `
-    <form class="wl-card" [formGroup]="form" (ngSubmit)="salvar()">
+    <aurum-card>
+    <form [formGroup]="form" (ngSubmit)="salvar()">
       <h2 class="form__titulo">{{ local ? 'Editar local' : 'Novo local' }}</h2>
     
       @if (!local) {
@@ -121,14 +124,15 @@ import { LookupsService } from '../../core/services/lookups.service';
       </div>
     
       <div class="acoes">
-        <button class="wl-btn" type="submit" [disabled]="salvando">
+        <aurum-button tipo="submit" [desabilitado]="salvando">
           {{ salvando ? 'Salvando…' : local ? 'Salvar alterações' : 'Cadastrar local' }}
-        </button>
-        <button class="wl-btn wl-btn--secundario" type="button" (click)="cancelar.emit()">
+        </aurum-button>
+        <aurum-button variante="outline" (click)="cancelar.emit()">
           Cancelar
-        </button>
+        </aurum-button>
       </div>
     </form>
+    </aurum-card>
     `,
     changeDetection: ChangeDetectionStrategy.Eager,
     styles: [

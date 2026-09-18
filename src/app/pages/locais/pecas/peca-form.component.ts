@@ -4,6 +4,8 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { PecaService } from '../services/peca.service';
 import { PecaPayload } from '../models/peca.model';
+import { AurumButtonComponent } from '../../../shared/aurum/aurum-button.component';
+import { AurumCardComponent } from '../../../shared/aurum/aurum-card.component';
 
 /**
  * Cadastro/edição de peça (T1 do plano tático), acessível pelo wizard
@@ -25,7 +27,7 @@ import { PecaPayload } from '../models/peca.model';
 @Component({
   selector: 'app-peca-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, AurumCardComponent, AurumButtonComponent],
   templateUrl: './peca-form.component.html',
 })
 export class PecaFormComponent implements OnInit {

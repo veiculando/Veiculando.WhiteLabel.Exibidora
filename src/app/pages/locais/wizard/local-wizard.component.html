@@ -1,39 +1,38 @@
 <section class="local-wizard">
   @if (naoEncontrado()) {
-    <p class="local-wizard__estado local-wizard__estado--erro" role="alert">
+    <div class="wl-estado wl-estado--erro" role="alert">
       Local não encontrado.
-    </p>
+    </div>
   } @else if (carregando()) {
-    <p class="local-wizard__estado">Carregando local…</p>
+    <div class="wl-estado wl-estado--carregando">Carregando local…</div>
   } @else if (erroCarregarLocal()) {
-    <p class="local-wizard__estado local-wizard__estado--erro" role="alert">{{ erroCarregarLocal() }}</p>
-    <button type="button" (click)="carregarLocal()">Tentar carregar local</button>
+    <div class="wl-estado wl-estado--erro" role="alert">{{ erroCarregarLocal() }}</div>
+    <aurum-button variante="ghost" (click)="carregarLocal()">Tentar carregar local</aurum-button>
   } @else {
-    <header class="local-wizard__header">
-      <h1>{{ idLocal() ? 'Editar local' : 'Novo local' }}</h1>
+    <aurum-page-header [titulo]="idLocal() ? 'Editar local' : 'Novo local'">
       @if (statusExibicao() !== null) {
-        <span class="badge">{{ statusLabel[statusExibicao()!] }}</span>
+        <aurum-status-pill aurumPageHeaderBadge [rotulo]="statusLabel[statusExibicao()!]" tom="neutro" />
       }
-    </header>
+    </aurum-page-header>
     @if (mensagem()) { <p role="status">{{ mensagem() }}</p> }
     @if (erroSalvar()) { <p role="alert">{{ erroSalvar() }}</p> }
     @if (salvando()) { <p role="status">Salvando e conferindo dados…</p> }
     @if (carregandoDemografia()) { <p role="status">Carregando dados demográficos…</p> }
     @if (erroCarregarDemografia()) {
       <p role="alert">{{ erroCarregarDemografia() }}</p>
-      <button type="button" [disabled]="carregandoDemografia() || salvando()" (click)="carregarDemografia()">Tentar carregar demografia</button>
+      <aurum-button variante="ghost" [desabilitado]="carregandoDemografia() || salvando()" (click)="carregarDemografia()">Tentar carregar demografia</aurum-button>
     }
 
     <nav class="local-wizard__abas">
-      <button type="button" [disabled]="!etapasHabilitadas()[0]" (click)="irParaEtapa(0)">
+      <aurum-button [variante]="etapaAtual() === 0 ? 'outline' : 'ghost'" [desabilitado]="!etapasHabilitadas()[0]" (click)="irParaEtapa(0)">
         1. Dados do Local
-      </button>
-      <button type="button" [disabled]="!etapasHabilitadas()[1]" (click)="irParaEtapa(1)">
+      </aurum-button>
+      <aurum-button [variante]="etapaAtual() === 1 ? 'outline' : 'ghost'" [desabilitado]="!etapasHabilitadas()[1]" (click)="irParaEtapa(1)">
         2. Dados Demográficos
-      </button>
-      <button type="button" [disabled]="!etapasHabilitadas()[2]" (click)="irParaEtapa(2)">
+      </aurum-button>
+      <aurum-button [variante]="etapaAtual() === 2 ? 'outline' : 'ghost'" [desabilitado]="!etapasHabilitadas()[2]" (click)="irParaEtapa(2)">
         3. Peças
-      </button>
+      </aurum-button>
     </nav>
 
     @switch (etapaAtual()) {

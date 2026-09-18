@@ -1,38 +1,38 @@
 <section class="local-pecas-step">
   <header class="local-pecas-step__header">
     <h2>Peças</h2>
-    <a class="btn btn--primary" [routerLink]="['/locais', idLocal, 'pecas', 'nova']">Nova peça</a>
+    <a class="local-pecas-step__link-primario" [routerLink]="['/locais', idLocal, 'pecas', 'nova']">Nova peça</a>
   </header>
 
   @if (carregando()) {
-    <p>Carregando peças…</p>
+    <div class="wl-estado wl-estado--carregando">Carregando peças…</div>
   } @else if (pecas().length === 0) {
-    <p>Nenhuma peça cadastrada para este local.</p>
+    <div class="wl-estado wl-estado--vazio">Nenhuma peça cadastrada para este local.</div>
   } @else {
-    <table class="local-pecas-step__tabela">
+    <table aurumTable>
       <thead>
-        <tr>
-          <th>Código</th>
-          <th>Formato</th>
-          <th>Valor Padrão</th>
-          <th>Status</th>
-          <th>Ações</th>
+        <tr aurumTableRow>
+          <th aurumTableHeaderCell>Código</th>
+          <th aurumTableHeaderCell>Formato</th>
+          <th aurumTableHeaderCell>Valor Padrão</th>
+          <th aurumTableHeaderCell>Status</th>
+          <th aurumTableHeaderCell>Ações</th>
         </tr>
       </thead>
       <tbody>
         @for (peca of pecas(); track peca.id) {
-          <tr>
-            <td>{{ peca.codigo }}</td>
-            <td>{{ peca.formatoDimensao || '—' }}</td>
-            <td>{{ peca.valorPadrao | currency: 'BRL' }}</td>
-            <td>{{ statusLabel[peca.statusExibicao] }}</td>
-            <td>
-              <a [routerLink]="['/locais', idLocal, 'pecas', peca.id]">Editar</a>
-              <button type="button" class="wl-btn wl-btn--link" (click)="fotoPecaId.set(peca.id)">Gerenciar foto</button>
+          <tr aurumTableRow>
+            <td aurumTableCell>{{ peca.codigo }}</td>
+            <td aurumTableCell>{{ peca.formatoDimensao || '—' }}</td>
+            <td aurumTableCell>{{ peca.valorPadrao | currency: 'BRL' }}</td>
+            <td aurumTableCell><aurum-status-pill [rotulo]="statusLabel[peca.statusExibicao]" tom="neutro" /></td>
+            <td aurumTableCell class="local-pecas-step__acoes">
+              <a class="local-pecas-step__link" [routerLink]="['/locais', idLocal, 'pecas', peca.id]">Editar</a>
+              <aurum-button variante="ghost" (click)="fotoPecaId.set(peca.id)">Gerenciar foto</aurum-button>
             </td>
           </tr>
           @if (fotoPecaId() === peca.id) {
-            <tr><td colspan="5">
+            <tr aurumTableRow><td aurumTableCell colspan="5">
               <app-photo-upload
                 [uploadUrl]="bffUrl + '/pecas/locais/' + idLocal + '/pecas/' + peca.id + '/foto'"
                 [listUrl]="bffUrl + '/pecas/locais/' + idLocal + '/pecas/' + peca.id + '/fotos'"
