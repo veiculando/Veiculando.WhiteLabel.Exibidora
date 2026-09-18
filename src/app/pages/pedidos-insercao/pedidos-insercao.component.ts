@@ -4,6 +4,15 @@ import { mensagemDeErro } from '../../core/http/api-error';
 import { PedidoInsercaoListItem } from '../../core/models/wl.models';
 import { PedidosInsercaoService } from '../../core/services/pedidos.service';
 import { PaginadorComponent } from '../../shared/paginador.component';
+import { AurumButtonComponent } from '../../shared/aurum/aurum-button.component';
+import { AurumPageHeaderComponent } from '../../shared/aurum/aurum-page-header.component';
+import { AurumStatusPillComponent } from '../../shared/aurum/aurum-status-pill.component';
+import {
+  AurumTableCellComponent,
+  AurumTableComponent,
+  AurumTableHeaderCellComponent,
+  AurumTableRowComponent,
+} from '../../shared/aurum/aurum-table.component';
 
 /**
  * Pedidos de inserção — card `c2a44cbc`.
@@ -19,61 +28,68 @@ import { PaginadorComponent } from '../../shared/paginador.component';
  */
 @Component({
     selector: 'app-pedidos-insercao',
-    imports: [CommonModule, PaginadorComponent],
+    imports: [
+      CommonModule,
+      PaginadorComponent,
+      AurumPageHeaderComponent,
+      AurumButtonComponent,
+      AurumStatusPillComponent,
+      AurumTableComponent,
+      AurumTableRowComponent,
+      AurumTableCellComponent,
+      AurumTableHeaderCellComponent,
+    ],
     template: `
-    <div class="wl-page">
-      <h1 class="wl-page__titulo">Pedidos de inserção</h1>
-      <p class="wl-page__descricao">PIs autorizadas para esta exibidora.</p>
-    
+    <aurum-page-header titulo="Pedidos de inserção" subtitulo="PIs autorizadas para esta exibidora." />
+
       @if (carregando) {
         <div class="wl-estado wl-estado--carregando">Carregando PIs…</div>
       }
-    
+
       @if (erro) {
         <div class="wl-estado wl-estado--erro">
           {{ erro }}
-          <button class="wl-btn wl-btn--link" type="button" (click)="carregar()">Tentar novamente</button>
+          <aurum-button variante="ghost" (click)="carregar()">Tentar novamente</aurum-button>
         </div>
       }
-    
+
       @if (!carregando && !erro && pedidos.length === 0) {
         <div class="wl-estado wl-estado--vazio">
           Nenhum pedido de inserção encontrado.
         </div>
       }
-    
+
       @if (pedidos.length > 0) {
         <div class="wl-tabela--rolavel">
-          <table class="wl-tabela">
+          <table aurumTable>
             <thead>
-              <tr>
-                <th>PI</th>
-                <th>Anunciante</th>
-                <th>Agência</th>
-                <th>Emissão</th>
-                <th>Status</th>
-                <th>Valor líquido</th>
-                <th>Detalhe</th>
+              <tr aurumTableRow>
+                <th aurumTableHeaderCell>PI</th>
+                <th aurumTableHeaderCell>Anunciante</th>
+                <th aurumTableHeaderCell>Agência</th>
+                <th aurumTableHeaderCell>Emissão</th>
+                <th aurumTableHeaderCell>Status</th>
+                <th aurumTableHeaderCell>Valor líquido</th>
+                <th aurumTableHeaderCell>Detalhe</th>
               </tr>
             </thead>
             <tbody>
               @for (pedido of pedidos; track pedido) {
-                <tr>
-                  <td>{{ pedido.codigo }}</td>
-                  <td>{{ pedido.anunciante || '—' }}</td>
-                  <td>{{ pedido.agencia || '—' }}</td>
-                  <td>{{ pedido.dataCadastro | date: 'dd/MM/yyyy' }}</td>
-                  <td><span class="wl-etiqueta">{{ pedido.status }}</span></td>
-                  <td>{{ pedido.valorLiquidoVeiculacao | currency: 'BRL' : 'symbol' : '1.2-2' }}</td>
-                  <td>
-                    <button
-                      class="wl-btn wl-btn--link"
-                      type="button"
-                      [disabled]="baixando === pedido.codigo"
+                <tr aurumTableRow>
+                  <td aurumTableCell>{{ pedido.codigo }}</td>
+                  <td aurumTableCell>{{ pedido.anunciante || '—' }}</td>
+                  <td aurumTableCell>{{ pedido.agencia || '—' }}</td>
+                  <td aurumTableCell>{{ pedido.dataCadastro | date: 'dd/MM/yyyy' }}</td>
+                  <td aurumTableCell><aurum-status-pill [rotulo]="pedido.status" tom="neutro" /></td>
+                  <td aurumTableCell>{{ pedido.valorLiquidoVeiculacao | currency: 'BRL' : 'symbol' : '1.2-2' }}</td>
+                  <td aurumTableCell>
+                    <aurum-button
+                      variante="ghost"
+                      [desabilitado]="baixando === pedido.codigo"
                       (click)="abrirPdf(pedido.codigo)"
                     >
                       {{ baixando === pedido.codigo ? 'Abrindo…' : 'Abrir PDF' }}
-                    </button>
+                    </aurum-button>
                   </td>
                 </tr>
               }
@@ -90,16 +106,8 @@ import { PaginadorComponent } from '../../shared/paginador.component';
           (pagina)="carregar($event)"
         />
       }
-    </div>
     `,
     changeDetection: ChangeDetectionStrategy.Eager,
-    styles: [
-        `
-      a {
-        color: var(--primary-color);
-      }
-    `,
-    ]
 })
 export class PedidosInsercaoComponent implements OnInit {
   private service = inject(PedidosInsercaoService);

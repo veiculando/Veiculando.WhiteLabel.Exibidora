@@ -40,7 +40,7 @@ describe('BrandingService', () => {
     const load = service.load();
     http.expectOne('/api/wl/config/branding').flush({
       nomeExibicao: 'Aurum', logoUrl: '/logo.png',
-      faviconUrl: 'https://assets.example.com/favicon-v2.png', primaryColor: '#A80009',
+      faviconUrl: 'https://assets.example.com/favicon-v2.png', primaryColor: '#8A0009',
     });
     await load;
     const icons = document.querySelectorAll('link[rel~="icon"]');

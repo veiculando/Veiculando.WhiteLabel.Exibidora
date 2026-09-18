@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, ElementRef, EventEmitter, Input, OnChanges, Output, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { LocalDadosPayload } from '../models/local.model';
+import { AurumButtonComponent } from '../../../shared/aurum/aurum-button.component';
 
 /**
  * Etapa 1 do wizard — "Dados do Local".
@@ -15,7 +16,7 @@ import { LocalDadosPayload } from '../models/local.model';
 @Component({
   selector: 'app-local-dados-step',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, AurumButtonComponent],
   templateUrl: './local-dados-step.component.html',
 })
 export class LocalDadosStepComponent implements OnChanges {

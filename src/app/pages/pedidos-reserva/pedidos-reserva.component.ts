@@ -8,6 +8,15 @@ import {
 } from '../../core/models/wl.models';
 import { PedidosReservaService } from '../../core/services/pedidos.service';
 import { PaginadorComponent } from '../../shared/paginador.component';
+import { AurumButtonComponent } from '../../shared/aurum/aurum-button.component';
+import { AurumPageHeaderComponent } from '../../shared/aurum/aurum-page-header.component';
+import { AurumStatusPillComponent } from '../../shared/aurum/aurum-status-pill.component';
+import {
+  AurumTableCellComponent,
+  AurumTableComponent,
+  AurumTableHeaderCellComponent,
+  AurumTableRowComponent,
+} from '../../shared/aurum/aurum-table.component';
 
 /**
  * Pedidos de reserva — card `67d92ac5`.
@@ -27,12 +36,23 @@ import { PaginadorComponent } from '../../shared/paginador.component';
  */
 @Component({
     selector: 'app-pedidos-reserva',
-    imports: [CommonModule, PaginadorComponent],
+    imports: [
+      CommonModule,
+      PaginadorComponent,
+      AurumPageHeaderComponent,
+      AurumButtonComponent,
+      AurumStatusPillComponent,
+      AurumTableComponent,
+      AurumTableRowComponent,
+      AurumTableCellComponent,
+      AurumTableHeaderCellComponent,
+    ],
     template: `
-    <div class="wl-page">
-      <h1 class="wl-page__titulo">Pedidos de reserva</h1>
-      <p class="wl-page__descricao">Solicitações de reserva de inventário desta exibidora.</p>
-    
+    <aurum-page-header
+      titulo="Pedidos de reserva"
+      subtitulo="Solicitações de reserva de inventário desta exibidora."
+    />
+
       @if (erro) {
         <div class="wl-estado wl-estado--erro">{{ erro }}</div>
       }
@@ -52,52 +72,50 @@ import { PaginadorComponent } from '../../shared/paginador.component';
     
       @if (pedidos.length > 0) {
         <div class="wl-tabela--rolavel">
-          <table class="wl-tabela">
+          <table aurumTable>
             <thead>
-              <tr>
-                <th>Pedido</th>
-                <th>Agência</th>
-                <th>Anunciante</th>
-                <th>Recebido em</th>
-                <th>Itens</th>
-                <th>Status</th>
-                <th>Ações</th>
+              <tr aurumTableRow>
+                <th aurumTableHeaderCell>Pedido</th>
+                <th aurumTableHeaderCell>Agência</th>
+                <th aurumTableHeaderCell>Anunciante</th>
+                <th aurumTableHeaderCell>Recebido em</th>
+                <th aurumTableHeaderCell>Itens</th>
+                <th aurumTableHeaderCell>Status</th>
+                <th aurumTableHeaderCell>Ações</th>
               </tr>
             </thead>
             <tbody>
               @for (pedido of pedidos; track pedido) {
-                <tr>
-                  <td>{{ pedido.codigo }}</td>
-                  <td>{{ pedido.agencia || '—' }}</td>
-                  <td>{{ pedido.cliente || '—' }}</td>
-                  <td>{{ pedido.dataCadastro | date: 'dd/MM/yyyy' }}</td>
-                  <td>{{ pedido.itensCount }}</td>
-                  <td><span class="wl-etiqueta">{{ pedido.status }}</span></td>
-                  <td class="acoes">
-                    <button class="wl-btn wl-btn--link" type="button" (click)="alternarDetalhe(pedido)">
+                <tr aurumTableRow>
+                  <td aurumTableCell>{{ pedido.codigo }}</td>
+                  <td aurumTableCell>{{ pedido.agencia || '—' }}</td>
+                  <td aurumTableCell>{{ pedido.cliente || '—' }}</td>
+                  <td aurumTableCell>{{ pedido.dataCadastro | date: 'dd/MM/yyyy' }}</td>
+                  <td aurumTableCell>{{ pedido.itensCount }}</td>
+                  <td aurumTableCell><aurum-status-pill [rotulo]="pedido.status" tom="neutro" /></td>
+                  <td aurumTableCell class="acoes">
+                    <aurum-button variante="ghost" (click)="alternarDetalhe(pedido)">
                       {{ expandido === pedido.codigo ? 'Ocultar' : 'Detalhe' }}
-                    </button>
-                    <button
-                      class="wl-btn wl-btn--link"
-                      type="button"
-                      [disabled]="respondendo === pedido.id"
+                    </aurum-button>
+                    <aurum-button
+                      variante="ghost"
+                      [desabilitado]="respondendo === pedido.id"
                       (click)="responderTudo(pedido, true)"
                       >
                       Aceitar tudo
-                    </button>
-                    <button
-                      class="wl-btn wl-btn--link rejeitar"
-                      type="button"
-                      [disabled]="respondendo === pedido.id"
+                    </aurum-button>
+                    <aurum-button
+                      variante="perigo"
+                      [desabilitado]="respondendo === pedido.id"
                       (click)="responderTudo(pedido, false)"
                       >
                       Recusar tudo
-                    </button>
+                    </aurum-button>
                   </td>
                 </tr>
                 @if (expandido === pedido.codigo) {
-                  <tr>
-                    <td colspan="7" class="detalhe">
+                  <tr aurumTableRow>
+                    <td aurumTableCell colspan="7" class="detalhe">
                       @if (carregandoDetalhe) {
                         <div class="wl-estado wl-estado--carregando">
                           Carregando itens…
@@ -114,22 +132,22 @@ import { PaginadorComponent } from '../../shared/paginador.component';
                           </div>
                         }
                         @if (d.itens.length > 0) {
-                          <table class="wl-tabela">
+                          <table aurumTable>
                             <thead>
-                              <tr>
-                                <th>Local</th>
-                                <th>Peça</th>
-                                <th>Status</th>
-                                <th>Decisão</th>
+                              <tr aurumTableRow>
+                                <th aurumTableHeaderCell>Local</th>
+                                <th aurumTableHeaderCell>Peça</th>
+                                <th aurumTableHeaderCell>Status</th>
+                                <th aurumTableHeaderCell>Decisão</th>
                               </tr>
                             </thead>
                             <tbody>
                               @for (item of d.itens; track item) {
-                                <tr>
-                                  <td>{{ item.localCodigo || '—' }}</td>
-                                  <td>{{ item.pecaCodigo || '—' }}</td>
-                                  <td>{{ item.status }}</td>
-                                  <td>
+                                <tr aurumTableRow>
+                                  <td aurumTableCell>{{ item.localCodigo || '—' }}</td>
+                                  <td aurumTableCell>{{ item.pecaCodigo || '—' }}</td>
+                                  <td aurumTableCell>{{ item.status }}</td>
+                                  <td aurumTableCell>
                                     <label class="decisao">
                                       <input
                                         type="checkbox"
@@ -150,14 +168,12 @@ import { PaginadorComponent } from '../../shared/paginador.component';
                               {{ resumoDecisoes.aceitos }} aceito(s),
                               {{ resumoDecisoes.rejeitados }} recusado(s)
                             </span>
-                            <button
-                              class="wl-btn"
-                              type="button"
-                              [disabled]="respondendo === pedido.id"
+                            <aurum-button
+                              [desabilitado]="respondendo === pedido.id"
                               (click)="enviarResposta(pedido)"
                             >
                               {{ respondendo === pedido.id ? 'Enviando…' : 'Enviar resposta' }}
-                            </button>
+                            </aurum-button>
                           </div>
                         }
                       }
@@ -178,7 +194,6 @@ import { PaginadorComponent } from '../../shared/paginador.component';
           (pagina)="carregar($event)"
         />
       }
-    </div>
     `,
     changeDetection: ChangeDetectionStrategy.Eager,
     styles: [
@@ -187,9 +202,6 @@ import { PaginadorComponent } from '../../shared/paginador.component';
         display: flex;
         gap: 12px;
         white-space: nowrap;
-      }
-      .rejeitar {
-        color: var(--danger);
       }
       .detalhe {
         background: var(--surface-muted);
