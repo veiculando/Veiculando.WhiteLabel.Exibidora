@@ -3,6 +3,9 @@ import { RouterLink } from '@angular/router';
 import { mensagemDeErro } from '../../core/http/api-error';
 import { DashboardKpis } from '../../core/models/wl.models';
 import { DashboardService } from '../../core/services/dashboard.service';
+import { AurumButtonComponent } from '../../shared/aurum/aurum-button.component';
+import { AurumCardComponent } from '../../shared/aurum/aurum-card.component';
+import { AurumPageHeaderComponent } from '../../shared/aurum/aurum-page-header.component';
 
 /**
  * KPIs operacionais da exibidora — `GET /api/wl/dashboard/kpis`.
@@ -12,55 +15,55 @@ import { DashboardService } from '../../core/services/dashboard.service';
  */
 @Component({
     selector: 'app-dashboard',
-    imports: [RouterLink],
+    imports: [RouterLink, AurumPageHeaderComponent, AurumCardComponent, AurumButtonComponent],
     template: `
-    <div class="wl-page">
-      <h1 class="wl-page__titulo">Dashboard operacional</h1>
-      <p class="wl-page__descricao">Visão geral do inventário e da operação da exibidora.</p>
-    
-      @if (carregando) {
-        <div class="wl-estado wl-estado--carregando">Carregando indicadores…</div>
-      }
-    
-      @if (erro) {
-        <div class="wl-estado wl-estado--erro">
-          {{ erro }}
-          <button class="wl-btn wl-btn--link" type="button" (click)="carregar()">Tentar novamente</button>
+    <aurum-page-header
+      titulo="Dashboard operacional"
+      subtitulo="Visão geral do inventário e da operação da exibidora."
+    />
+
+    @if (carregando) {
+      <div class="wl-estado wl-estado--carregando">Carregando indicadores…</div>
+    }
+
+    @if (erro) {
+      <div class="wl-estado wl-estado--erro">
+        {{ erro }}
+        <aurum-button variante="ghost" (click)="carregar()">Tentar novamente</aurum-button>
+      </div>
+    }
+
+    @if (kpis; as k) {
+      <!-- Alerta de aprovação pendente: locais criados pela Exibidora entram
+      como StatusExibicao = AprovacaoPendente e são liberados no Admin. -->
+      @if (aprovacaoPendente(k) > 0) {
+        <div class="alerta">
+          <strong>{{ aprovacaoPendente(k) }}</strong>
+          {{ aprovacaoPendente(k) === 1 ? 'local aguarda aprovação' : 'locais aguardam aprovação' }}.
+          A liberação é feita pela equipe Veiculando no painel Admin.
+          <a routerLink="/locais">Ver locais</a>
         </div>
       }
-    
-      @if (kpis; as k) {
-        <!-- Alerta de aprovação pendente: locais criados pela Exibidora entram
-        como StatusExibicao = AprovacaoPendente e são liberados no Admin. -->
-        @if (aprovacaoPendente(k) > 0) {
-          <div class="alerta">
-            <strong>{{ aprovacaoPendente(k) }}</strong>
-            {{ aprovacaoPendente(k) === 1 ? 'local aguarda aprovação' : 'locais aguardam aprovação' }}.
-            A liberação é feita pela equipe Veiculando no painel Admin.
-            <a routerLink="/locais">Ver locais</a>
-          </div>
-        }
-        <div class="kpis">
-          <div class="kpi">
-            <span class="kpi__rotulo">Locais ativos</span>
-            <span class="kpi__valor">{{ k.locaisAtivos }}</span>
-          </div>
-          <div class="kpi">
-            <span class="kpi__rotulo">Peças em exibição</span>
-            <span class="kpi__valor">{{ k.pecasEmExibicao }}</span>
-          </div>
-          <div class="kpi">
-            <span class="kpi__rotulo">Pedidos pendentes</span>
-            <span class="kpi__valor">{{ k.pedidosPendentes }}</span>
-          </div>
-          <!-- Sem card de Receita mensal, de propósito (TP-B, seção 2): o BFF
-          não calcula esse valor (nenhuma regra financeira aprovada ainda) e
-          não devolve mais o campo. Mostrar zero como se fosse dado real é
-          proibido pelo PRD vigente — a saída não é "rotular o zero melhor",
-          é não apresentar o card até existir a regra de verdade. -->
-        </div>
-      }
-    </div>
+      <div class="kpis">
+        <aurum-card class="kpi">
+          <span class="kpi__rotulo">Locais ativos</span>
+          <span class="kpi__valor">{{ k.locaisAtivos }}</span>
+        </aurum-card>
+        <aurum-card class="kpi">
+          <span class="kpi__rotulo">Peças em exibição</span>
+          <span class="kpi__valor">{{ k.pecasEmExibicao }}</span>
+        </aurum-card>
+        <aurum-card class="kpi">
+          <span class="kpi__rotulo">Pedidos pendentes</span>
+          <span class="kpi__valor">{{ k.pedidosPendentes }}</span>
+        </aurum-card>
+        <!-- Sem card de Receita mensal, de propósito (TP-B, seção 2): o BFF
+        não calcula esse valor (nenhuma regra financeira aprovada ainda) e
+        não devolve mais o campo. Mostrar zero como se fosse dado real é
+        proibido pelo PRD vigente — a saída não é "rotular o zero melhor",
+        é não apresentar o card até existir a regra de verdade. -->
+      </div>
+    }
     `,
     changeDetection: ChangeDetectionStrategy.Eager,
     styles: [
@@ -74,10 +77,6 @@ import { DashboardService } from '../../core/services/dashboard.service';
         display: flex;
         flex-direction: column;
         gap: 6px;
-        padding: 18px;
-        background: var(--white);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-sm);
       }
       .kpi__rotulo {
         font-size: 0.75rem;
