@@ -19,11 +19,22 @@ export type AurumButtonVariante = 'wine' | 'gold' | 'outline' | 'ghost';
   changeDetection: ChangeDetectionStrategy.Eager,
   styles: [
     `
+      /*
+       * inline-block, como um <button> nativo: por padrao encolhe para o
+       * conteudo, mas respeita width definido por quem hospeda (ex.: botao
+       * de submit ocupando a largura do formulario de login). O botao
+       * interno e width:100% do host de propósito, para que o host seja o
+       * unico ponto de controle de largura.
+       */
+      :host {
+        display: inline-block;
+      }
       .aurum-button {
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 8px;
+        width: 100%;
         border-radius: var(--radius-pill);
         padding: 10px 20px;
         font-size: 0.8125rem;
