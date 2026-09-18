@@ -19,8 +19,10 @@ import { PermissionService } from '../core/auth/permission.service';
           @if (hasPermission('PecaGerenciar')) {
             <a routerLink="/locais" routerLinkActive="active" class="nav-item">Locais & Peças</a>
           }
-          <a routerLink="/programacao" routerLinkActive="active" class="nav-item">Programação</a>
-          @if (hasPermission('Checking')) {
+          @if (hasPermission('ProgramacaoVisualizar')) {
+            <a routerLink="/programacao" routerLinkActive="active" class="nav-item">Programação</a>
+          }
+          @if (hasPermission('CheckingGerenciar')) {
             <a routerLink="/checking" routerLinkActive="active" class="nav-item">Checking</a>
           }
         </div>
