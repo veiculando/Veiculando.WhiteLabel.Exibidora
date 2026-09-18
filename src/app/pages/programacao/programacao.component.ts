@@ -7,6 +7,15 @@ import { LocalListItem, PeriodoLookup, ProgramacaoItem } from '../../core/models
 import { LocaisService } from '../../core/services/locais.service';
 import { LookupsService } from '../../core/services/lookups.service';
 import { ProgramacaoService } from '../../core/services/programacao.service';
+import { AurumButtonComponent } from '../../shared/aurum/aurum-button.component';
+import { AurumPageHeaderComponent } from '../../shared/aurum/aurum-page-header.component';
+import { AurumStatusPillComponent } from '../../shared/aurum/aurum-status-pill.component';
+import {
+  AurumTableCellComponent,
+  AurumTableComponent,
+  AurumTableHeaderCellComponent,
+  AurumTableRowComponent,
+} from '../../shared/aurum/aurum-table.component';
 
 /** Uma linha da grade: uma peça, com o status em cada período. */
 interface LinhaGrade {
@@ -30,12 +39,20 @@ interface LinhaGrade {
  */
 @Component({
     selector: 'app-programacao',
-    imports: [FormsModule, PaginadorComponent],
+    imports: [
+      FormsModule,
+      PaginadorComponent,
+      AurumPageHeaderComponent,
+      AurumButtonComponent,
+      AurumStatusPillComponent,
+      AurumTableComponent,
+      AurumTableRowComponent,
+      AurumTableCellComponent,
+      AurumTableHeaderCellComponent,
+    ],
     template: `
-    <div class="wl-page">
-      <h1 class="wl-page__titulo">Grade de programação</h1>
-      <p class="wl-page__descricao">Status de cada peça por bi-semana.</p>
-    
+    <aurum-page-header titulo="Grade de programação" subtitulo="Status de cada peça por bi-semana." />
+
       <div class="wl-toolbar">
         <div class="wl-campo">
           <label for="local">Local</label>
@@ -61,19 +78,19 @@ interface LinhaGrade {
           </select>
         </div>
     
-        <button class="wl-btn" type="button" [disabled]="carregando" (click)="aplicarFiltro()">
+        <aurum-button [desabilitado]="carregando" (click)="aplicarFiltro()">
           {{ carregando ? 'Consultando…' : 'Consultar' }}
-        </button>
+        </aurum-button>
       </div>
-    
+
       @if (carregando) {
         <div class="wl-estado wl-estado--carregando">Carregando a grade…</div>
       }
-    
+
       @if (erro) {
         <div class="wl-estado wl-estado--erro">
           {{ erro }}
-          <button class="wl-btn wl-btn--link" type="button" (click)="carregar()">Tentar novamente</button>
+          <aurum-button variante="ghost" (click)="carregar()">Tentar novamente</aurum-button>
         </div>
       }
     
@@ -85,27 +102,25 @@ interface LinhaGrade {
     
       @if (linhas.length > 0) {
         <div class="wl-tabela--rolavel">
-          <table class="wl-tabela">
+          <table aurumTable>
             <thead>
-              <tr>
-                <th>Local</th>
-                <th>Peça</th>
+              <tr aurumTableRow>
+                <th aurumTableHeaderCell>Local</th>
+                <th aurumTableHeaderCell>Peça</th>
                 @for (periodo of colunas; track periodo) {
-                  <th>{{ periodo.nome }}</th>
+                  <th aurumTableHeaderCell>{{ periodo.nome }}</th>
                 }
               </tr>
             </thead>
             <tbody>
               @for (linha of linhas; track linha) {
-                <tr>
-                  <td>{{ linha.localCodigo }}</td>
-                  <td>{{ linha.pecaCodigo }}</td>
+                <tr aurumTableRow>
+                  <td aurumTableCell>{{ linha.localCodigo }}</td>
+                  <td aurumTableCell>{{ linha.pecaCodigo }}</td>
                   @for (periodo of colunas; track periodo) {
-                    <td>
+                    <td aurumTableCell>
                       @if (linha.statusPorPeriodo.get(periodo.id); as status) {
-                        <span class="wl-etiqueta">
-                          {{ status }}
-                        </span>
+                        <aurum-status-pill [rotulo]="status" tom="neutro" />
                       }
                       @if (!linha.statusPorPeriodo.has(periodo.id)) {
                         <span class="vazio">—</span>
@@ -127,13 +142,12 @@ interface LinhaGrade {
           (pagina)="carregar($event)"
         />
       }
-    </div>
     `,
     changeDetection: ChangeDetectionStrategy.Eager,
     styles: [
         `
       .vazio {
-        color: #b6b6bd;
+        color: color-mix(in srgb, var(--on-surface) 50%, transparent);
       }
     `,
     ]
