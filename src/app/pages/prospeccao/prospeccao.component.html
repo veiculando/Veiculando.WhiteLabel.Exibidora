@@ -1,0 +1,40 @@
+<!--
+  Subtítulo PRÓPRIO (mesma correção de VEI-RD-80): o Figma repete aqui a copy de
+  Anunciantes — "Gestão das marcas anunciantes e associação às agências" —, que é
+  herança do arquivo de design, não intenção. Esta tela abre uma sessão de venda
+  assistida; não gere marcas. Sinalizado ao design para a revisão v2.3.
+-->
+<aurum-page-header
+  eyebrow="Comercial"
+  titulo="Prospecção"
+  subtitulo="Abra o aplicativo do anunciante em seu nome para montar um pedido junto com o cliente"
+/>
+
+<div class="prospeccao__grade">
+  <section class="prospeccao__destaque">
+    <aurum-eyebrow texto="Sessão de Prospecção" />
+    <h2>Abrir App WL em nova aba</h2>
+    <p>
+      Abra o aplicativo já autenticado para montar o pedido junto com o cliente. A
+      sessão fica registrada em seu nome.
+    </p>
+    <aurum-button variante="gold" [desabilitado]="abrindo" (click)="iniciar()">
+      Iniciar Prospecção
+    </aurum-button>
+    @if (erro) {
+      <p class="prospeccao__erro" role="alert">{{ erro }}</p>
+    }
+  </section>
+
+  <aurum-card>
+    <h2>Como funciona</h2>
+    <!-- Copy literal do Figma. Nenhuma das palavras FonteAgenciaId, BFF ou TTL
+         aparece na interface — o comportamento técnico continua o mesmo. -->
+    @for (item of comoFunciona; track item.titulo) {
+      <div class="prospeccao__item">
+        <strong>{{ item.titulo }}</strong>
+        <span>{{ item.texto }}</span>
+      </div>
+    }
+  </aurum-card>
+</div>
