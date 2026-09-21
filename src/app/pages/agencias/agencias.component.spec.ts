@@ -118,7 +118,7 @@ describe('AgenciasComponent — VEI-RD-79', () => {
     fixture.detectChanges();
   });
 
-  it('as abas de status filtram a listagem no servidor', () => {
+  it('as abas de status filtram a listagem no servidor', async () => {
     const { fixture, http } = montar();
     const aba = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('[role="tab"]'))
       .find((b) => b.textContent?.trim() === 'Inativo')! as HTMLButtonElement;
@@ -126,6 +126,7 @@ describe('AgenciasComponent — VEI-RD-79', () => {
 
     const requisicao = http.expectOne((r) => r.url === base && r.params.get('status') === 'Inativo');
     requisicao.flush(pagina([inativa]));
+    await fixture.whenStable();
     fixture.detectChanges();
 
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('Agência Parada');

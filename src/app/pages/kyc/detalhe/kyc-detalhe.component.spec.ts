@@ -195,7 +195,7 @@ describe('KycDetalheComponent — VEI-RD-81', () => {
     expect(texto()).toContain('ainda não estão disponíveis');
   });
 
-  it('recusa do servidor na decisão aparece para o operador', () => {
+  it('recusa do servidor na decisão aparece para o operador', async () => {
     const { fixture, http, texto } = montar();
     fixture.componentInstance.abrirDecisao('aprovar');
     fixture.componentInstance.justificativa = 'ok';
@@ -205,6 +205,7 @@ describe('KycDetalheComponent — VEI-RD-81', () => {
       { message: 'A organização ainda não foi criada no Core — não há o que vincular.' },
       { status: 409, statusText: 'Conflict' }
     );
+    await fixture.whenStable();
     fixture.detectChanges();
 
     expect(texto()).toContain('não há o que vincular');

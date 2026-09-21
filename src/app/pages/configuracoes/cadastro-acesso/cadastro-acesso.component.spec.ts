@@ -83,7 +83,7 @@ describe('CadastroAcessoComponent — VEI-RD-82', () => {
     expect(botao(fixture, 'Salvar alterações').disabled).toBe(false);
   });
 
-  it('salvar envia o PUT e recarrega a configuração', () => {
+  it('salvar envia o PUT e recarrega a configuração', async () => {
     const { fixture, http } = montar();
     fixture.componentInstance.alternar(true);
     fixture.detectChanges();
@@ -96,6 +96,10 @@ describe('CadastroAcessoComponent — VEI-RD-82', () => {
     requisicao.flush({});
 
     http.expectOne(base).flush({ ...config, ExigirEmailCorporativoNoCadastro: true });
+    // whenStable antes de ler o DOM: o PUT dispara o GET a partir da resposta, e o
+    // scheduler coalescido do Angular 22 nao reavalia os @if do template so com um
+    // detectChanges sincrono. Sem isto, um not.toContain passaria lendo a tela antiga.
+    await fixture.whenStable();
     fixture.detectChanges();
 
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('Ativo');

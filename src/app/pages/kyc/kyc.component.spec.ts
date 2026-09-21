@@ -147,7 +147,7 @@ describe('KycComponent — VEI-RD-80', () => {
     fixture.detectChanges();
   });
 
-  it('conflito ao assumir mostra a recusa do servidor', () => {
+  it('conflito ao assumir mostra a recusa do servidor', async () => {
     const { fixture, http, texto } = montar([pendente]);
     const botao = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button'))
       .find((b) => b.textContent?.trim() === 'Assumir')!;
@@ -157,6 +157,7 @@ describe('KycComponent — VEI-RD-80', () => {
       { message: 'Esta análise já foi assumida por outro operador.' },
       { status: 409, statusText: 'Conflict' }
     );
+    await fixture.whenStable();
     fixture.detectChanges();
 
     expect(texto()).toContain('já foi assumida por outro operador');
