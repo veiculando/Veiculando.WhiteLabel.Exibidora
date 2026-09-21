@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ProspeccaoService } from '../../core/services/comercial.service';
+import { ProspeccaoSessao } from '../../core/models/comercial.models';
 import { AurumButtonComponent } from '../../shared/aurum/aurum-button.component';
 import { AurumCardComponent } from '../../shared/aurum/aurum-card.component';
 import { AurumEyebrowComponent } from '../../shared/aurum/aurum-eyebrow.component';
@@ -55,13 +56,7 @@ export class ProspeccaoComponent {
     this.erro = '';
 
     this.serv.abrirSessao().subscribe({
-      next: (sessao) => {
-        this.abrindo = false;
-        // O token viaja no corpo da resposta e é entregue ao App por POST, nunca na
-        // query string: token em URL entra no histórico do navegador, no Referer da
-        // requisição seguinte e no log de qualquer proxy no caminho.
-        this.abrirAppComToken(sessao.AppUrl, sessao.Token);
-      },
+      next: (sessao) => this.entregarAoApp(sessao),
       error: (resposta) => {
         this.abrindo = false;
         this.erro = resposta?.error?.message ?? 'Não foi possível iniciar a prospecção.';
@@ -70,27 +65,57 @@ export class ProspeccaoComponent {
   }
 
   /**
-   * Abre o App WL em nova aba entregando o token por um POST auto-submetido, e não
-   * por `window.open(url + '?token=')`.
+   * Abre o App WL e entrega o token por `postMessage`, nunca pela URL.
+   *
+   * Token em query string entra no histórico do navegador, no `Referer` da
+   * requisição seguinte e no log de qualquer proxy no caminho — o card proíbe os
+   * dois. Um POST de formulário também não resolve: o App é uma SPA servida como
+   * arquivo estático, e o corpo do POST não chega ao JavaScript dele.
+   *
+   * O handshake é iniciado pelo App: ele avisa "pronto" quando a página carregou,
+   * e só então o token é enviado. Mandar antes seria uma corrida contra o load da
+   * outra aba, e a mensagem se perderia em silêncio.
    */
-  private abrirAppComToken(appUrl: string, token: string): void {
-    const aba = window.open('', '_blank', 'noopener');
+  private entregarAoApp(sessao: ProspeccaoSessao): void {
+    const destino = new URL('/prospeccao/entrar', sessao.AppUrl);
+    const aba = window.open(destino.toString(), '_blank', 'noopener=no');
+
     if (!aba) {
+      this.abrindo = false;
       this.erro = 'Permita janelas pop-up para abrir a prospecção.';
       return;
     }
 
-    const form = aba.document.createElement('form');
-    form.method = 'POST';
-    form.action = appUrl;
+    const origemApp = destino.origin;
 
-    const campo = aba.document.createElement('input');
-    campo.type = 'hidden';
-    campo.name = 'token';
-    campo.value = token;
+    const aoReceber = (evento: MessageEvent) => {
+      // Origem verificada antes de o conteúdo ser lido.
+      if (evento.origin !== origemApp) return;
+      if (evento.data?.type !== 'prospeccao-pronto') return;
 
-    form.appendChild(campo);
-    aba.document.body.appendChild(form);
-    form.submit();
+      window.removeEventListener('message', aoReceber);
+      clearTimeout(expiracao);
+      this.abrindo = false;
+
+      // Destino explícito, nunca '*': com curinga, qualquer página que tivesse
+      // conseguido se colocar nessa janela receberia o token.
+      aba.postMessage(
+        {
+          type: 'prospeccao-token',
+          token: sessao.Token,
+          operadorId: sessao.FonteUsuarioId,
+          anuncianteId: null,
+        },
+        origemApp
+      );
+    };
+
+    const expiracao = setTimeout(() => {
+      window.removeEventListener('message', aoReceber);
+      this.abrindo = false;
+      this.erro = 'O aplicativo não respondeu. Tente iniciar a prospecção de novo.';
+    }, 15000);
+
+    window.addEventListener('message', aoReceber);
   }
 }

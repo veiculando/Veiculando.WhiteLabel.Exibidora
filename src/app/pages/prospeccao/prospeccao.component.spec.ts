@@ -7,6 +7,16 @@ import { ProspeccaoComponent } from './prospeccao.component';
 describe('ProspeccaoComponent — VEI-RD-83', () => {
   const base = `${environment.bffUrl}/prospeccao/sessao`;
 
+  const sessao = {
+    AppUrl: 'https://app.exemplo.com.br/',
+    Token: 'tok.en',
+    ExpiraEm: '2026-08-10T09:14:00Z',
+    TtlSegundos: 120,
+    FonteOrigem: 'WhiteLabel',
+    FonteAgenciaId: 7,
+    FonteUsuarioId: 42,
+  };
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [ProspeccaoComponent],
@@ -62,15 +72,7 @@ describe('ProspeccaoComponent — VEI-RD-83', () => {
 
     const requisicao = http.expectOne(base);
     expect(requisicao.request.method).toBe('POST');
-    requisicao.flush({
-      AppUrl: 'https://app.exemplo.com.br/prospeccao',
-      Token: 'tok.en',
-      ExpiraEm: '2026-08-10T09:14:00Z',
-      TtlSegundos: 120,
-      FonteOrigem: 'WhiteLabel',
-      FonteAgenciaId: 7,
-      FonteUsuarioId: 42,
-    });
+    requisicao.flush(sessao);
     fixture.detectChanges();
   });
 
@@ -85,20 +87,82 @@ describe('ProspeccaoComponent — VEI-RD-83', () => {
       .find((b) => b.textContent?.trim() === 'Iniciar Prospecção')!;
     botao.click();
 
-    http.expectOne(base).flush({
-      AppUrl: 'https://app.exemplo.com.br/prospeccao',
-      Token: 'tok.en',
-      ExpiraEm: '2026-08-10T09:14:00Z',
-      TtlSegundos: 120,
-      FonteOrigem: 'WhiteLabel',
-      FonteAgenciaId: 7,
-      FonteUsuarioId: 42,
-    });
+    http.expectOne(base).flush(sessao);
     fixture.detectChanges();
 
-    const urlAberta = abrir.mock.calls[0]?.[0] ?? '';
-    expect(String(urlAberta)).not.toContain('tok.en');
-    expect(String(urlAberta)).not.toContain('token=');
+    const urlAberta = String(abrir.mock.calls[0]?.[0] ?? '');
+    expect(urlAberta).not.toContain('tok.en');
+    expect(urlAberta).not.toContain('token=');
+    expect(urlAberta).toContain('/prospeccao/entrar');
+  });
+
+  it('o token só é entregue depois que o App avisa que está pronto', () => {
+    // Mandar antes seria uma corrida contra o load da outra aba, e a mensagem se
+    // perderia em silêncio.
+    const { fixture } = montar();
+    const http = TestBed.inject(HttpTestingController);
+    const abaFalsa = { postMessage: vi.fn() };
+    vi.spyOn(window, 'open').mockReturnValue(abaFalsa as unknown as Window);
+
+    Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button'))
+      .find((b) => b.textContent?.trim() === 'Iniciar Prospecção')!
+      .click();
+    http.expectOne(base).flush(sessao);
+    fixture.detectChanges();
+
+    expect(abaFalsa.postMessage).not.toHaveBeenCalled();
+
+    window.dispatchEvent(new MessageEvent('message', {
+      data: { type: 'prospeccao-pronto' },
+      origin: 'https://app.exemplo.com.br',
+    }));
+
+    expect(abaFalsa.postMessage).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'prospeccao-token', token: 'tok.en', operadorId: 42 }),
+      'https://app.exemplo.com.br'
+    );
+  });
+
+  it('mensagem de outra origem não recebe o token', () => {
+    // A guarda de origem impede que qualquer página que tenha conseguido falar com
+    // esta aba se passe pelo App.
+    const { fixture } = montar();
+    const http = TestBed.inject(HttpTestingController);
+    const abaFalsa = { postMessage: vi.fn() };
+    vi.spyOn(window, 'open').mockReturnValue(abaFalsa as unknown as Window);
+
+    Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button'))
+      .find((b) => b.textContent?.trim() === 'Iniciar Prospecção')!
+      .click();
+    http.expectOne(base).flush(sessao);
+    fixture.detectChanges();
+
+    window.dispatchEvent(new MessageEvent('message', {
+      data: { type: 'prospeccao-pronto' },
+      origin: 'https://atacante.example',
+    }));
+
+    expect(abaFalsa.postMessage).not.toHaveBeenCalled();
+  });
+
+  it('o token nunca é enviado com destino curinga', () => {
+    const { fixture } = montar();
+    const http = TestBed.inject(HttpTestingController);
+    const abaFalsa = { postMessage: vi.fn() };
+    vi.spyOn(window, 'open').mockReturnValue(abaFalsa as unknown as Window);
+
+    Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button'))
+      .find((b) => b.textContent?.trim() === 'Iniciar Prospecção')!
+      .click();
+    http.expectOne(base).flush(sessao);
+    fixture.detectChanges();
+
+    window.dispatchEvent(new MessageEvent('message', {
+      data: { type: 'prospeccao-pronto' },
+      origin: 'https://app.exemplo.com.br',
+    }));
+
+    expect(abaFalsa.postMessage.mock.calls[0][1]).not.toBe('*');
   });
 
   it('erro do servidor aparece para o operador', () => {
