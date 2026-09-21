@@ -3,6 +3,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { mensagemDeErro } from '../../core/http/api-error';
 import { PeriodoLookup, RelatorioResumo } from '../../core/models/wl.models';
+import { PermissionService } from '../../core/auth/permission.service';
 import { LookupsService } from '../../core/services/lookups.service';
 import { AurumButtonComponent } from '../../shared/aurum/aurum-button.component';
 import { AurumCardComponent } from '../../shared/aurum/aurum-card.component';
@@ -97,6 +98,16 @@ import { RelatoriosService } from './services/relatorios.service';
 export class RelatoriosComponent implements OnInit {
   private readonly service = inject(RelatoriosService);
   private readonly lookups = inject(LookupsService);
+  private readonly permissions = inject(PermissionService);
+
+  /**
+   * `RelatorioExportar` é distinta de `FinanceiroVisualizar` (que já protege
+   * a rota inteira) — controla especificamente a ação de exportar. Omitida
+   * do DOM quando ausente, não apenas desabilitada: um botão desabilitado
+   * ainda revela que a ação existe, e o invariante do projeto é "controles
+   * proibidos omitidos do DOM".
+   */
+  readonly podeExportar = this.permissions.has('RelatorioExportar');
 
   periodos: PeriodoLookup[] = [];
   idPeriodoSelecionado: number | null = null;

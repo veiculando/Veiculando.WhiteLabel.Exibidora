@@ -13,9 +13,11 @@
     </select>
   </label>
 
-  <aurum-button variante="outline" [desabilitado]="exportando || !resumo" (click)="exportar()">
-    {{ exportando ? 'Exportando…' : 'Exportar (CSV)' }}
-  </aurum-button>
+  @if (podeExportar) {
+    <aurum-button variante="outline" [desabilitado]="exportando || !resumo" (click)="exportar()">
+      {{ exportando ? 'Exportando…' : 'Exportar (CSV)' }}
+    </aurum-button>
+  }
 </div>
 
 @if (erroExportacao) {
