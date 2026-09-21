@@ -1,0 +1,97 @@
+<aurum-page-header
+  titulo="Relatórios"
+  subtitulo="Agregações financeiras e operacionais por período comercial."
+/>
+
+<div class="rel-toolbar">
+  <label>
+    Período:
+    <select [(ngModel)]="idPeriodoSelecionado" (ngModelChange)="aoTrocarPeriodo()">
+      @for (periodo of periodos; track periodo.id) {
+        <option [ngValue]="periodo.id">{{ periodo.nome }}</option>
+      }
+    </select>
+  </label>
+
+  <aurum-button variante="outline" [desabilitado]="exportando || !resumo" (click)="exportar()">
+    {{ exportando ? 'Exportando…' : 'Exportar (CSV)' }}
+  </aurum-button>
+</div>
+
+@if (erroExportacao) {
+  <p role="alert">{{ erroExportacao }}</p>
+}
+
+@if (carregando) {
+  <div class="wl-estado wl-estado--carregando">Carregando relatório…</div>
+} @else if (erro) {
+  <div class="wl-estado wl-estado--erro" role="alert">
+    {{ erro }}
+    <aurum-button variante="ghost" (click)="carregar()">Tentar novamente</aurum-button>
+  </div>
+} @else if (resumo; as r) {
+  <div class="kpis">
+    <aurum-card class="kpi">
+      <span class="kpi__rotulo">Faturamento Previsto</span>
+      @if (r.faturamentoPrevisto.disponivel) {
+        <span class="kpi__valor">{{ formatarMoeda(r.faturamentoPrevisto.valor) }}</span>
+      } @else {
+        <span class="kpi__valor kpi__valor--indisponivel">Indisponível</span>
+      }
+    </aurum-card>
+    <aurum-card class="kpi">
+      <span class="kpi__rotulo">Valor Líquido de Veiculação (PIs)</span>
+      <span class="kpi__valor">{{ formatarMoeda(r.valorLiquidoVeiculacaoTotal) }}</span>
+    </aurum-card>
+    <aurum-card class="kpi">
+      <span class="kpi__rotulo">Peças Veiculadas</span>
+      <span class="kpi__valor">{{ r.pecasVeiculadas }}</span>
+    </aurum-card>
+  </div>
+
+  <div class="rel-tabelas">
+    <div>
+      <h3>Pedidos de Inserção por status ({{ r.pedidosInsercao.total }} total)</h3>
+      <table aurumTable>
+        <thead>
+          <tr aurumTableRow>
+            <th aurumTableHeaderCell>Status</th>
+            <th aurumTableHeaderCell>Quantidade</th>
+            <th aurumTableHeaderCell>Valor Líquido</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (linha of r.pedidosInsercao.porStatus; track linha.status) {
+            <tr aurumTableRow>
+              <td aurumTableCell>{{ linha.status }}</td>
+              <td aurumTableCell>{{ linha.quantidade }}</td>
+              <td aurumTableCell>{{ formatarMoeda(linha.valorLiquido ?? 0) }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div>
+      <h3>Reservas por status ({{ r.reservas.total }} total)</h3>
+      <table aurumTable>
+        <thead>
+          <tr aurumTableRow>
+            <th aurumTableHeaderCell>Status</th>
+            <th aurumTableHeaderCell>Quantidade</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (linha of r.reservas.porStatus; track linha.status) {
+            <tr aurumTableRow>
+              <td aurumTableCell>{{ linha.status }}</td>
+              <td aurumTableCell>{{ linha.quantidade }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+} @else {
+  <div class="wl-estado wl-estado--vazio">Selecione um período para ver o relatório.</div>
+}

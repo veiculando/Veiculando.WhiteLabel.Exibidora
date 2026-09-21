@@ -1,0 +1,100 @@
+<aurum-page-header
+  titulo="Valores de Peças e Tabela de Preços"
+  subtitulo="Precificação das peças de mídia cadastradas para a afiliada."
+/>
+
+<div class="pv-toolbar">
+  <div class="pv-filtros">
+    <aurum-text-input
+      placeholder="Buscar por código, código interno, cidade…"
+      rotulo="Buscar por código, código interno, cidade…"
+      [valor]="busca"
+      (valorChange)="busca = $event"
+    />
+
+    <aurum-filter-field rotulo="Cidade">
+      <select [(ngModel)]="idCidade">
+        <option [ngValue]="null">Todas</option>
+        @for (cidade of cidades; track cidade.id) {
+          <option [ngValue]="cidade.id">{{ cidade.nome }} — {{ cidade.sigla }}</option>
+        }
+      </select>
+    </aurum-filter-field>
+
+    <aurum-filter-field rotulo="Suporte">
+      <select [(ngModel)]="idTipoSuporte">
+        <option [ngValue]="null">Todos</option>
+        @for (suporte of suportes; track suporte.id) {
+          <option [ngValue]="suporte.id">{{ suporte.nome }}</option>
+        }
+      </select>
+    </aurum-filter-field>
+
+    <aurum-filter-field rotulo="Status">
+      <select [(ngModel)]="status">
+        <option [ngValue]="null">Todos</option>
+        <option [ngValue]="StatusExibicao.Ativo">{{ statusLabel[StatusExibicao.Ativo] }}</option>
+        <option [ngValue]="StatusExibicao.Inativo">{{ statusLabel[StatusExibicao.Inativo] }}</option>
+        <option [ngValue]="StatusExibicao.AprovacaoPendente">{{ statusLabel[StatusExibicao.AprovacaoPendente] }}</option>
+      </select>
+    </aurum-filter-field>
+
+    <aurum-button variante="ghost" [desabilitado]="carregando" (click)="aplicarFiltro()">
+      {{ carregando ? 'Consultando…' : 'Filtrar' }}
+    </aurum-button>
+  </div>
+
+  <aurum-button [desabilitado]="selecionadosCount === 0" (click)="abrirModal()">
+    Alterar Preço ({{ selecionadosCount }} selecionada{{ selecionadosCount === 1 ? '' : 's' }})
+  </aurum-button>
+</div>
+
+@if (sucesso) {
+  <p role="status">{{ sucesso }}</p>
+}
+
+@if (erro) {
+  <div class="wl-estado wl-estado--erro" role="alert">
+    {{ erro }}
+    <aurum-button variante="ghost" (click)="carregar()">Tentar novamente</aurum-button>
+  </div>
+} @else if (carregando && itens.length === 0) {
+  <div class="wl-estado wl-estado--carregando">Carregando peças…</div>
+} @else if (!carregando && itens.length === 0) {
+  <div class="wl-estado wl-estado--vazio">Nenhuma peça encontrada para o filtro selecionado.</div>
+} @else {
+  <div class="pv-grid-wrapper">
+    <ag-grid-angular
+      class="ag-theme-quartz"
+      style="width: 100%; height: 100%;"
+      [rowData]="itens"
+      [columnDefs]="colDefs"
+      [defaultColDef]="defaultColDef"
+      [rowSelection]="'multiple'"
+      [suppressRowClickSelection]="true"
+      [getRowId]="getRowId"
+      (gridReady)="onGridReady($event)"
+      (rowDataUpdated)="onRowDataUpdated($event)"
+      (selectionChanged)="onSelectionChanged($event)"
+    />
+  </div>
+
+  <app-paginador
+    [page]="page"
+    [pageSize]="pageSize"
+    [total]="total"
+    [totalPaginas]="totalPaginas"
+    [carregando]="carregando"
+    (pagina)="carregar($event)"
+  />
+}
+
+@if (modalAberto) {
+  <app-pecas-alterar-preco-modal
+    [itens]="itensSelecionados()"
+    [salvando]="salvandoModal"
+    [erro]="erroModal"
+    (confirmar)="confirmarAlteracao($event)"
+    (fechar)="fecharModal()"
+  />
+}

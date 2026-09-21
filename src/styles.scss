@@ -243,6 +243,12 @@ textarea {
   font-style: italic;
 }
 
+.wl-linha-secundaria {
+  display: block;
+  font-size: 0.75rem;
+  color: color-mix(in srgb, var(--on-surface) 70%, transparent);
+}
+
 .wl-etiqueta {
   display: inline-block;
   padding: 2px 8px;

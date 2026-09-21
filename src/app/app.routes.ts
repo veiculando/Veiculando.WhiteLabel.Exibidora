@@ -13,6 +13,8 @@ import { authGuard } from './core/auth/auth.guard';
  *  - 'PedidoReservaGerenciar'
  *  - 'PedidoInsercaoGerenciar'
  *  - 'UsuarioAfiliadaGerenciar'
+ *  - 'FinanceiroVisualizar' (VEI-RD-85/92, Plano 2 — VEI-RD-93)
+ *  - 'RelatorioExportar' (VEI-RD-92, Plano 2 — VEI-RD-93)
  *
  * Toda a área autenticada é filha do `ShellComponent` (header/sidebar/breadcrumb/
  * footer); /login e /acesso-negado ficam fora dele por serem públicas.
@@ -131,6 +133,14 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/locais/pecas/peca-form.component').then(m => m.PecaFormComponent),
       },
+      {
+        path: 'pecas/valores',
+        title: 'Valores de peças',
+        data: { permission: 'PecaGerenciar' },
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./pages/pecas-valores/pecas-valores.component').then((m) => m.PecasValoresComponent),
+      },
 
       // --- Comercial ---
       {
@@ -152,6 +162,16 @@ export const routes: Routes = [
           import('./pages/pedidos-insercao/pedidos-insercao.component').then(
             (m) => m.PedidosInsercaoComponent
           ),
+      },
+
+      // --- Financeiro ---
+      {
+        path: 'relatorios',
+        title: 'Relatórios',
+        data: { permission: 'FinanceiroVisualizar' },
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./pages/relatorios/relatorios.component').then((m) => m.RelatoriosComponent),
       },
 
       // --- Administração ---
