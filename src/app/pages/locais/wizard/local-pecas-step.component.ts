@@ -6,6 +6,14 @@ import { PecaListItem } from '../models/peca.model';
 import { STATUS_EXIBICAO_LABEL } from '../models/status-exibicao.enum';
 import { PhotoUploadComponent } from '../../../shared/photo-upload.component';
 import { environment } from '../../../../environments/environment';
+import { AurumButtonComponent } from '../../../shared/aurum/aurum-button.component';
+import { AurumStatusPillComponent } from '../../../shared/aurum/aurum-status-pill.component';
+import {
+  AurumTableCellComponent,
+  AurumTableComponent,
+  AurumTableHeaderCellComponent,
+  AurumTableRowComponent,
+} from '../../../shared/aurum/aurum-table.component';
 
 /**
  * Etapa 3 do wizard — "Peças". Lista as peças do local e encaminha o
@@ -21,8 +29,60 @@ import { environment } from '../../../../environments/environment';
 @Component({
   selector: 'app-local-pecas-step',
   standalone: true,
-  imports: [CommonModule, RouterLink, PhotoUploadComponent],
+  imports: [
+    CommonModule,
+    RouterLink,
+    PhotoUploadComponent,
+    AurumButtonComponent,
+    AurumStatusPillComponent,
+    AurumTableComponent,
+    AurumTableRowComponent,
+    AurumTableCellComponent,
+    AurumTableHeaderCellComponent,
+  ],
   templateUrl: './local-pecas-step.component.html',
+  styles: [
+    `
+      .local-pecas-step__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+      }
+      .local-pecas-step__acoes {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        white-space: nowrap;
+      }
+      .local-pecas-step__link {
+        color: var(--primary-color);
+        text-decoration: none;
+      }
+      .local-pecas-step__link:hover {
+        text-decoration: underline;
+      }
+      .local-pecas-step__link-primario {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--radius-pill);
+        padding: 10px 20px;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        background: var(--primary-color);
+        color: var(--white);
+        text-decoration: none;
+        box-shadow: var(--shadow-base);
+      }
+      .local-pecas-step__link-primario:hover {
+        background: var(--primary-dark);
+        box-shadow: var(--shadow-hover);
+      }
+    `,
+  ],
 })
 export class LocalPecasStepComponent implements OnInit {
   readonly bffUrl = environment.bffUrl;

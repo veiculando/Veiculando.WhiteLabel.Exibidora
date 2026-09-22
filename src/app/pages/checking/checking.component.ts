@@ -5,6 +5,15 @@ import { ItemChecking, PiAutorizada } from '../../core/models/wl.models';
 import { CheckingService } from '../../core/services/checking.service';
 import { PhotoUploadComponent } from '../../shared/photo-upload.component';
 import { environment } from '../../../environments/environment';
+import { AurumButtonComponent } from '../../shared/aurum/aurum-button.component';
+import { AurumPageHeaderComponent } from '../../shared/aurum/aurum-page-header.component';
+import { AurumStatusPillComponent } from '../../shared/aurum/aurum-status-pill.component';
+import {
+  AurumTableCellComponent,
+  AurumTableComponent,
+  AurumTableHeaderCellComponent,
+  AurumTableRowComponent,
+} from '../../shared/aurum/aurum-table.component';
 
 /**
  * Checking de veiculação — card `9dd345d3`.
@@ -29,14 +38,23 @@ import { environment } from '../../../environments/environment';
  */
 @Component({
     selector: 'app-checking',
-    imports: [CommonModule, PhotoUploadComponent],
+    imports: [
+      CommonModule,
+      PhotoUploadComponent,
+      AurumPageHeaderComponent,
+      AurumButtonComponent,
+      AurumStatusPillComponent,
+      AurumTableComponent,
+      AurumTableRowComponent,
+      AurumTableCellComponent,
+      AurumTableHeaderCellComponent,
+    ],
     template: `
-    <div class="wl-page">
-      <h1 class="wl-page__titulo">Checking de veiculação</h1>
-      <p class="wl-page__descricao">
-        Comprovação fotográfica das inserções autorizadas.
-      </p>
-    
+    <aurum-page-header
+      titulo="Checking de veiculação"
+      subtitulo="Comprovação fotográfica das inserções autorizadas."
+    />
+
       @if (erro) {
         <div class="wl-estado wl-estado--erro">{{ erro }}</div>
       }
@@ -58,25 +76,25 @@ import { environment } from '../../../environments/environment';
         }
         @if (pis.length > 0) {
           <div class="wl-tabela--rolavel">
-            <table class="wl-tabela">
+            <table aurumTable>
               <thead>
-                <tr>
-                  <th>PI</th>
-                  <th>Emissão</th>
-                  <th>Valor líquido</th>
-                  <th></th>
+                <tr aurumTableRow>
+                  <th aurumTableHeaderCell>PI</th>
+                  <th aurumTableHeaderCell>Emissão</th>
+                  <th aurumTableHeaderCell>Valor líquido</th>
+                  <th aurumTableHeaderCell></th>
                 </tr>
               </thead>
               <tbody>
                 @for (pi of pis; track pi) {
-                  <tr>
-                    <td>{{ pi.codigo }}</td>
-                    <td>{{ pi.dataCadastro | date: 'dd/MM/yyyy' }}</td>
-                    <td>{{ pi.valorLiquidoVeiculacao | currency: 'BRL' : 'symbol' : '1.2-2' }}</td>
-                    <td>
-                      <button class="wl-btn wl-btn--link" type="button" (click)="abrirPi(pi)">
+                  <tr aurumTableRow>
+                    <td aurumTableCell>{{ pi.codigo }}</td>
+                    <td aurumTableCell>{{ pi.dataCadastro | date: 'dd/MM/yyyy' }}</td>
+                    <td aurumTableCell>{{ pi.valorLiquidoVeiculacao | currency: 'BRL' : 'symbol' : '1.2-2' }}</td>
+                    <td aurumTableCell>
+                      <aurum-button variante="ghost" (click)="abrirPi(pi)">
                         Ver itens
-                      </button>
+                      </aurum-button>
                     </td>
                   </tr>
                 }
@@ -89,9 +107,9 @@ import { environment } from '../../../environments/environment';
       <!-- ------------------------------------- Telas 2 e 3: itens e envio -->
       @if (piSelecionada; as pi) {
         <div class="wl-toolbar">
-          <button class="wl-btn wl-btn--secundario" type="button" (click)="voltar()">
+          <aurum-button variante="outline" (click)="voltar()">
             ← Voltar para as PIs
-          </button>
+          </aurum-button>
           <span class="contexto">
             PI <strong>{{ pi.codigo }}</strong> ·
             {{ pi.dataCadastro | date: 'dd/MM/yyyy' }}
@@ -113,26 +131,26 @@ import { environment } from '../../../environments/environment';
         }
         @if (itens.length > 0) {
           <div class="wl-tabela--rolavel">
-            <table class="wl-tabela">
+            <table aurumTable>
               <thead>
-                <tr>
-                  <th>Item</th>
-                  <th>Local</th>
-                  <th>Peça</th>
-                  <th>Status</th>
-                  <th>Enviar foto</th>
+                <tr aurumTableRow>
+                  <th aurumTableHeaderCell>Item</th>
+                  <th aurumTableHeaderCell>Local</th>
+                  <th aurumTableHeaderCell>Peça</th>
+                  <th aurumTableHeaderCell>Status</th>
+                  <th aurumTableHeaderCell>Enviar foto</th>
                 </tr>
               </thead>
               <tbody>
                 @for (item of itens; track item) {
-                  <tr>
-                    <td>{{ item.idPedidoItem }}</td>
-                    <td>{{ item.localDescricao || item.localCodigo || '—' }}</td>
-                    <td>{{ item.pecaCodigo || '—' }}</td>
-                    <td>
-                      <span class="wl-etiqueta">{{ item.statusChecking || item.status }}</span>
+                  <tr aurumTableRow>
+                    <td aurumTableCell>{{ item.idPedidoItem }}</td>
+                    <td aurumTableCell>{{ item.localDescricao || item.localCodigo || '—' }}</td>
+                    <td aurumTableCell>{{ item.pecaCodigo || '—' }}</td>
+                    <td aurumTableCell>
+                      <aurum-status-pill [rotulo]="item.statusChecking || item.status" tom="neutro" />
                     </td>
-                    <td>
+                    <td aurumTableCell>
                       <app-photo-upload
                         [uploadUrl]="bffUrl + '/checking/enviar-foto/' + item.idPedidoItem"
                         [listUrl]="bffUrl + '/checking/item/' + item.idPedidoItem + '/fotos'"
@@ -146,7 +164,6 @@ import { environment } from '../../../environments/environment';
             </div>
           }
         }
-      </div>
     `,
     changeDetection: ChangeDetectionStrategy.Eager,
     styles: [

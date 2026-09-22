@@ -5,6 +5,7 @@ import { Router, RouterLink } from '@angular/router';
 import { BrandingService } from '../../core/branding/branding.service';
 import { mensagemDeErro } from '../../core/http/api-error';
 import { AuthService } from '../../core/services/auth.service';
+import { AurumButtonComponent } from '../../shared/aurum/aurum-button.component';
 
 /**
  * Autenticação do operador WL — `POST /api/wl/auth/login`.
@@ -20,7 +21,7 @@ import { AuthService } from '../../core/services/auth.service';
  */
 @Component({
     selector: 'app-login',
-    imports: [ReactiveFormsModule, RouterLink],
+    imports: [ReactiveFormsModule, RouterLink, AurumButtonComponent],
     template: `
     <div class="login">
       <div class="login__moldura">
@@ -63,11 +64,11 @@ import { AuthService } from '../../core/services/auth.service';
             <div class="wl-estado wl-estado--erro login__erro">{{ erro }}</div>
           }
 
-          <button class="wl-btn login__botao" type="submit" [disabled]="enviando">
+          <aurum-button class="login__botao" tipo="submit" [desabilitado]="enviando">
             {{ enviando ? 'Entrando…' : 'Entrar' }}
-          </button>
+          </aurum-button>
 
-          <a class="wl-btn--link login__esqueci" routerLink="/login/esqueci-senha">Esqueci minha senha</a>
+          <a class="login__esqueci" routerLink="/login/esqueci-senha">Esqueci minha senha</a>
         </form>
       </div>
 
@@ -168,7 +169,6 @@ import { AuthService } from '../../core/services/auth.service';
       }
       .login__botao {
         width: 100%;
-        padding: 11px;
       }
       .login__rodape {
         margin-top: 20px;
@@ -180,6 +180,8 @@ import { AuthService } from '../../core/services/auth.service';
         margin-top: 14px;
         text-align: center;
         font-size: 0.85rem;
+        color: var(--primary-color);
+        text-decoration: underline;
       }
       @media (max-width: 760px) {
         .login {

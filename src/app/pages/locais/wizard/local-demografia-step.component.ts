@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { LocalPublicoPayload, emptyLocalPublicoPayload } from '../models/local-publico.model';
+import { AurumButtonComponent } from '../../../shared/aurum/aurum-button.component';
 
 /**
  * Etapa 2 do wizard — "Dados Demográficos".
@@ -20,7 +21,7 @@ import { LocalPublicoPayload, emptyLocalPublicoPayload } from '../models/local-p
 @Component({
   selector: 'app-local-demografia-step',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, AurumButtonComponent],
   templateUrl: './local-demografia-step.component.html',
 })
 export class LocalDemografiaStepComponent implements OnChanges {

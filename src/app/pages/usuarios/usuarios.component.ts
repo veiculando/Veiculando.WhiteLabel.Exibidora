@@ -10,6 +10,16 @@ import {
   UsuarioWl,
 } from '../../core/models/wl.models';
 import { UsuariosService } from '../../core/services/usuarios.service';
+import { AurumButtonComponent } from '../../shared/aurum/aurum-button.component';
+import { AurumCardComponent } from '../../shared/aurum/aurum-card.component';
+import { AurumPageHeaderComponent } from '../../shared/aurum/aurum-page-header.component';
+import { AurumStatusPillComponent } from '../../shared/aurum/aurum-status-pill.component';
+import {
+  AurumTableCellComponent,
+  AurumTableComponent,
+  AurumTableHeaderCellComponent,
+  AurumTableRowComponent,
+} from '../../shared/aurum/aurum-table.component';
 
 /**
  * Operadores da exibidora — card `6c8ee49a`.
@@ -31,19 +41,28 @@ import { UsuariosService } from '../../core/services/usuarios.service';
  */
 @Component({
     selector: 'app-usuarios',
-    imports: [CommonModule, ReactiveFormsModule],
+    imports: [
+      CommonModule,
+      ReactiveFormsModule,
+      AurumPageHeaderComponent,
+      AurumCardComponent,
+      AurumButtonComponent,
+      AurumStatusPillComponent,
+      AurumTableComponent,
+      AurumTableRowComponent,
+      AurumTableCellComponent,
+      AurumTableHeaderCellComponent,
+    ],
     template: `
-    <div class="wl-page">
-      <h1 class="wl-page__titulo">Operadores da exibidora</h1>
-      <p class="wl-page__descricao">Contas de acesso ao painel e suas permissões.</p>
-    
+    <aurum-page-header titulo="Operadores da exibidora" subtitulo="Contas de acesso ao painel e suas permissões." />
+
       @if (erro) {
         <div class="wl-estado wl-estado--erro" role="alert">{{ erro }}</div>
       }
       @if (erroCarregamento) {
-        <button class="wl-btn wl-btn--secundario" type="button" (click)="carregar()">
+        <aurum-button variante="outline" (click)="carregar()">
           Tentar novamente
-        </button>
+        </aurum-button>
       }
       @if (aviso) {
         <div class="wl-estado wl-estado--sucesso" role="status">{{ aviso }}</div>
@@ -57,9 +76,9 @@ import { UsuariosService } from '../../core/services/usuarios.service';
           Mostrar excluídos
         </label>
         @if (!criando) {
-          <button class="wl-btn" type="button" (click)="abrirCriacao()">
+          <aurum-button (click)="abrirCriacao()">
             Novo operador
-          </button>
+          </aurum-button>
         }
       </div>
     
@@ -70,7 +89,8 @@ import { UsuariosService } from '../../core/services/usuarios.service';
 
       <!-- --------------------------------------------- Criação -->
       @if (criando) {
-        <form class="wl-card" [formGroup]="formCriacao" (ngSubmit)="criar()">
+        <aurum-card>
+        <form [formGroup]="formCriacao" (ngSubmit)="criar()">
           <h2 class="cartao__titulo">Novo operador</h2>
           <div class="grade">
             <div class="wl-campo">
@@ -115,14 +135,15 @@ import { UsuariosService } from '../../core/services/usuarios.service';
               }
             </fieldset>
             <div class="acoes-form">
-              <button class="wl-btn" type="submit" [disabled]="salvando">
+              <aurum-button tipo="submit" [desabilitado]="salvando">
                 {{ salvando ? 'Enviando…' : 'Criar e enviar convite' }}
-              </button>
-              <button class="wl-btn wl-btn--secundario" type="button" (click)="cancelarCriacao()">
+              </aurum-button>
+              <aurum-button variante="outline" (click)="cancelarCriacao()">
                 Cancelar
-              </button>
+              </aurum-button>
             </div>
           </form>
+        </aurum-card>
         }
     
         <!-- --------------------------------------------- Listagem -->
@@ -138,38 +159,41 @@ import { UsuariosService } from '../../core/services/usuarios.service';
     
         @if (usuarios.length > 0) {
           <div class="wl-tabela--rolavel">
-            <table class="wl-tabela">
+            <table aurumTable>
               <thead>
-                <tr>
-                  <th>Nome</th>
-                  <th>E-mail</th>
-                  <th>Cargo</th>
-                  <th>Acesso</th>
-                  <th>Último acesso</th>
-                  <th>Permissões</th>
-                  <th>Ações</th>
+                <tr aurumTableRow>
+                  <th aurumTableHeaderCell>Nome</th>
+                  <th aurumTableHeaderCell>E-mail</th>
+                  <th aurumTableHeaderCell>Cargo</th>
+                  <th aurumTableHeaderCell>Acesso</th>
+                  <th aurumTableHeaderCell>Último acesso</th>
+                  <th aurumTableHeaderCell>Permissões</th>
+                  <th aurumTableHeaderCell>Ações</th>
                 </tr>
               </thead>
               <tbody>
                 @for (usuario of usuarios; track usuario) {
-                  <tr>
-                    <td>{{ usuario.nome }}</td>
-                    <td>{{ usuario.email }}</td>
-                    <td>{{ usuario.cargo || '—' }}</td>
-                    <td>
-                      <span class="wl-etiqueta">{{ usuario.excluido ? 'Excluído' : (usuario.statusConvite === 'Aceito' ? 'Ativo' : 'Convite pendente') }}</span>
+                  <tr aurumTableRow>
+                    <td aurumTableCell>{{ usuario.nome }}</td>
+                    <td aurumTableCell>{{ usuario.email }}</td>
+                    <td aurumTableCell>{{ usuario.cargo || '—' }}</td>
+                    <td aurumTableCell>
+                      <aurum-status-pill
+                        [rotulo]="usuario.excluido ? 'Excluído' : (usuario.statusConvite === 'Aceito' ? 'Ativo' : 'Convite pendente')"
+                        [tom]="usuario.excluido ? 'neutro' : (usuario.statusConvite === 'Aceito' ? 'sucesso' : 'aviso')"
+                      />
                       @if (usuario.excluido) {
                         <div class="sem-permissao">
                           Excluído em {{ usuario.dataExclusao ? (usuario.dataExclusao | date: 'dd/MM/yyyy HH:mm') : 'data não registrada' }}
                         </div>
                       }
                     </td>
-                    <td>
+                    <td aurumTableCell>
                       {{ usuario.dataUltimoLogin ? (usuario.dataUltimoLogin | date: 'dd/MM/yyyy HH:mm') : 'nunca' }}
                     </td>
-                    <td>
+                    <td aurumTableCell>
                       @for (p of usuario.permissoes; track p) {
-                        <span class="wl-etiqueta">{{ rotulo(p) }}</span>
+                        <aurum-status-pill [rotulo]="rotulo(p)" tom="neutro" />
                       }
                       @if (usuario.permissoes.length === 0) {
                         <span class="sem-permissao">
@@ -177,22 +201,22 @@ import { UsuariosService } from '../../core/services/usuarios.service';
                         </span>
                       }
                     </td>
-                    <td class="acoes">
+                    <td aurumTableCell class="acoes">
                       @if (usuario.excluido) {
                         <span class="sem-permissao">Somente consulta</span>
                       } @else {
                       @if (usuario.statusConvite === 'Pendente') {
-                        <button class="wl-btn wl-btn--link" type="button"
-                          [disabled]="reenviando !== null" (click)="reenviarConvite(usuario)">
+                        <aurum-button variante="ghost"
+                          [desabilitado]="reenviando !== null" (click)="reenviarConvite(usuario)">
                           {{ reenviando === usuario.id ? 'Enviando…' : 'Reenviar convite' }}
-                        </button>
+                        </aurum-button>
                       }
-                      <button class="wl-btn wl-btn--link" type="button" (click)="abrirEdicao(usuario)">
+                      <aurum-button variante="ghost" (click)="abrirEdicao(usuario)">
                         {{ editando === usuario.id ? 'Fechar' : 'Editar' }}
-                      </button>
-                      <button class="wl-btn wl-btn--link excluir" type="button" (click)="excluir(usuario)">
+                      </aurum-button>
+                      <aurum-button variante="perigo" (click)="excluir(usuario)">
                         Excluir
-                      </button>
+                      </aurum-button>
                       }
                     </td>
                   </tr>
@@ -243,9 +267,9 @@ import { UsuariosService } from '../../core/services/usuarios.service';
                               }
                             </fieldset>
                             <div class="acoes-form">
-                              <button class="wl-btn" type="button" [disabled]="salvando" (click)="salvarEdicao(usuario)">
+                              <aurum-button [desabilitado]="salvando" (click)="salvarEdicao(usuario)">
                                 {{ salvando ? 'Salvando…' : 'Salvar alterações' }}
-                              </button>
+                              </aurum-button>
                             </div>
                           </td>
                         </tr>
@@ -255,7 +279,6 @@ import { UsuariosService } from '../../core/services/usuarios.service';
                 </table>
               </div>
             }
-          </div>
     `,
     changeDetection: ChangeDetectionStrategy.Eager,
     styles: [
@@ -304,9 +327,6 @@ import { UsuariosService } from '../../core/services/usuarios.service';
         gap: 12px;
         white-space: nowrap;
       }
-      .excluir {
-        color: var(--danger);
-      }
       .edicao {
         background: var(--surface-muted);
       }
@@ -321,7 +341,7 @@ import { UsuariosService } from '../../core/services/usuarios.service';
         font-style: italic;
         color: var(--on-surface);
       }
-      td .wl-etiqueta {
+      td aurum-status-pill {
         margin: 0 4px 4px 0;
       }
     `,
