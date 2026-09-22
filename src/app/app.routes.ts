@@ -104,6 +104,57 @@ export const routes: Routes = [
           import('./pages/checking/checking.component').then((m) => m.CheckingComponent),
       },
       {
+        path: 'checkout',
+        title: 'Check out',
+        data: { permission: 'Checking' },
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./pages/checkout/checkout-listagem.component').then((m) => m.CheckoutListagemComponent),
+      },
+      {
+        path: 'checkout/:codigo',
+        title: 'Check out',
+        data: { permission: 'Checking' },
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./pages/checkout/checkout-detalhe.component').then((m) => m.CheckoutDetalheComponent),
+      },
+      // --- Ordem de Serviço (VEI-RD-88) ---
+      //
+      // Sem `data.permission`: nenhuma das 5 permissões da whitelist cobre OS
+      // semanticamente, e a whitelist é fixa (WlPermissoesValidas do domínio)
+      // — inventar uma aqui quebraria `app.routes.spec.ts`. Mesmo padrão de
+      // /programacao: exige sessão (authGuard no nó pai), não uma claim
+      // específica.
+      //
+      // ⚠️ Nenhuma rota `/atribuir` ou `/reatribuir` aqui — regra dura,
+      // decisão humana 2026-09-17: a atribuição de colador não existe nesta
+      // sprint, nem como opção de UI nem como destino de navegação.
+      {
+        path: 'ordens-servico',
+        title: 'Ordem de Serviço',
+        loadComponent: () =>
+          import('./pages/ordem-servico/ordem-servico-listagem.component').then(
+            (m) => m.OrdemServicoListagemComponent
+          ),
+      },
+      {
+        path: 'ordens-servico/nova',
+        title: 'Gerar Ordem de Serviço',
+        loadComponent: () =>
+          import('./pages/ordem-servico/ordem-servico-geracao.component').then(
+            (m) => m.OrdemServicoGeracaoComponent
+          ),
+      },
+      {
+        path: 'ordens-servico/:id',
+        title: 'Ordem de Serviço',
+        loadComponent: () =>
+          import('./pages/ordem-servico/ordem-servico-detalhe.component').then(
+            (m) => m.OrdemServicoDetalheComponent
+          ),
+      },
+      {
         path: 'locais/novo',
         data: { permission: 'PecaGerenciar' },
         canActivate: [authGuard],

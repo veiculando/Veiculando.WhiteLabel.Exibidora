@@ -5,11 +5,11 @@ import { SidebarComponent } from './sidebar.component';
 
 /**
  * VEI-RD-76, passo 6: reorganização do menu conforme PRD §4 (Shell.tsx:16-54).
- * A sprint 10 só entrega rotas para Locais, Programação, Checking, Pedidos de
- * Reserva, Pedidos de Inserção e Usuários — todo o resto do PRD (Prospecção,
- * Agências, Anunciantes, Análises KYC, Campanhas, Valores de Peças, Tipos de
- * Suporte, Relatórios, Cadastro e acesso) ainda não tem rota e não pode
- * aparecer, nem como link morto.
+ * A sprint 10 entrega rotas para Locais, Programação, Checking, Check out,
+ * Ordem de Serviço, Pedidos de Reserva, Pedidos de Inserção e Usuários —
+ * todo o resto do PRD (Prospecção, Agências, Anunciantes, Análises KYC,
+ * Campanhas, Valores de Peças, Tipos de Suporte, Relatórios, Cadastro e
+ * acesso) ainda não tem rota e não pode aparecer, nem como link morto.
  */
 describe('SidebarComponent', () => {
   let fixture: ComponentFixture<SidebarComponent>;
@@ -36,6 +36,27 @@ describe('SidebarComponent', () => {
     fixture.detectChanges();
 
     expect(textoGrupos()).toEqual(['Inventário', 'Comercial', 'Operacional', 'Configurações']);
+  });
+
+  it('Check out e Ordem de Servico aparecem no grupo Operacional', () => {
+    configurar(['Checking']);
+    fixture.detectChanges();
+    const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(texto).toContain('Check out');
+    expect(texto).toContain('Ordem de Serviço');
+  });
+
+  it('Ordem de Servico nao exige permissao e aparece mesmo sem nenhuma concedida', () => {
+    configurar([]);
+    fixture.detectChanges();
+    const link = (fixture.nativeElement as HTMLElement).querySelector('a[href="/ordens-servico"]');
+    expect(link?.textContent?.trim()).toBe('Ordem de Serviço');
+  });
+
+  it('Check out some sem a permissao Checking', () => {
+    configurar([]);
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('Check out');
   });
 
   it('Dashboard aparece fora de qualquer grupo, sempre visivel', () => {
@@ -82,7 +103,10 @@ describe('SidebarComponent', () => {
   it('nenhum item renderizado aponta para uma rota que nao existe no app', () => {
     configurar(['PecaGerenciar', 'Checking', 'PedidoReservaGerenciar', 'PedidoInsercaoGerenciar', 'UsuarioAfiliadaGerenciar']);
     fixture.detectChanges();
-    const rotasConhecidas = ['/dashboard', '/locais', '/programacao', '/checking', '/pedidos-reserva', '/pedidos-insercao', '/usuarios'];
+    const rotasConhecidas = [
+      '/dashboard', '/locais', '/programacao', '/checking', '/checkout', '/ordens-servico',
+      '/pedidos-reserva', '/pedidos-insercao', '/usuarios',
+    ];
     const links = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('a[href]'));
     for (const link of links) {
       expect(rotasConhecidas).toContain(link.getAttribute('href'));
