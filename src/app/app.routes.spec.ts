@@ -83,6 +83,18 @@ describe('app.routes', () => {
         });
     });
 
+    it('nenhuma rota de atribuicao/reatribuicao de colador existe (regra dura VEI-RD-88, decisao humana 2026-09-17)', () => {
+        // Toda a arvore de rotas, nao so os filhos diretos da area protegida.
+        const achatar = (lista: Route[]): Route[] => lista.flatMap((r) => [r, ...achatar(r.children ?? [])]);
+        const todasAsRotas = achatar(routes);
+
+        for (const rota of todasAsRotas) {
+            const caminho = rota.path ?? '';
+            expect(caminho.toLowerCase()).not.toContain('atribuir');
+            expect(caminho.toLowerCase()).not.toContain('reatribuir');
+        }
+    });
+
     it('rotas publicas ficam fora da area protegida', () => {
         // /login e /acesso-negado nao podem herdar o guard: quem chega nelas ou nao
         // tem sessao, ou foi barrado por permissao. Guard ali seria um loop.

@@ -4,12 +4,14 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   PaginaFiltro,
-  PaginaWl,
+  PaginaPedidosInsercao,
   PedidoInsercaoListItem,
   PedidoReservaDetalhe,
   PedidoReservaItemDecisao,
   PedidoReservaListItem,
   PedidoReservaRespostaResultado,
+  PedidosInsercaoFiltro,
+  PaginaWl,
 } from '../models/wl.models';
 
 /** Monta a query string de paginação, omitindo o que não foi informado. */
@@ -65,10 +67,30 @@ export class PedidosInsercaoService {
   private http = inject(HttpClient);
   private readonly base = `${environment.bffUrl}/pedidos-insercao`;
 
-  listar(filtro?: PaginaFiltro): Observable<PaginaWl<PedidoInsercaoListItem>> {
-    return this.http.get<PaginaWl<PedidoInsercaoListItem>>(this.base, {
-      params: paramsDePagina(filtro),
-    });
+  /**
+   * `GET /api/wl/pedidos-insercao` — espelha `PedidosInsercaoController.GetAll`
+   * (VEI-RD-94).
+   *
+   * `resumo` vem NA MESMA resposta, ao lado da página — não existe
+   * `/pedidos-insercao/resumo` separado. O servidor calcula os agregados
+   * (mini-dashboard: total de pedidos, peças, valor líquido, e quantidade por
+   * cada um dos 6 status oficiais) sobre a MESMA query já filtrada, antes do
+   * Skip/Take, então o card e a lista nunca divergem — o cliente nunca soma
+   * em memória.
+   *
+   * `status` vai como o NOME do enum (`StatusPedidoInsercaoEnum`), não um
+   * número: o controller faz `Enum.TryParse<StatusPedidoInsercaoEnum>(status, …)`
+   * a partir de `[FromQuery] string status`. Só os 6 status oficiais são
+   * aceitos — qualquer outro valor volta 400.
+   */
+  listar(filtro?: PedidosInsercaoFiltro, pagina?: PaginaFiltro): Observable<PaginaPedidosInsercao> {
+    let params = paramsDePagina(pagina);
+    if (filtro?.busca) params = params.set('busca', filtro.busca);
+    if (filtro?.status) params = params.set('status', filtro.status);
+    if (filtro?.idPeriodoInicial) params = params.set('idPeriodoInicial', filtro.idPeriodoInicial);
+    if (filtro?.idPeriodoFinal) params = params.set('idPeriodoFinal', filtro.idPeriodoFinal);
+
+    return this.http.get<PaginaPedidosInsercao>(this.base, { params });
   }
 
   obter(codigo: string): Observable<PedidoInsercaoListItem> {

@@ -53,6 +53,8 @@ const GRUPOS: GrupoNav[] = [
     itens: [
       { rotulo: 'Programação', rota: '/programacao', permissao: 'ProgramacaoVisualizar' },
       { rotulo: 'Checking', rota: '/checking', permissao: 'CheckingGerenciar' },
+      { rotulo: 'Check out', rota: '/checkout', permissao: 'CheckingGerenciar' },
+      { rotulo: 'Ordem de Serviço', rota: '/ordens-servico', permissao: 'PecaGerenciar' },
     ],
   },
   {

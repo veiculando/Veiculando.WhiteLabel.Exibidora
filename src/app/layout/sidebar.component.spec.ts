@@ -6,8 +6,8 @@ import { SidebarComponent } from './sidebar.component';
 /**
  * VEI-RD-76, passo 6: reorganização do menu conforme PRD §4 (Shell.tsx:16-54).
  * A sprint 10 entrega rotas para Locais, Valores de Peças, Programação,
- * Checking, Pedidos de Reserva, Pedidos de Inserção, Usuários e Relatórios
- * (planos 1, 2 e 5) e, pelo plano 3, Agências, Análise KYC, Campanhas,
+ * Checking, Check out, Ordem de Serviço, Pedidos de Reserva, Pedidos de
+ * Inserção, Relatórios e Usuários, mais Agências, Análise KYC, Campanhas,
  * Prospecção e Cadastro e acesso. O que ainda não tem rota — Anunciantes e
  * Tipos de Suporte — continua proibido de aparecer, nem como link morto.
  */
@@ -36,6 +36,26 @@ describe('SidebarComponent', () => {
     fixture.detectChanges();
 
     expect(textoGrupos()).toEqual(['Inventário', 'Comercial', 'Operacional', 'Configurações']);
+  });
+
+  it('Check out e Ordem de Servico aparecem no grupo Operacional, cada um com sua permissao', () => {
+    configurar(['CheckingGerenciar', 'PecaGerenciar']);
+    fixture.detectChanges();
+    const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(texto).toContain('Check out');
+    expect(texto).toContain('Ordem de Serviço');
+  });
+
+  it('Ordem de Servico exige PecaGerenciar (mesma policy do OrdensServicoController real) e some sem ela', () => {
+    configurar(['CheckingGerenciar']);
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('Ordem de Serviço');
+  });
+
+  it('Check out some sem a permissao CheckingGerenciar', () => {
+    configurar([]);
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('Check out');
   });
 
   it('Dashboard aparece fora de qualquer grupo, sempre visivel', () => {
@@ -114,7 +134,7 @@ describe('SidebarComponent', () => {
   // dos DOIS lados, em testes separados. O helper `configurar` chama
   // TestBed.configureTestingModule, que nao pode rodar duas vezes no mesmo `it`
   // depois de o componente existir — um estado por teste, um detectChanges por teste.
-  it('Programação aparece com ProgramacaoVisualizar', () => {
+  it('Programação aparece com ProgramacaoVisualizar concedida', () => {
     configurar(['ProgramacaoVisualizar']);
     fixture.detectChanges();
     const link = (fixture.nativeElement as HTMLElement).querySelector('a[href="/programacao"]');
@@ -154,6 +174,8 @@ describe('SidebarComponent', () => {
       '/agencias', '/kyc', '/prospeccao', '/campanhas', '/configuracoes/cadastro-acesso',
       // Entregues pelo plano 5.
       '/pecas/valores', '/relatorios',
+      // Entregues pelo plano 4.
+      '/checkout', '/ordens-servico',
     ];
     const links = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('a[href]'));
     for (const link of links) {
