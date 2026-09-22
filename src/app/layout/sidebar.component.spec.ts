@@ -32,7 +32,7 @@ describe('SidebarComponent', () => {
   }
 
   it('com todas as permissoes, segue a ordem de grupos do PRD secao 4, sem "Geral"', () => {
-    configurar(['PecaGerenciar', 'Checking', 'PedidoReservaGerenciar', 'PedidoInsercaoGerenciar', 'UsuarioAfiliadaGerenciar']);
+    configurar(['PecaGerenciar', 'CheckingGerenciar', 'ProgramacaoVisualizar', 'PedidoReservaGerenciar', 'PedidoInsercaoGerenciar', 'UsuarioAfiliadaGerenciar']);
     fixture.detectChanges();
 
     expect(textoGrupos()).toEqual(['Inventário', 'Comercial', 'Operacional', 'Configurações']);
@@ -47,7 +47,7 @@ describe('SidebarComponent', () => {
   });
 
   it('item sem rota nunca aparece (Prospecção, Agências, Valores de Peças, Relatórios, etc.)', () => {
-    configurar(['PecaGerenciar', 'Checking', 'PedidoReservaGerenciar', 'PedidoInsercaoGerenciar', 'UsuarioAfiliadaGerenciar']);
+    configurar(['PecaGerenciar', 'CheckingGerenciar', 'ProgramacaoVisualizar', 'PedidoReservaGerenciar', 'PedidoInsercaoGerenciar', 'UsuarioAfiliadaGerenciar']);
     fixture.detectChanges();
     const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
     for (const rotuloSemRota of [
@@ -59,7 +59,7 @@ describe('SidebarComponent', () => {
   });
 
   it('grupo sem nenhum item habilitado (Financeiro) nao renderiza nem o titulo', () => {
-    configurar(['PecaGerenciar', 'Checking', 'PedidoReservaGerenciar', 'PedidoInsercaoGerenciar', 'UsuarioAfiliadaGerenciar']);
+    configurar(['PecaGerenciar', 'CheckingGerenciar', 'ProgramacaoVisualizar', 'PedidoReservaGerenciar', 'PedidoInsercaoGerenciar', 'UsuarioAfiliadaGerenciar']);
     fixture.detectChanges();
     expect(textoGrupos()).not.toContain('Financeiro');
   });
@@ -72,15 +72,42 @@ describe('SidebarComponent', () => {
     expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('Locais');
   });
 
-  it('Programação nao exige permissao e aparece mesmo sem nenhuma concedida', () => {
-    configurar([]);
+  // VEI-RD-93: os dois itens abaixo guardam permissao, e cada guarda e exercitada
+  // dos DOIS lados, em testes separados. O helper `configurar` chama
+  // TestBed.configureTestingModule, que nao pode rodar duas vezes no mesmo `it`
+  // depois de o componente existir — um estado por teste, um detectChanges por teste.
+  it('Programação aparece com ProgramacaoVisualizar', () => {
+    configurar(['ProgramacaoVisualizar']);
     fixture.detectChanges();
     const link = (fixture.nativeElement as HTMLElement).querySelector('a[href="/programacao"]');
     expect(link?.textContent?.trim()).toBe('Programação');
   });
 
+  it('Programação some sem ProgramacaoVisualizar', () => {
+    // O teste anterior afirmava o contrario — que Programação nao exigia
+    // permissao nenhuma. Era a regressao escrita como contrato.
+    configurar([]);
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelector('a[href="/programacao"]')).toBeNull();
+  });
+
+  it('Checking aparece com CheckingGerenciar', () => {
+    configurar(['CheckingGerenciar']);
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelector('a[href="/checking"]')).not.toBeNull();
+  });
+
+  it('Checking NAO aparece com o nome antigo "Checking"', () => {
+    // A claim antiga foi renomeada pela migration
+    // RenomearCheckingEGrantProgramacaoVisualizar. Aceitar 'Checking' aqui
+    // reabriria a colisao que fazia o authGuard falhar aberto.
+    configurar(['Checking']);
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelector('a[href="/checking"]')).toBeNull();
+  });
+
   it('nenhum item renderizado aponta para uma rota que nao existe no app', () => {
-    configurar(['PecaGerenciar', 'Checking', 'PedidoReservaGerenciar', 'PedidoInsercaoGerenciar', 'UsuarioAfiliadaGerenciar']);
+    configurar(['PecaGerenciar', 'CheckingGerenciar', 'ProgramacaoVisualizar', 'PedidoReservaGerenciar', 'PedidoInsercaoGerenciar', 'UsuarioAfiliadaGerenciar']);
     fixture.detectChanges();
     const rotasConhecidas = ['/dashboard', '/locais', '/programacao', '/checking', '/pedidos-reserva', '/pedidos-insercao', '/usuarios'];
     const links = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('a[href]'));
