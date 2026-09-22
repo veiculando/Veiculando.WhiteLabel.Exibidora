@@ -65,6 +65,17 @@ export interface OperadorLogado {
  * antiga sao migrados via RenomearCheckingEGrantProgramacaoVisualizar no
  * dominio; nenhuma acao e necessaria aqui alem de nao oferecer mais
  * "Checking" na tela.
+ * Whitelist de permissoes — espelha `WlPermissoesValidas` no dominio.
+ * Sao os identificadores exatos aceitos pelo BFF em `POST/PUT /api/wl/usuarios`;
+ * qualquer outro valor volta como 400.
+ * `RelatorioExportar` (VEI-RD-92) fica FORA desta lista de propósito: é uma
+ * permissão real no BFF (protege `GET /api/wl/relatorios/exportar`), mas não
+ * existe uma rota própria de "exportar" para ela governar — é uma ação
+ * dentro da tela de Relatórios, não uma tela. `app.routes.spec.ts` mantém a
+ * whitelist e as permissões declaradas em rotas em bijeção exata; incluir
+ * aqui uma permissão sem rota quebraria essa checagem sem necessidade real
+ * (nenhuma tela usaria o rótulo). Atribuí-la a um operador continua possível
+ * — só não é validada pela whitelist do frontend.
  */
 export const PERMISSOES_WL = [
   'PecaGerenciar',
@@ -235,6 +246,11 @@ export interface NomeadoLookup {
   nome: string;
 }
 
+/** `GET /api/wl/lookups/mapa-config` (VEI-RD-87) — `null` quando o servidor não tem chave configurada. */
+export interface MapaConfig {
+  googleMapsApiKey: string | null;
+}
+
 // ---------------------------------------------------------------- Programacao
 
 /**
@@ -397,4 +413,146 @@ export interface UsuarioWlUpdate {
   departamento?: string | null;
   telefoneComercial?: string | null;
   permissoes?: string[];
+}
+
+// ---------------------------------------------------------------- Valores de Peças (VEI-RD-54)
+
+/** Espelha `AlteracaoValorTipoEnum` do Core — não reordenar. */
+export enum AlteracaoValorTipo {
+  Incremento = 1,
+  Porcentagem = 2,
+  ValorExato = 3,
+}
+
+/** `GET /api/wl/pecas/valores` — item da grade. */
+export interface PecaValorListItem {
+  id: number;
+  codigo: string;
+  codigoInterno: string | null;
+  suporte: string | null;
+  cidade: string | null;
+  endereco: string | null;
+  valorPadrao: number;
+  statusExibicao: StatusExibicao;
+}
+
+export interface PecaValoresFiltro {
+  idCidade?: number | null;
+  idTipoSuporte?: number | null;
+  status?: StatusExibicao | null;
+  busca?: string;
+}
+
+/** `POST /api/wl/pecas/valores/alterar`. */
+export interface PecasAlterarValoresRequest {
+  pecasIds: number[];
+  valor: number;
+  tipoValor: AlteracaoValorTipo;
+}
+
+export interface PecaValorAlteracaoAuditoria {
+  id: number;
+  codigo: string;
+  valorAnterior: number;
+  valorNovo: number;
+}
+
+export interface PecasAlterarValoresResultado {
+  message: string;
+  quantidadeAfetada: number;
+  alteracoes: PecaValorAlteracaoAuditoria[];
+}
+
+/** `POST /api/wl/pecas/valores/sazonais`. */
+export interface PecasAlterarValoresSazonaisRequest {
+  pecasIds: number[];
+  periodosValor: { idPeriodo: number; valor: number }[];
+}
+
+// ---------------------------------------------------------------- Dashboard financeiro (VEI-RD-85/92)
+
+/**
+ * "Faturamento Previsto" — pendência do Humano (2026-09-16): nem a fórmula
+ * nem a fonte foram definidas. `disponivel: false` é a resposta honesta do
+ * BFF enquanto isso — nunca renderizar `valor` como se fosse receita real
+ * quando `disponivel` é falso.
+ */
+export interface FaturamentoPrevisto {
+  disponivel: boolean;
+  valor: number | null;
+  variacaoPercentualVsCicloAnterior: number | null;
+}
+
+export interface TaxaOcupacaoOOH {
+  disponivel: boolean;
+  /** Fórmula provisória (peças ocupadas / peças ativas) — pendente confirmação. */
+  formulaProvisoria: boolean;
+  percentual: number;
+  pecasOcupadas: number;
+  pecasAtivas: number;
+}
+
+export interface DemandasPendentes {
+  /** Definição provisória (reserva em Solicitado + PI em Novo) — pendente confirmação. */
+  formulaProvisoria: boolean;
+  reservas: number;
+  pedidosInsercao: number;
+}
+
+export interface DashboardFinanceiroKpis {
+  periodo: {
+    id: number;
+    nome: string;
+    dataInicio: string;
+    dataFim: string;
+    vigente: boolean;
+  };
+  faturamentoPrevisto: FaturamentoPrevisto;
+  taxaOcupacaoOOH: TaxaOcupacaoOOH;
+  campanhasAtivas: number;
+  demandasPendentes: DemandasPendentes;
+}
+
+export interface DashboardReservaItem {
+  id: number;
+  codigo: string;
+  status: string;
+  agencia: string | null;
+  cliente: string | null;
+  campanha: string | null;
+  itensCount: number;
+  valorTotalBruto: number | null;
+}
+
+export interface DashboardPedidoInsercaoItem {
+  id: number;
+  codigo: string;
+  status: string;
+  anunciante: string | null;
+  cidade: string | null;
+  numeroDePecas: number;
+  valorLiquidoVeiculacao: number | null;
+}
+
+// ---------------------------------------------------------------- Relatórios (VEI-RD-92)
+
+export interface RelatorioContagemPorStatus {
+  status: string;
+  quantidade: number;
+  valorLiquido?: number;
+}
+
+export interface RelatorioResumo {
+  periodoId: number;
+  faturamentoPrevisto: FaturamentoPrevisto;
+  valorLiquidoVeiculacaoTotal: number;
+  pedidosInsercao: {
+    total: number;
+    porStatus: RelatorioContagemPorStatus[];
+  };
+  reservas: {
+    total: number;
+    porStatus: RelatorioContagemPorStatus[];
+  };
+  pecasVeiculadas: number;
 }

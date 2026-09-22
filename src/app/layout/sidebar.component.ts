@@ -30,7 +30,10 @@ interface GrupoNav {
 const GRUPOS: GrupoNav[] = [
   {
     titulo: 'Inventário',
-    itens: [{ rotulo: 'Locais & Peças', rota: '/locais', permissao: 'PecaGerenciar' }],
+    itens: [
+      { rotulo: 'Locais & Peças', rota: '/locais', permissao: 'PecaGerenciar' },
+      { rotulo: 'Valores de Peças', rota: '/pecas/valores', permissao: 'PecaGerenciar' },
+    ],
   },
   {
     titulo: 'Comercial',
@@ -54,7 +57,7 @@ const GRUPOS: GrupoNav[] = [
   },
   {
     titulo: 'Financeiro',
-    itens: [],
+    itens: [{ rotulo: 'Relatórios', rota: '/relatorios', permissao: 'FinanceiroVisualizar' }],
   },
   {
     titulo: 'Configurações',

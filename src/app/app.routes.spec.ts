@@ -45,8 +45,12 @@ describe('app.routes', () => {
     // permissao ja roteada nesta lista faria o teste aprovar por engano, que e o
     // oposto do que ele existe para fazer.
     const PERMISSOES_RESERVADAS_PARA_OUTROS_CARDS = [
-        'FinanceiroVisualizar', // VEI-RD-85 (KPI de Faturamento)
-        'RelatorioExportar', // VEI-RD-92 (Relatórios)
+        // FinanceiroVisualizar saiu: o plano 5 entregou /relatorios, que a usa
+        // como permissao de rota. RelatorioExportar continua sem rota propria de
+        // proposito — ela governa o botao de exportar DENTRO de Relatorios, nao
+        // uma tela. Permissao de acao dentro de tela nao tem rota para declarar,
+        // e e exatamente para esses casos que esta lista existe.
+        'RelatorioExportar', // VEI-RD-92 (acao de exportar, nao tela)
     ] as const;
 
     it('toda permissao da whitelist esta roteada aqui OU e reserva documentada de outro card', () => {

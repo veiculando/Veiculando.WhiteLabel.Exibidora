@@ -5,11 +5,11 @@ import { SidebarComponent } from './sidebar.component';
 
 /**
  * VEI-RD-76, passo 6: reorganização do menu conforme PRD §4 (Shell.tsx:16-54).
- * A sprint 10 entrega rotas para Locais, Programação, Checking, Pedidos de
- * Reserva, Pedidos de Inserção, Usuários e — a partir do plano 3 — Agências,
- * Análise KYC, Prospecção, Campanhas e Cadastro e acesso. O que ainda não tem
- * rota (Anunciantes, Valores de Peças, Tipos de Suporte, Relatórios) continua
- * proibido de aparecer, nem como link morto.
+ * A sprint 10 entrega rotas para Locais, Valores de Peças, Programação,
+ * Checking, Pedidos de Reserva, Pedidos de Inserção, Usuários e Relatórios
+ * (planos 1, 2 e 5) e, pelo plano 3, Agências, Análise KYC, Campanhas,
+ * Prospecção e Cadastro e acesso. O que ainda não tem rota — Anunciantes e
+ * Tipos de Suporte — continua proibido de aparecer, nem como link morto.
  */
 describe('SidebarComponent', () => {
   let fixture: ComponentFixture<SidebarComponent>;
@@ -46,15 +46,22 @@ describe('SidebarComponent', () => {
     expect(dashboard?.closest('.nav-section')).toBeNull();
   });
 
-  it('item sem rota nunca aparece (Anunciantes, Valores de Peças, Relatórios, etc.)', () => {
+  it('item sem rota nunca aparece (Anunciantes, Tipos de Suporte)', () => {
     configurar(['PecaGerenciar', 'CheckingGerenciar', 'ProgramacaoVisualizar', 'PedidoReservaGerenciar', 'PedidoInsercaoGerenciar', 'UsuarioAfiliadaGerenciar']);
     fixture.detectChanges();
     const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
     for (const rotuloSemRota of [
-      'Anunciantes', 'Valores de Peças', 'Tipos de Suporte', 'Relatórios',
+      'Anunciantes', 'Tipos de Suporte',
     ]) {
       expect(texto).not.toContain(rotuloSemRota);
     }
+  });
+
+  it('Valores de Peças aparece em Inventário quando PecaGerenciar é concedida (VEI-RD-54)', () => {
+    configurar(['PecaGerenciar']);
+    fixture.detectChanges();
+    const link = (fixture.nativeElement as HTMLElement).querySelector('a[href="/pecas/valores"]');
+    expect(link?.textContent?.trim()).toBe('Valores de Peças');
   });
 
   // Os dois lados, em testes separados: acender o item com a permissao certa E
@@ -85,6 +92,14 @@ describe('SidebarComponent', () => {
     configurar(['PecaGerenciar', 'CheckingGerenciar', 'ProgramacaoVisualizar', 'PedidoReservaGerenciar', 'PedidoInsercaoGerenciar', 'UsuarioAfiliadaGerenciar']);
     fixture.detectChanges();
     expect(textoGrupos()).not.toContain('Financeiro');
+  });
+
+  it('Relatórios aparece em Financeiro quando FinanceiroVisualizar é concedida (VEI-RD-92)', () => {
+    configurar(['FinanceiroVisualizar']);
+    fixture.detectChanges();
+    expect(textoGrupos()).toContain('Financeiro');
+    const link = (fixture.nativeElement as HTMLElement).querySelector('a[href="/relatorios"]');
+    expect(link?.textContent?.trim()).toBe('Relatórios');
   });
 
   it('item que depende de permissao some quando ela falta, e o grupo some se ficar vazio', () => {
@@ -137,6 +152,8 @@ describe('SidebarComponent', () => {
       '/pedidos-insercao', '/usuarios',
       // Entregues pelo plano 3.
       '/agencias', '/kyc', '/prospeccao', '/campanhas', '/configuracoes/cadastro-acesso',
+      // Entregues pelo plano 5.
+      '/pecas/valores', '/relatorios',
     ];
     const links = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('a[href]'));
     for (const link of links) {
