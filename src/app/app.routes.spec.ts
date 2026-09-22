@@ -33,15 +33,37 @@ describe('app.routes', () => {
         expect(areaProtegida.canActivate).toContain(authGuard);
     });
 
-    it('todas as permissoes da whitelist aparecem nas rotas protegidas', () => {
-        // Várias subrotas podem reutilizar a mesma permissão (por exemplo, o
-        // wizard e o formulário de peça usam PecaGerenciar). O contrato é a
-        // cobertura da whitelist, não uma quantidade fixa de rotas.
-        const declaradas = [...new Set(
-            comPermissao.map((r) => r.data!['permission'] as string)
-        )].sort();
+    // VEI-RD-93: a lista canônica agora inclui permissões de telas que ainda não
+    // existem neste repo — pertencem a outros cards do mesmo plano estratégico
+    // (Anunciantes, Agências, Prospecção, Financeiro, Relatórios). Publicar a
+    // lista canônica ANTES dessas telas existirem é intencional: quem construir
+    // cada uma delas usa um nome já reconhecido pelo authGuard, em vez de
+    // inventar um nome novo que precisaria de outra reconciliação depois.
+    // A lista encolhe conforme os cards entregam. ClienteGerenciar e PedidoCriar
+    // sairam daqui porque o Plano 3 passou a rotea-las de fato: ClienteGerenciar
+    // em Anunciantes/Agências/Análises KYC, PedidoCriar em Prospecção. Manter uma
+    // permissao ja roteada nesta lista faria o teste aprovar por engano, que e o
+    // oposto do que ele existe para fazer.
+    const PERMISSOES_RESERVADAS_PARA_OUTROS_CARDS = [
+        // FinanceiroVisualizar saiu: o plano 5 entregou /relatorios, que a usa
+        // como permissao de rota. RelatorioExportar continua sem rota propria de
+        // proposito — ela governa o botao de exportar DENTRO de Relatorios, nao
+        // uma tela. Permissao de acao dentro de tela nao tem rota para declarar,
+        // e e exatamente para esses casos que esta lista existe.
+        'RelatorioExportar', // VEI-RD-92 (acao de exportar, nao tela)
+    ] as const;
 
-        expect(declaradas).toEqual([...PERMISSOES_WL].sort());
+    it('toda permissao da whitelist esta roteada aqui OU e reserva documentada de outro card', () => {
+        // Trava o mesmo tanto quanto o teste original: nenhuma permissão pode
+        // ficar "esquecida" na whitelist sem que uma rota a use ou que esta
+        // lista explique por quê ainda não. Adicionar uma permissão nova sem
+        // atualizar nenhum dos dois lados quebra este teste.
+        const declaradas = new Set(comPermissao.map((r) => r.data!['permission'] as string));
+        const semRotaAinda = (PERMISSOES_WL as readonly string[])
+            .filter((p) => !declaradas.has(p))
+            .sort();
+
+        expect(semRotaAinda).toEqual([...PERMISSOES_RESERVADAS_PARA_OUTROS_CARDS].sort());
     });
 
     comPermissao.forEach((rota) => {

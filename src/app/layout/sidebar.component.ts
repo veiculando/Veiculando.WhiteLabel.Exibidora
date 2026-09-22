@@ -38,6 +38,12 @@ const GRUPOS: GrupoNav[] = [
   {
     titulo: 'Comercial',
     itens: [
+      { rotulo: 'Agências', rota: '/agencias', permissao: 'ClienteGerenciar' },
+      { rotulo: 'Análise KYC', rota: '/kyc', permissao: 'ClienteGerenciar' },
+      // Ordem do PRD §4: Prospecção antes de Campanhas, e Campanhas antes das
+      // Solicitações de Reserva.
+      { rotulo: 'Prospecção', rota: '/prospeccao', permissao: 'PedidoCriar' },
+      { rotulo: 'Campanhas', rota: '/campanhas', permissao: 'ClienteGerenciar' },
       { rotulo: 'Solicitações de Reserva', rota: '/pedidos-reserva', permissao: 'PedidoReservaGerenciar' },
       { rotulo: 'Pedidos de Inserção', rota: '/pedidos-insercao', permissao: 'PedidoInsercaoGerenciar' },
     ],
@@ -45,8 +51,8 @@ const GRUPOS: GrupoNav[] = [
   {
     titulo: 'Operacional',
     itens: [
-      { rotulo: 'Programação', rota: '/programacao' },
-      { rotulo: 'Checking', rota: '/checking', permissao: 'Checking' },
+      { rotulo: 'Programação', rota: '/programacao', permissao: 'ProgramacaoVisualizar' },
+      { rotulo: 'Checking', rota: '/checking', permissao: 'CheckingGerenciar' },
     ],
   },
   {
@@ -55,7 +61,10 @@ const GRUPOS: GrupoNav[] = [
   },
   {
     titulo: 'Configurações',
-    itens: [{ rotulo: 'Usuários', rota: '/usuarios', permissao: 'UsuarioAfiliadaGerenciar' }],
+    itens: [
+      { rotulo: 'Usuários', rota: '/usuarios', permissao: 'UsuarioAfiliadaGerenciar' },
+      { rotulo: 'Cadastro e acesso', rota: '/configuracoes/cadastro-acesso', permissao: 'UsuarioAfiliadaGerenciar' },
+    ],
   },
 ];
 

@@ -56,10 +56,18 @@ export interface OperadorLogado {
 }
 
 /**
+ * Whitelist de permissoes — espelha `WlPermissoesValidas` no dominio, item a
+ * item (lista canonica, VEI-RD-93). Sao os identificadores exatos aceitos
+ * pelo BFF em `POST/PUT /api/wl/usuarios`; qualquer outro valor volta como 400.
+ *
+ * "Checking" foi reconciliado para "CheckingGerenciar" — unico nome sem verbo
+ * no repo ate entao (convencao <Entidade><Verbo>). Usuarios com a claim
+ * antiga sao migrados via RenomearCheckingEGrantProgramacaoVisualizar no
+ * dominio; nenhuma acao e necessaria aqui alem de nao oferecer mais
+ * "Checking" na tela.
  * Whitelist de permissoes — espelha `WlPermissoesValidas` no dominio.
  * Sao os identificadores exatos aceitos pelo BFF em `POST/PUT /api/wl/usuarios`;
  * qualquer outro valor volta como 400.
- *
  * `RelatorioExportar` (VEI-RD-92) fica FORA desta lista de propósito: é uma
  * permissão real no BFF (protege `GET /api/wl/relatorios/exportar`), mas não
  * existe uma rota própria de "exportar" para ela governar — é uma ação
@@ -71,22 +79,35 @@ export interface OperadorLogado {
  */
 export const PERMISSOES_WL = [
   'PecaGerenciar',
-  'Checking',
+  'CheckingGerenciar',
   'PedidoReservaGerenciar',
   'PedidoInsercaoGerenciar',
   'UsuarioAfiliadaGerenciar',
+  // VEI-RD-79/80/51 (Agências, Análise KYC, Campanhas) e VEI-RD-83 (Prospecção).
+  // Os dois já existem em WlPermissoesValidas no domínio — o teste
+  // WlPermissoesCanonicasTests documenta, em comentário, que ClienteGerenciar é
+  // de VEI-RD-46 *e* VEI-RD-79, e que PedidoCriar seria o de Prospecção. Esta
+  // lista precisa espelhar aquela item a item; o que faltava era este lado.
+  'ClienteGerenciar',
+  'PedidoCriar',
+  'ProgramacaoVisualizar',
   'FinanceiroVisualizar',
+  'RelatorioExportar',
 ] as const;
 
 export type PermissaoWl = (typeof PERMISSOES_WL)[number];
 
 export const PERMISSOES_WL_ROTULOS: Record<PermissaoWl, string> = {
   PecaGerenciar: 'Gerenciar locais e peças',
-  Checking: 'Enviar checking',
+  CheckingGerenciar: 'Enviar checking',
   PedidoReservaGerenciar: 'Gerenciar pedidos de reserva',
   PedidoInsercaoGerenciar: 'Consultar pedidos de inserção',
   UsuarioAfiliadaGerenciar: 'Gerenciar operadores',
-  FinanceiroVisualizar: 'Visualizar Dashboard e Relatórios financeiros',
+  ClienteGerenciar: 'Gerenciar anunciantes, agências e análises de KYC',
+  PedidoCriar: 'Abrir sessão de prospecção',
+  ProgramacaoVisualizar: 'Visualizar programação',
+  FinanceiroVisualizar: 'Visualizar financeiro',
+  RelatorioExportar: 'Exportar relatórios',
 };
 
 // ---------------------------------------------------------------- Dashboard

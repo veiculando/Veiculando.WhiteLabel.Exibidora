@@ -6,10 +6,10 @@ import { SidebarComponent } from './sidebar.component';
 /**
  * VEI-RD-76, passo 6: reorganização do menu conforme PRD §4 (Shell.tsx:16-54).
  * A sprint 10 entrega rotas para Locais, Valores de Peças, Programação,
- * Checking, Pedidos de Reserva, Pedidos de Inserção, Relatórios e Usuários
- * (VEI-RD-54/87/92, Ordem 5) — o restante do PRD (Prospecção, Agências,
- * Anunciantes, Análises KYC, Campanhas, Tipos de Suporte, Cadastro e acesso)
- * ainda não tem rota e não pode aparecer, nem como link morto.
+ * Checking, Pedidos de Reserva, Pedidos de Inserção, Usuários e Relatórios
+ * (planos 1, 2 e 5) e, pelo plano 3, Agências, Análise KYC, Campanhas,
+ * Prospecção e Cadastro e acesso. O que ainda não tem rota — Anunciantes e
+ * Tipos de Suporte — continua proibido de aparecer, nem como link morto.
  */
 describe('SidebarComponent', () => {
   let fixture: ComponentFixture<SidebarComponent>;
@@ -32,7 +32,7 @@ describe('SidebarComponent', () => {
   }
 
   it('com todas as permissoes, segue a ordem de grupos do PRD secao 4, sem "Geral"', () => {
-    configurar(['PecaGerenciar', 'Checking', 'PedidoReservaGerenciar', 'PedidoInsercaoGerenciar', 'UsuarioAfiliadaGerenciar']);
+    configurar(['PecaGerenciar', 'CheckingGerenciar', 'ProgramacaoVisualizar', 'PedidoReservaGerenciar', 'PedidoInsercaoGerenciar', 'UsuarioAfiliadaGerenciar']);
     fixture.detectChanges();
 
     expect(textoGrupos()).toEqual(['Inventário', 'Comercial', 'Operacional', 'Configurações']);
@@ -46,13 +46,12 @@ describe('SidebarComponent', () => {
     expect(dashboard?.closest('.nav-section')).toBeNull();
   });
 
-  it('item sem rota nunca aparece (Prospecção, Agências, Tipos de Suporte, etc.)', () => {
-    configurar(['PecaGerenciar', 'Checking', 'PedidoReservaGerenciar', 'PedidoInsercaoGerenciar', 'UsuarioAfiliadaGerenciar']);
+  it('item sem rota nunca aparece (Anunciantes, Tipos de Suporte)', () => {
+    configurar(['PecaGerenciar', 'CheckingGerenciar', 'ProgramacaoVisualizar', 'PedidoReservaGerenciar', 'PedidoInsercaoGerenciar', 'UsuarioAfiliadaGerenciar']);
     fixture.detectChanges();
     const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
     for (const rotuloSemRota of [
-      'Prospecção', 'Agências', 'Anunciantes', 'Análises KYC', 'Campanhas',
-      'Tipos de Suporte', 'Cadastro e acesso',
+      'Anunciantes', 'Tipos de Suporte',
     ]) {
       expect(texto).not.toContain(rotuloSemRota);
     }
@@ -65,8 +64,32 @@ describe('SidebarComponent', () => {
     expect(link?.textContent?.trim()).toBe('Valores de Peças');
   });
 
+  // Os dois lados, em testes separados: acender o item com a permissao certa E
+  // apaga-lo sem ela. So o lado "some" passaria com o item nunca renderizando.
+  // Separados porque configurar() reconfigura o TestBed, o que nao pode acontecer
+  // depois de um fixture ja criado no mesmo teste.
+  const ITENS_DO_PLANO_3 = ['Agências', 'Análise KYC', 'Campanhas', 'Prospecção'];
+
+  it('os itens do plano 3 aparecem quando a permissao existe', () => {
+    configurar(['ClienteGerenciar', 'PedidoCriar']);
+    fixture.detectChanges();
+    const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    for (const rotulo of ITENS_DO_PLANO_3) {
+      expect(texto).toContain(rotulo);
+    }
+  });
+
+  it('os itens do plano 3 somem quando a permissao falta', () => {
+    configurar([]);
+    fixture.detectChanges();
+    const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    for (const rotulo of ITENS_DO_PLANO_3) {
+      expect(texto).not.toContain(rotulo);
+    }
+  });
+
   it('grupo sem nenhum item habilitado (Financeiro) nao renderiza nem o titulo', () => {
-    configurar(['PecaGerenciar', 'Checking', 'PedidoReservaGerenciar', 'PedidoInsercaoGerenciar', 'UsuarioAfiliadaGerenciar']);
+    configurar(['PecaGerenciar', 'CheckingGerenciar', 'ProgramacaoVisualizar', 'PedidoReservaGerenciar', 'PedidoInsercaoGerenciar', 'UsuarioAfiliadaGerenciar']);
     fixture.detectChanges();
     expect(textoGrupos()).not.toContain('Financeiro');
   });
@@ -87,19 +110,50 @@ describe('SidebarComponent', () => {
     expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('Locais');
   });
 
-  it('Programação nao exige permissao e aparece mesmo sem nenhuma concedida', () => {
-    configurar([]);
+  // VEI-RD-93: os dois itens abaixo guardam permissao, e cada guarda e exercitada
+  // dos DOIS lados, em testes separados. O helper `configurar` chama
+  // TestBed.configureTestingModule, que nao pode rodar duas vezes no mesmo `it`
+  // depois de o componente existir — um estado por teste, um detectChanges por teste.
+  it('Programação aparece com ProgramacaoVisualizar', () => {
+    configurar(['ProgramacaoVisualizar']);
     fixture.detectChanges();
     const link = (fixture.nativeElement as HTMLElement).querySelector('a[href="/programacao"]');
     expect(link?.textContent?.trim()).toBe('Programação');
   });
 
+  it('Programação some sem ProgramacaoVisualizar', () => {
+    // O teste anterior afirmava o contrario — que Programação nao exigia
+    // permissao nenhuma. Era a regressao escrita como contrato.
+    configurar([]);
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelector('a[href="/programacao"]')).toBeNull();
+  });
+
+  it('Checking aparece com CheckingGerenciar', () => {
+    configurar(['CheckingGerenciar']);
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelector('a[href="/checking"]')).not.toBeNull();
+  });
+
+  it('Checking NAO aparece com o nome antigo "Checking"', () => {
+    // A claim antiga foi renomeada pela migration
+    // RenomearCheckingEGrantProgramacaoVisualizar. Aceitar 'Checking' aqui
+    // reabriria a colisao que fazia o authGuard falhar aberto.
+    configurar(['Checking']);
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelector('a[href="/checking"]')).toBeNull();
+  });
+
   it('nenhum item renderizado aponta para uma rota que nao existe no app', () => {
-    configurar(['PecaGerenciar', 'Checking', 'PedidoReservaGerenciar', 'PedidoInsercaoGerenciar', 'UsuarioAfiliadaGerenciar']);
+    configurar(['PecaGerenciar', 'CheckingGerenciar', 'ProgramacaoVisualizar', 'PedidoReservaGerenciar', 'PedidoInsercaoGerenciar', 'UsuarioAfiliadaGerenciar']);
     fixture.detectChanges();
     const rotasConhecidas = [
-      '/dashboard', '/locais', '/pecas/valores', '/programacao', '/checking',
-      '/pedidos-reserva', '/pedidos-insercao', '/relatorios', '/usuarios',
+      '/dashboard', '/locais', '/programacao', '/checking', '/pedidos-reserva',
+      '/pedidos-insercao', '/usuarios',
+      // Entregues pelo plano 3.
+      '/agencias', '/kyc', '/prospeccao', '/campanhas', '/configuracoes/cadastro-acesso',
+      // Entregues pelo plano 5.
+      '/pecas/valores', '/relatorios',
     ];
     const links = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('a[href]'));
     for (const link of links) {

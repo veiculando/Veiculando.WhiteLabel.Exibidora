@@ -1,0 +1,186 @@
+@if (carregando) {
+  <p class="kyc-detalhe__vazio">Carregando análise…</p>
+} @else if (!detalhe) {
+  <p class="kyc-detalhe__vazio" role="alert">{{ erro || 'Análise não encontrada.' }}</p>
+} @else {
+  <aurum-page-header
+    eyebrow="Análise KYC"
+    [titulo]="'Análise #' + detalhe.Id + ' — ' + rotuloTipo(detalhe.Tipo)"
+    subtitulo="Revisão do pedido de onboarding e decisão registrada em histórico"
+  >
+    <aurum-status-pill
+      aurumPageHeaderBadge
+      [rotulo]="rotuloEstado(detalhe.Estado)"
+      [tom]="tomEstado(detalhe.Estado)"
+    />
+  </aurum-page-header>
+
+  @if (erro) {
+    <p role="alert" class="kyc-detalhe__erro">{{ erro }}</p>
+  }
+
+  <div class="kyc-detalhe__abas" role="tablist" aria-label="Seções da análise">
+    @for (item of abas; track item.chave) {
+      <button
+        type="button"
+        role="tab"
+        class="kyc-detalhe__aba"
+        [attr.aria-selected]="aba === item.chave"
+        (click)="selecionarAba(item.chave)"
+      >
+        {{ item.chave === 'representacao' ? rotuloRepresentacao() : item.rotulo }}
+      </button>
+    }
+  </div>
+
+  <aurum-card>
+    @switch (aba) {
+      @case ('empresa') {
+        <h2>Dados da empresa</h2>
+        @if (detalhe.IdOrganizacao) {
+          <p>Organização #{{ detalhe.IdOrganizacao }} criada no sistema após a aprovação.</p>
+        } @else {
+          <!--
+            Lacuna de modelo herdada de VEI-RD-78 (plano 2): OrganizacaoOnboarding
+            não tem colunas de nome fantasia, razão social, CNPJ, telefone, e-mail
+            corporativo, site, endereço, inscrições e logo, e IdOrganizacao é nulo
+            por design até a aprovação. Não há o que ler aqui enquanto o KYC está
+            pendente — que é justamente quando o operador precisa desses dados.
+            O texto diz o que houve em vez de mostrar uma aba vazia sem explicação.
+          -->
+          <p class="kyc-detalhe__lacuna">
+            Os dados cadastrais desta organização ainda não estão disponíveis no
+            sistema. A tabela de onboarding não armazena dados da empresa e o
+            registro comercial só é criado na aprovação — pendência registrada para
+            a revisão do modelo (VEI-RD-78).
+          </p>
+        }
+      }
+
+      @case ('responsavel') {
+        <h2>Responsável legal</h2>
+        @if (detalhe.ResponsavelLegal; as responsavel) {
+          <div class="kyc-detalhe__campos">
+            <span class="kyc-detalhe__campo"><span class="kyc-detalhe__rotulo">Nome</span>{{ responsavel.Nome }}</span>
+            <span class="kyc-detalhe__campo"><span class="kyc-detalhe__rotulo">CPF</span>{{ responsavel.Cpf }}</span>
+            <span class="kyc-detalhe__campo"><span class="kyc-detalhe__rotulo">Cargo</span>{{ responsavel.Cargo }}</span>
+            <span class="kyc-detalhe__campo"><span class="kyc-detalhe__rotulo">E-mail</span>{{ responsavel.Email }}</span>
+            <span class="kyc-detalhe__campo"><span class="kyc-detalhe__rotulo">Celular</span>{{ responsavel.Celular }}</span>
+            <span class="kyc-detalhe__campo"><span class="kyc-detalhe__rotulo">Declaração de poderes</span>{{ responsavel.DeclaracaoPoderes }}</span>
+          </div>
+        } @else {
+          <p class="kyc-detalhe__vazio">Nenhum responsável legal informado.</p>
+        }
+      }
+
+      @case ('documentos') {
+        <h2>Documentos</h2>
+        @if (detalhe.Documentos.length === 0) {
+          <p class="kyc-detalhe__vazio">Nenhum documento enviado.</p>
+        } @else {
+          @for (documento of detalhe.Documentos; track documento.Id) {
+            <div class="kyc-detalhe__doc">
+              <strong>{{ rotuloTipoDocumento(documento.Tipo) }}</strong>
+              <aurum-status-pill [rotulo]="rotuloStatusDocumento(documento.Status)" tom="neutro" />
+              @if (documento.MotivoPendencia) {
+                <span>{{ documento.MotivoPendencia }}</span>
+              }
+              <!-- Abre por URL temporária pedida no clique, nunca por link permanente. -->
+              <aurum-button variante="ghost" (click)="abrirDocumento(documento)">Visualizar</aurum-button>
+            </div>
+          }
+        }
+      }
+
+      @case ('representacao') {
+        <h2>{{ rotuloRepresentacao() }}</h2>
+        <p class="kyc-detalhe__vazio">
+          Os vínculos de representação (comissão e vigência) passam a existir após a
+          aprovação, quando a organização é criada.
+        </p>
+      }
+
+      @case ('usuarios') {
+        <h2>Usuários e convites</h2>
+        @if (detalhe.UsuariosEConvites.length === 0) {
+          <p class="kyc-detalhe__vazio">Nenhum convite emitido para esta organização.</p>
+        } @else {
+          @for (convite of detalhe.UsuariosEConvites; track convite.Id) {
+            <div class="kyc-detalhe__doc">
+              <strong>{{ convite.Email }}</strong>
+              <span>Expira em {{ expiracao(convite.DataExpiracao) }}</span>
+            </div>
+          }
+        }
+      }
+
+      @case ('comerciais') {
+        <h2>Condições comerciais</h2>
+        <!-- PRD §8.15: condições comerciais são pós-aprovação e NÃO bloqueiam o KYC.
+             Aprovar com esta aba em branco funciona — é por isso que não há validação
+             aqui nem o botão Aprovar olha para ela. -->
+        <p class="kyc-detalhe__vazio">
+          As condições comerciais são definidas após a aprovação e não bloqueiam esta
+          análise.
+        </p>
+      }
+
+      @case ('historico') {
+        <aurum-history-card titulo="Histórico de decisões" [eventos]="eventosHistorico()" />
+      }
+    }
+  </aurum-card>
+
+  <div class="kyc-detalhe__acoes">
+    <aurum-button variante="outline" (click)="abrirDecisao('ajustes')">Solicitar ajustes</aurum-button>
+    <aurum-button variante="wine" (click)="abrirDecisao('aprovar')">Aprovar</aurum-button>
+    <aurum-button variante="perigo" (click)="abrirDecisao('rejeitar')">Rejeitar</aurum-button>
+    <!-- Suspender só aparece para organização aprovada; reativar, só para suspensa.
+         Controle que não se aplica some do DOM (invariante #8), não vem desabilitado. -->
+    @if (podeSuspender()) {
+      <aurum-button variante="outline" (click)="abrirDecisao('suspender')">Suspender</aurum-button>
+    }
+    @if (podeReativar()) {
+      <aurum-button variante="outline" (click)="abrirDecisao('reativar')">Reativar</aurum-button>
+    }
+  </div>
+
+  @if (decisaoAberta) {
+    <aurum-card>
+      <div class="kyc-detalhe__decisao">
+        <h2>Registrar decisão: {{ decisaoAberta }}</h2>
+
+        @if (decisaoAberta === 'ajustes') {
+          <!-- /ajustes exige dizer O QUE ajustar. Sem isto o solicitante volta ao
+               início sem saber o que corrigir. O servidor recusa igual. -->
+          <p>Selecione os campos ou documentos pendentes:</p>
+          <div class="kyc-detalhe__pendencias">
+            @for (campo of camposPendentesPossiveis; track campo) {
+              <aurum-checkbox
+                [rotulo]="campo"
+                [marcado]="!!pendencias[campo]"
+                (marcadoChange)="alternarPendencia(campo, $event)"
+              />
+            }
+          </div>
+        }
+
+        @if (decisaoAberta !== 'reativar') {
+          <aurum-text-input
+            [valor]="justificativa"
+            (valorChange)="justificativa = $event"
+            rotulo="Justificativa"
+            placeholder="A justificativa fica registrada no histórico"
+          />
+        }
+
+        <div class="kyc-detalhe__acoes">
+          <aurum-button variante="wine" [desabilitado]="!podeEnviar()" (click)="enviarDecisao()">
+            Enviar decisão
+          </aurum-button>
+          <aurum-button variante="ghost" (click)="decisaoAberta = null">Cancelar</aurum-button>
+        </div>
+      </div>
+    </aurum-card>
+  }
+}

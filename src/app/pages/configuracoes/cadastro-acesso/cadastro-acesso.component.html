@@ -1,0 +1,72 @@
+<aurum-page-header
+  eyebrow="Configurações"
+  titulo="Cadastro e acesso"
+  subtitulo="Regras aplicadas ao cadastro público de novas organizações na exibidora"
+/>
+
+@if (erro) {
+  <p role="alert" class="cadastro-acesso__vazio">{{ erro }}</p>
+}
+
+@if (carregando) {
+  <p class="cadastro-acesso__vazio">Carregando configuração…</p>
+} @else if (config) {
+  <aurum-card>
+    <div class="cadastro-acesso__bloco">
+      <div class="cadastro-acesso__linha">
+        <h2>E-mail corporativo no cadastro</h2>
+        <aurum-status-pill [rotulo]="rotuloEstado()" [tom]="exigirEmailCorporativo ? 'sucesso' : 'neutro'" />
+      </div>
+
+      <aurum-checkbox
+        rotulo="Exigir e-mail corporativo no cadastro público"
+        [marcado]="exigirEmailCorporativo"
+        (marcadoChange)="alternar($event)"
+      />
+
+      <p class="cadastro-acesso__info">
+        Quando ativo, novos cadastros públicos não podem usar provedores de e-mail
+        pessoal ou descartável.
+      </p>
+      <p class="cadastro-acesso__info">
+        A regra vale para o cadastro público de novas organizações.
+      </p>
+      <!-- InfoLine 2 do frame confirma o PRD §5.14: a política NÃO bloqueia convites. -->
+      <p class="cadastro-acesso__info">
+        Convites de organizações já aprovadas continuam permitidos.
+      </p>
+    </div>
+
+    <div class="cadastro-acesso__bloco">
+      <h3>Prévia da mensagem no App</h3>
+      <p class="cadastro-acesso__previa">
+        Use seu e-mail corporativo para continuar. Endereços de provedores pessoais
+        não são aceitos neste cadastro.
+      </p>
+    </div>
+
+    <div class="cadastro-acesso__bloco">
+      <h3>Domínios bloqueados (não editável nesta versão)</h3>
+      <!-- A lista vem do servidor, que é quem barra. Nenhum controle de edição é
+           renderizado — ausência, não `disabled` (invariante #8). -->
+      <ul class="cadastro-acesso__dominios">
+        @for (dominio of config.DominiosBloqueados; track dominio) {
+          <li class="cadastro-acesso__dominio">{{ dominio }}</li>
+        }
+      </ul>
+    </div>
+
+    <div class="cadastro-acesso__acoes">
+      <!-- É o Salvar que aplica. Alternar o switch sozinho não persiste nada. -->
+      <aurum-button variante="wine" [desabilitado]="!sujo || salvando" (click)="salvar()">
+        Salvar alterações
+      </aurum-button>
+      @if (sujo) {
+        <aurum-button variante="ghost" (click)="descartar()">Descartar</aurum-button>
+        <span class="cadastro-acesso__sujo">Alteração ainda não salva.</span>
+      }
+    </div>
+  </aurum-card>
+
+  <aurum-history-card titulo="Histórico de alterações" [eventos]="eventosHistorico()" />
+}
