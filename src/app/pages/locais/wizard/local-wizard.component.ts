@@ -12,6 +12,9 @@ import { LocalPublicoService } from '../services/local-publico.service';
 import { LocalDadosPayload, LocalDetalhe } from '../models/local.model';
 import { LocalPublicoPayload } from '../models/local-publico.model';
 import { STATUS_EXIBICAO_LABEL, StatusExibicao } from '../models/status-exibicao.enum';
+import { AurumButtonComponent } from '../../../shared/aurum/aurum-button.component';
+import { AurumPageHeaderComponent } from '../../../shared/aurum/aurum-page-header.component';
+import { AurumStatusPillComponent } from '../../../shared/aurum/aurum-status-pill.component';
 
 type Etapa = 0 | 1 | 2;
 
@@ -27,7 +30,15 @@ type Etapa = 0 | 1 | 2;
 @Component({
   selector: 'app-local-wizard',
   standalone: true,
-  imports: [CommonModule, LocalDadosStepComponent, LocalDemografiaStepComponent, LocalPecasStepComponent],
+  imports: [
+    CommonModule,
+    LocalDadosStepComponent,
+    LocalDemografiaStepComponent,
+    LocalPecasStepComponent,
+    AurumPageHeaderComponent,
+    AurumButtonComponent,
+    AurumStatusPillComponent,
+  ],
   templateUrl: './local-wizard.component.html',
 })
 export class LocalWizardComponent implements OnInit {

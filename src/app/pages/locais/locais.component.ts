@@ -5,6 +5,16 @@ import { LocalService } from './services/local.service';
 import { LocalListItem } from './models/local.model';
 import { mensagemDeErro } from '../../core/http/api-error';
 import { STATUS_EXIBICAO_LABEL, StatusExibicao } from './models/status-exibicao.enum';
+import { AurumButtonComponent } from '../../shared/aurum/aurum-button.component';
+import { AurumPageHeaderComponent } from '../../shared/aurum/aurum-page-header.component';
+import { AurumStatusPillComponent } from '../../shared/aurum/aurum-status-pill.component';
+import {
+  AurumTableCellComponent,
+  AurumTableComponent,
+  AurumTableHeaderCellComponent,
+  AurumTableRowComponent,
+} from '../../shared/aurum/aurum-table.component';
+import { AurumTextInputComponent } from '../../shared/aurum/aurum-text-input.component';
 
 /**
  * Listagem de Locais (Inventário).
@@ -22,8 +32,58 @@ import { STATUS_EXIBICAO_LABEL, StatusExibicao } from './models/status-exibicao.
 @Component({
   selector: 'app-locais',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [
+    CommonModule,
+    RouterLink,
+    AurumPageHeaderComponent,
+    AurumButtonComponent,
+    AurumStatusPillComponent,
+    AurumTableComponent,
+    AurumTableRowComponent,
+    AurumTableCellComponent,
+    AurumTableHeaderCellComponent,
+    AurumTextInputComponent,
+  ],
   templateUrl: './locais.component.html',
+  styles: [
+    `
+      .locais__filtros {
+        margin-bottom: 16px;
+      }
+      .locais__acoes {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        white-space: nowrap;
+      }
+      .locais__link {
+        color: var(--primary-color);
+        text-decoration: none;
+      }
+      .locais__link:hover {
+        text-decoration: underline;
+      }
+      .locais__link-primario {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--radius-pill);
+        padding: 10px 20px;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        background: var(--primary-color);
+        color: var(--white);
+        text-decoration: none;
+        box-shadow: var(--shadow-base);
+      }
+      .locais__link-primario:hover {
+        background: var(--primary-dark);
+        box-shadow: var(--shadow-hover);
+      }
+    `,
+  ],
 })
 export class LocaisComponent implements OnInit {
   private readonly localService = inject(LocalService);

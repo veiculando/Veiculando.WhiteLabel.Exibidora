@@ -1,3 +1,4 @@
+<aurum-card>
 <form class="peca-form" [formGroup]="form" (ngSubmit)="onSubmit()">
   <h1>{{ idPeca ? 'Editar peça' : 'Nova peça' }}</h1>
 
@@ -177,5 +178,6 @@
     </label>
   </fieldset>
 
-  <button type="submit" class="btn btn--primary">Salvar peça</button>
+  <aurum-button tipo="submit">Salvar peça</aurum-button>
 </form>
+</aurum-card>
