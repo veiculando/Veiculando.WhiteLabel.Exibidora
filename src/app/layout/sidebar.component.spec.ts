@@ -73,26 +73,34 @@ describe('SidebarComponent', () => {
   });
 
   // VEI-RD-93: os dois itens abaixo guardam permissao, e cada guarda e exercitada
-  // dos DOIS lados. O teste anterior afirmava que Programação nao exigia permissao
-  // nenhuma — era a regressao escrita como contrato.
-  it('Programação exige ProgramacaoVisualizar e some sem ela', () => {
+  // dos DOIS lados, em testes separados. O helper `configurar` chama
+  // TestBed.configureTestingModule, que nao pode rodar duas vezes no mesmo `it`
+  // depois de o componente existir — um estado por teste, um detectChanges por teste.
+  it('Programação aparece com ProgramacaoVisualizar', () => {
     configurar(['ProgramacaoVisualizar']);
     fixture.detectChanges();
-    const comPermissao = (fixture.nativeElement as HTMLElement).querySelector('a[href="/programacao"]');
-    expect(comPermissao?.textContent?.trim()).toBe('Programação');
+    const link = (fixture.nativeElement as HTMLElement).querySelector('a[href="/programacao"]');
+    expect(link?.textContent?.trim()).toBe('Programação');
+  });
 
+  it('Programação some sem ProgramacaoVisualizar', () => {
+    // O teste anterior afirmava o contrario — que Programação nao exigia
+    // permissao nenhuma. Era a regressao escrita como contrato.
     configurar([]);
     fixture.detectChanges();
     expect((fixture.nativeElement as HTMLElement).querySelector('a[href="/programacao"]')).toBeNull();
   });
 
-  it('Checking exige CheckingGerenciar, e o nome antigo "Checking" nao abre a porta', () => {
+  it('Checking aparece com CheckingGerenciar', () => {
     configurar(['CheckingGerenciar']);
     fixture.detectChanges();
     expect((fixture.nativeElement as HTMLElement).querySelector('a[href="/checking"]')).not.toBeNull();
+  });
 
-    // A claim antiga foi renomeada pela migration RenomearCheckingEGrantProgramacaoVisualizar.
-    // Aceitar 'Checking' aqui reabriria a colisao que fazia o authGuard falhar aberto.
+  it('Checking NAO aparece com o nome antigo "Checking"', () => {
+    // A claim antiga foi renomeada pela migration
+    // RenomearCheckingEGrantProgramacaoVisualizar. Aceitar 'Checking' aqui
+    // reabriria a colisao que fazia o authGuard falhar aberto.
     configurar(['Checking']);
     fixture.detectChanges();
     expect((fixture.nativeElement as HTMLElement).querySelector('a[href="/checking"]')).toBeNull();
