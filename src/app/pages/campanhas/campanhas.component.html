@@ -1,0 +1,97 @@
+<aurum-page-header
+  eyebrow="Comercial"
+  titulo="Campanhas de Mídia"
+  subtitulo="Consulta das campanhas com veiculação nesta exibidora"
+>
+  <!-- O badge é o contrato com quem lê a tela: aqui não se cria nem se altera nada. -->
+  <aurum-status-pill aurumPageHeaderBadge rotulo="Módulo Consultivo" tom="aviso" />
+</aurum-page-header>
+
+@if (erro) {
+  <p role="alert" class="campanhas__vazio">{{ erro }}</p>
+}
+
+<div class="campanhas__chips">
+  @for (chip of chips; track chip) {
+    <button type="button" class="campanhas__chip" [attr.aria-pressed]="chipAtivo(chip)" (click)="selecionarChip(chip)">
+      {{ chip }}
+    </button>
+  }
+</div>
+
+<div class="campanhas__barra">
+  <div class="campanhas__busca">
+    <aurum-filter-field rotulo="Buscar" posicaoRotulo="acima">
+      <aurum-text-input
+        [valor]="busca"
+        (valorChange)="busca = $event"
+        placeholder="Buscar por código, nome da campanha, anunciante ou agência"
+        rotulo="Buscar campanhas"
+      />
+    </aurum-filter-field>
+  </div>
+  <aurum-button variante="outline" (click)="carregar()">Aplicar</aurum-button>
+  <aurum-view-selector storageKey="campanhas" [modo]="modo" (modoChange)="modo = $event" />
+</div>
+
+@if (carregando) {
+  <p class="campanhas__vazio">Carregando campanhas…</p>
+} @else if (campanhas.length === 0) {
+  <p class="campanhas__vazio">Nenhuma campanha encontrada para este filtro.</p>
+} @else if (modo === 'card') {
+  <div class="campanhas__cards">
+    @for (campanha of campanhas; track campanha.Id) {
+      <aurum-card>
+        <p class="campanhas__codigo">{{ campanha.Codigo }}</p>
+        <strong>{{ campanha.Nome }}</strong>
+        <p>Anunciante: {{ campanha.Anunciante }}</p>
+        <p>Agência: {{ agencia(campanha) }}</p>
+        <p>Período: {{ periodo(campanha.Periodo) }}</p>
+        <div class="campanhas__rodape">
+          <span>{{ campanha.Pecas }} Peças • Valor Total</span>
+          <span class="campanhas__valor">{{ valor(campanha) }}</span>
+        </div>
+        <!-- Única ação: consulta. Nenhum controle de mutação é renderizado. -->
+        <aurum-button variante="ghost">Detalhes</aurum-button>
+      </aurum-card>
+    }
+  </div>
+} @else {
+  <!--
+    Visão de lista DERIVADA: o Figma só desenhou a visão card. Mesmos dados, mesma
+    consulta — as colunas seguem a sugestão do plano e estão pendentes de confirmação
+    com o design.
+  -->
+  <table aurumTable>
+    <thead>
+      <tr aurumTableRow>
+        <th aurumTableHeaderCell scope="col">Código</th>
+        <th aurumTableHeaderCell scope="col">Campanha</th>
+        <th aurumTableHeaderCell scope="col">Anunciante</th>
+        <th aurumTableHeaderCell scope="col">Agência</th>
+        <th aurumTableHeaderCell scope="col">Período</th>
+        <th aurumTableHeaderCell scope="col">Peças</th>
+        <th aurumTableHeaderCell scope="col">Valor Total</th>
+        <th aurumTableHeaderCell scope="col">Status</th>
+        <th aurumTableHeaderCell scope="col">Ação</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (campanha of campanhas; track campanha.Id) {
+        <tr aurumTableRow>
+          <td aurumTableCell>{{ campanha.Codigo }}</td>
+          <td aurumTableCell>{{ campanha.Nome }}</td>
+          <td aurumTableCell>{{ campanha.Anunciante }}</td>
+          <td aurumTableCell>{{ agencia(campanha) }}</td>
+          <td aurumTableCell>{{ periodo(campanha.Periodo) }}</td>
+          <td aurumTableCell>{{ campanha.Pecas }}</td>
+          <td aurumTableCell>{{ valor(campanha) }}</td>
+          <td aurumTableCell>
+            <aurum-status-pill [rotulo]="rotuloStatus(campanha.Status)" tom="neutro" />
+          </td>
+          <td aurumTableCell><aurum-button variante="ghost">Detalhes</aurum-button></td>
+        </tr>
+      }
+    </tbody>
+  </table>
+}

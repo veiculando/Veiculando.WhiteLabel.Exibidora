@@ -39,9 +39,12 @@ describe('app.routes', () => {
     // lista canônica ANTES dessas telas existirem é intencional: quem construir
     // cada uma delas usa um nome já reconhecido pelo authGuard, em vez de
     // inventar um nome novo que precisaria de outra reconciliação depois.
+    // A lista encolhe conforme os cards entregam. ClienteGerenciar e PedidoCriar
+    // sairam daqui porque o Plano 3 passou a rotea-las de fato: ClienteGerenciar
+    // em Anunciantes/Agências/Análises KYC, PedidoCriar em Prospecção. Manter uma
+    // permissao ja roteada nesta lista faria o teste aprovar por engano, que e o
+    // oposto do que ele existe para fazer.
     const PERMISSOES_RESERVADAS_PARA_OUTROS_CARDS = [
-        'ClienteGerenciar', // VEI-RD-46 (Anunciantes) / VEI-RD-79 (Agências)
-        'PedidoCriar', // VEI-RD-83 (Prospecção)
         'FinanceiroVisualizar', // VEI-RD-85 (KPI de Faturamento)
         'RelatorioExportar', // VEI-RD-92 (Relatórios)
     ] as const;

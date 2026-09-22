@@ -5,11 +5,11 @@ import { SidebarComponent } from './sidebar.component';
 
 /**
  * VEI-RD-76, passo 6: reorganização do menu conforme PRD §4 (Shell.tsx:16-54).
- * A sprint 10 só entrega rotas para Locais, Programação, Checking, Pedidos de
- * Reserva, Pedidos de Inserção e Usuários — todo o resto do PRD (Prospecção,
- * Agências, Anunciantes, Análises KYC, Campanhas, Valores de Peças, Tipos de
- * Suporte, Relatórios, Cadastro e acesso) ainda não tem rota e não pode
- * aparecer, nem como link morto.
+ * A sprint 10 entrega rotas para Locais, Programação, Checking, Pedidos de
+ * Reserva, Pedidos de Inserção, Usuários e — a partir do plano 3 — Agências,
+ * Análise KYC, Prospecção, Campanhas e Cadastro e acesso. O que ainda não tem
+ * rota (Anunciantes, Valores de Peças, Tipos de Suporte, Relatórios) continua
+ * proibido de aparecer, nem como link morto.
  */
 describe('SidebarComponent', () => {
   let fixture: ComponentFixture<SidebarComponent>;
@@ -46,15 +46,38 @@ describe('SidebarComponent', () => {
     expect(dashboard?.closest('.nav-section')).toBeNull();
   });
 
-  it('item sem rota nunca aparece (Prospecção, Agências, Valores de Peças, Relatórios, etc.)', () => {
+  it('item sem rota nunca aparece (Anunciantes, Valores de Peças, Relatórios, etc.)', () => {
     configurar(['PecaGerenciar', 'CheckingGerenciar', 'ProgramacaoVisualizar', 'PedidoReservaGerenciar', 'PedidoInsercaoGerenciar', 'UsuarioAfiliadaGerenciar']);
     fixture.detectChanges();
     const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
     for (const rotuloSemRota of [
-      'Prospecção', 'Agências', 'Anunciantes', 'Análises KYC', 'Campanhas',
-      'Valores de Peças', 'Tipos de Suporte', 'Relatórios', 'Cadastro e acesso',
+      'Anunciantes', 'Valores de Peças', 'Tipos de Suporte', 'Relatórios',
     ]) {
       expect(texto).not.toContain(rotuloSemRota);
+    }
+  });
+
+  // Os dois lados, em testes separados: acender o item com a permissao certa E
+  // apaga-lo sem ela. So o lado "some" passaria com o item nunca renderizando.
+  // Separados porque configurar() reconfigura o TestBed, o que nao pode acontecer
+  // depois de um fixture ja criado no mesmo teste.
+  const ITENS_DO_PLANO_3 = ['Agências', 'Análise KYC', 'Campanhas', 'Prospecção'];
+
+  it('os itens do plano 3 aparecem quando a permissao existe', () => {
+    configurar(['ClienteGerenciar', 'PedidoCriar']);
+    fixture.detectChanges();
+    const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    for (const rotulo of ITENS_DO_PLANO_3) {
+      expect(texto).toContain(rotulo);
+    }
+  });
+
+  it('os itens do plano 3 somem quando a permissao falta', () => {
+    configurar([]);
+    fixture.detectChanges();
+    const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    for (const rotulo of ITENS_DO_PLANO_3) {
+      expect(texto).not.toContain(rotulo);
     }
   });
 
@@ -109,7 +132,12 @@ describe('SidebarComponent', () => {
   it('nenhum item renderizado aponta para uma rota que nao existe no app', () => {
     configurar(['PecaGerenciar', 'CheckingGerenciar', 'ProgramacaoVisualizar', 'PedidoReservaGerenciar', 'PedidoInsercaoGerenciar', 'UsuarioAfiliadaGerenciar']);
     fixture.detectChanges();
-    const rotasConhecidas = ['/dashboard', '/locais', '/programacao', '/checking', '/pedidos-reserva', '/pedidos-insercao', '/usuarios'];
+    const rotasConhecidas = [
+      '/dashboard', '/locais', '/programacao', '/checking', '/pedidos-reserva',
+      '/pedidos-insercao', '/usuarios',
+      // Entregues pelo plano 3.
+      '/agencias', '/kyc', '/prospeccao', '/campanhas', '/configuracoes/cadastro-acesso',
+    ];
     const links = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('a[href]'));
     for (const link of links) {
       expect(rotasConhecidas).toContain(link.getAttribute('href'));

@@ -16,8 +16,8 @@ import { authGuard } from './core/auth/auth.guard';
  *  - 'PedidoReservaGerenciar'
  *  - 'PedidoInsercaoGerenciar'
  *  - 'UsuarioAfiliadaGerenciar'
- *  - 'ClienteGerenciar'
- *  - 'PedidoCriar'
+ *  - 'ClienteGerenciar'      (Anunciantes, Agências, Análise KYC, Campanhas)
+ *  - 'PedidoCriar'           (Prospecção)
  *  - 'ProgramacaoVisualizar'
  *  - 'FinanceiroVisualizar'
  *  - 'RelatorioExportar'
@@ -164,6 +164,58 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/pedidos-insercao/pedidos-insercao.component').then(
             (m) => m.PedidosInsercaoComponent
+          ),
+      },
+
+      {
+        path: 'agencias',
+        title: 'Agências',
+        data: { permission: 'ClienteGerenciar' },
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./pages/agencias/agencias.component').then((m) => m.AgenciasComponent),
+      },
+      {
+        path: 'kyc',
+        title: 'Análise KYC',
+        data: { permission: 'ClienteGerenciar' },
+        canActivate: [authGuard],
+        loadComponent: () => import('./pages/kyc/kyc.component').then((m) => m.KycComponent),
+      },
+      {
+        path: 'kyc/:id',
+        title: 'Análise KYC',
+        data: { permission: 'ClienteGerenciar' },
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./pages/kyc/detalhe/kyc-detalhe.component').then((m) => m.KycDetalheComponent),
+      },
+      {
+        path: 'campanhas',
+        title: 'Campanhas de mídia',
+        data: { permission: 'ClienteGerenciar' },
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./pages/campanhas/campanhas.component').then((m) => m.CampanhasComponent),
+      },
+      {
+        path: 'prospeccao',
+        title: 'Prospecção',
+        data: { permission: 'PedidoCriar' },
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./pages/prospeccao/prospeccao.component').then((m) => m.ProspeccaoComponent),
+      },
+
+      // --- Configurações ---
+      {
+        path: 'configuracoes/cadastro-acesso',
+        title: 'Cadastro e acesso',
+        data: { permission: 'UsuarioAfiliadaGerenciar' },
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./pages/configuracoes/cadastro-acesso/cadastro-acesso.component').then(
+            (m) => m.CadastroAcessoComponent
           ),
       },
 

@@ -72,6 +72,11 @@ export const PERMISSOES_WL = [
   'PedidoReservaGerenciar',
   'PedidoInsercaoGerenciar',
   'UsuarioAfiliadaGerenciar',
+  // VEI-RD-79/80/51 (Agências, Análise KYC, Campanhas) e VEI-RD-83 (Prospecção).
+  // Os dois já existem em WlPermissoesValidas no domínio — o teste
+  // WlPermissoesCanonicasTests documenta, em comentário, que ClienteGerenciar é
+  // de VEI-RD-46 *e* VEI-RD-79, e que PedidoCriar seria o de Prospecção. Esta
+  // lista precisa espelhar aquela item a item; o que faltava era este lado.
   'ClienteGerenciar',
   'PedidoCriar',
   'ProgramacaoVisualizar',
@@ -87,8 +92,8 @@ export const PERMISSOES_WL_ROTULOS: Record<PermissaoWl, string> = {
   PedidoReservaGerenciar: 'Gerenciar pedidos de reserva',
   PedidoInsercaoGerenciar: 'Consultar pedidos de inserção',
   UsuarioAfiliadaGerenciar: 'Gerenciar operadores',
-  ClienteGerenciar: 'Gerenciar anunciantes',
-  PedidoCriar: 'Criar pedidos (prospecção)',
+  ClienteGerenciar: 'Gerenciar anunciantes, agências e análises de KYC',
+  PedidoCriar: 'Abrir sessão de prospecção',
   ProgramacaoVisualizar: 'Visualizar programação',
   FinanceiroVisualizar: 'Visualizar financeiro',
   RelatorioExportar: 'Exportar relatórios',
