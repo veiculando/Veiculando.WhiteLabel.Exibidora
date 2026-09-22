@@ -32,7 +32,7 @@ describe('SidebarComponent', () => {
   }
 
   it('com todas as permissoes, segue a ordem de grupos do PRD secao 4, sem "Geral"', () => {
-    configurar(['PecaGerenciar', 'CheckingGerenciar', 'PedidoReservaGerenciar', 'PedidoInsercaoGerenciar', 'UsuarioAfiliadaGerenciar']);
+    configurar(['PecaGerenciar', 'CheckingGerenciar', 'PedidoReservaGerenciar', 'PedidoInsercaoGerenciar', 'UsuarioAfiliadaGerenciar', 'ProgramacaoVisualizar']);
     fixture.detectChanges();
 
     expect(textoGrupos()).toEqual(['Inventário', 'Comercial', 'Operacional', 'Configurações']);
@@ -67,7 +67,7 @@ describe('SidebarComponent', () => {
   });
 
   it('item sem rota nunca aparece (Prospecção, Agências, Valores de Peças, Relatórios, etc.)', () => {
-    configurar(['PecaGerenciar', 'CheckingGerenciar', 'PedidoReservaGerenciar', 'PedidoInsercaoGerenciar', 'UsuarioAfiliadaGerenciar']);
+    configurar(['PecaGerenciar', 'CheckingGerenciar', 'PedidoReservaGerenciar', 'PedidoInsercaoGerenciar', 'UsuarioAfiliadaGerenciar', 'ProgramacaoVisualizar']);
     fixture.detectChanges();
     const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
     for (const rotuloSemRota of [
@@ -79,7 +79,7 @@ describe('SidebarComponent', () => {
   });
 
   it('grupo sem nenhum item habilitado (Financeiro) nao renderiza nem o titulo', () => {
-    configurar(['PecaGerenciar', 'CheckingGerenciar', 'PedidoReservaGerenciar', 'PedidoInsercaoGerenciar', 'UsuarioAfiliadaGerenciar']);
+    configurar(['PecaGerenciar', 'CheckingGerenciar', 'PedidoReservaGerenciar', 'PedidoInsercaoGerenciar', 'UsuarioAfiliadaGerenciar', 'ProgramacaoVisualizar']);
     fixture.detectChanges();
     expect(textoGrupos()).not.toContain('Financeiro');
   });
@@ -92,15 +92,21 @@ describe('SidebarComponent', () => {
     expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('Locais');
   });
 
-  it('Programação nao exige permissao e aparece mesmo sem nenhuma concedida', () => {
+  it('Programação exige ProgramacaoVisualizar (VEI-RD-86e, mesma policy do ProgramacaoController real) e some sem ela', () => {
     configurar([]);
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('Programação');
+  });
+
+  it('Programação aparece com ProgramacaoVisualizar concedida', () => {
+    configurar(['ProgramacaoVisualizar']);
     fixture.detectChanges();
     const link = (fixture.nativeElement as HTMLElement).querySelector('a[href="/programacao"]');
     expect(link?.textContent?.trim()).toBe('Programação');
   });
 
   it('nenhum item renderizado aponta para uma rota que nao existe no app', () => {
-    configurar(['PecaGerenciar', 'CheckingGerenciar', 'PedidoReservaGerenciar', 'PedidoInsercaoGerenciar', 'UsuarioAfiliadaGerenciar']);
+    configurar(['PecaGerenciar', 'CheckingGerenciar', 'PedidoReservaGerenciar', 'PedidoInsercaoGerenciar', 'UsuarioAfiliadaGerenciar', 'ProgramacaoVisualizar']);
     fixture.detectChanges();
     const rotasConhecidas = [
       '/dashboard', '/locais', '/programacao', '/checking', '/checkout', '/ordens-servico',

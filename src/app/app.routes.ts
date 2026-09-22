@@ -14,6 +14,8 @@ import { authGuard } from './core/auth/auth.guard';
  *  - 'PedidoReservaGerenciar'
  *  - 'PedidoInsercaoGerenciar'
  *  - 'UsuarioAfiliadaGerenciar'
+ *  - 'ProgramacaoVisualizar' (VEI-RD-86e — ProgramacaoController real exige
+ *    essa policy; ver a rota /programacao abaixo)
  *
  * Toda a área autenticada é filha do `ShellComponent` (header/sidebar/breadcrumb/
  * footer); /login e /acesso-negado ficam fora dele por serem públicas.
@@ -26,8 +28,8 @@ import { authGuard } from './core/auth/auth.guard';
  * só uma verificação de sessão. Data de rota é herdada de pai para filho, nunca
  * o contrário.
  *
- * O guard no pai continua ali de propósito: cobre `/dashboard` e `/programacao`,
- * que exigem sessão mas nenhuma permissão específica.
+ * O guard no pai continua ali de propósito: cobre `/dashboard`, que exige
+ * sessão mas nenhuma permissão específica.
  */
 export const routes: Routes = [
   // Rota pública: login
@@ -93,6 +95,11 @@ export const routes: Routes = [
       {
         path: 'programacao',
         title: 'Programação',
+        // VEI-RD-86e: ProgramacaoController.cs real exige a policy
+        // ProgramacaoVisualizar — confirmado lendo o controller no workspace
+        // irmão do BFF. Mesmo padrão de /checking e /checkout neste arquivo.
+        data: { permission: 'ProgramacaoVisualizar' },
+        canActivate: [authGuard],
         loadComponent: () =>
           import('./pages/programacao/programacao.component').then((m) => m.ProgramacaoComponent),
       },

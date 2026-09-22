@@ -57,7 +57,7 @@ export interface OperadorLogado {
 
 /**
  * Whitelist de permissoes — espelha `WlPermissoesValidas` no dominio.
- * Sao os 5 identificadores exatos aceitos pelo BFF em `POST/PUT /api/wl/usuarios`
+ * Sao os 6 identificadores exatos aceitos pelo BFF em `POST/PUT /api/wl/usuarios`
  * que já têm rota/feature nesta sprint; qualquer outro valor volta como 400.
  *
  * `CheckingGerenciar` (não `'Checking'`): reconciliado no domínio em
@@ -67,11 +67,16 @@ export interface OperadorLogado {
  * fazia o `authGuard` nunca bater contra a claim real do JWT — ninguém
  * conseguia abrir `/checking` nem `/checkout`.
  *
+ * `ProgramacaoVisualizar` (VEI-RD-86e): `ProgramacaoController.cs` real já
+ * exige essa policy (`[Authorize(Policy = AuthorizationSetup.ProgramacaoVisualizar)]`)
+ * — a rota `/programacao` passou a declará-la também, mesmo padrão de
+ * `/checking`/`/checkout` neste arquivo.
+ *
  * `WlPermissoesValidas.Lista` no domínio tem 10 entradas no total
- * (`ClienteGerenciar`, `PedidoCriar`, `ProgramacaoVisualizar`,
- * `FinanceiroVisualizar`, `RelatorioExportar` além destas 5) — as outras 5
- * ainda não têm rota/feature correspondente nesta sprint, então ficam de
- * fora desta whitelist por ora.
+ * (`ClienteGerenciar`, `PedidoCriar`, `FinanceiroVisualizar`,
+ * `RelatorioExportar` além destas 6) — as outras 4 ainda não têm
+ * rota/feature correspondente nesta sprint, então ficam de fora desta
+ * whitelist por ora.
  */
 export const PERMISSOES_WL = [
   'PecaGerenciar',
@@ -79,6 +84,7 @@ export const PERMISSOES_WL = [
   'PedidoReservaGerenciar',
   'PedidoInsercaoGerenciar',
   'UsuarioAfiliadaGerenciar',
+  'ProgramacaoVisualizar',
 ] as const;
 
 export type PermissaoWl = (typeof PERMISSOES_WL)[number];
@@ -89,6 +95,7 @@ export const PERMISSOES_WL_ROTULOS: Record<PermissaoWl, string> = {
   PedidoReservaGerenciar: 'Gerenciar pedidos de reserva',
   PedidoInsercaoGerenciar: 'Consultar pedidos de inserção',
   UsuarioAfiliadaGerenciar: 'Gerenciar operadores',
+  ProgramacaoVisualizar: 'Visualizar a grade de programação',
 };
 
 // ---------------------------------------------------------------- Dashboard
