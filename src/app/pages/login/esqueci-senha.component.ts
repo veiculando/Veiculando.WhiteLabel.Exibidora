@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { BrandingService } from '../../core/branding/branding.service';
 import { mensagemDeErro } from '../../core/http/api-error';
 import { AuthService } from '../../core/services/auth.service';
+import { AurumButtonComponent } from '../../shared/aurum/aurum-button.component';
 
 /**
  * Solicitação de recuperação de senha — `POST /api/wl/auth/esqueci-senha`.
@@ -15,7 +16,7 @@ import { AuthService } from '../../core/services/auth.service';
  */
 @Component({
   selector: 'app-esqueci-senha',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, AurumButtonComponent],
   template: `
     <div class="login">
       <div class="login__caixa">
@@ -24,7 +25,7 @@ import { AuthService } from '../../core/services/auth.service';
 
         @if (mensagemSucesso) {
           <div class="wl-estado wl-estado--sucesso login__erro">{{ mensagemSucesso }}</div>
-          <a class="wl-btn login__botao login__voltar" routerLink="/login">Voltar para o login</a>
+          <a class="login__link-primario login__voltar" routerLink="/login">Voltar para o login</a>
         } @else {
           <p class="login__instrucao">
             Informe o e-mail cadastrado. Se ele pertencer a um operador desta
@@ -44,11 +45,11 @@ import { AuthService } from '../../core/services/auth.service';
               <div class="wl-estado wl-estado--erro login__erro">{{ erro }}</div>
             }
 
-            <button class="wl-btn login__botao" type="submit" [disabled]="enviando">
+            <aurum-button class="login__botao" tipo="submit" [desabilitado]="enviando">
               {{ enviando ? 'Enviando…' : 'Enviar instruções' }}
-            </button>
+            </aurum-button>
 
-            <a class="wl-btn--link login__esqueci" routerLink="/login">Voltar para o login</a>
+            <a class="login__esqueci" routerLink="/login">Voltar para o login</a>
           </form>
         }
       </div>
@@ -101,19 +102,36 @@ import { AuthService } from '../../core/services/auth.service';
       }
       .login__botao {
         width: 100%;
-        padding: 10px;
+      }
+      .login__link-primario {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--radius-pill);
+        padding: 10px 20px;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        background: var(--primary-color);
+        color: var(--white);
+        text-decoration: none;
+        box-shadow: var(--shadow-base);
+      }
+      .login__link-primario:hover {
+        background: var(--primary-dark);
+        box-shadow: var(--shadow-hover);
       }
       .login__voltar {
         margin-top: 14px;
-        display: block;
-        text-align: center;
-        text-decoration: none;
       }
       .login__esqueci {
         display: block;
         margin-top: 14px;
         text-align: center;
         font-size: 0.85rem;
+        color: var(--primary-color);
+        text-decoration: underline;
       }
       .login__rodape {
         margin-top: 20px;

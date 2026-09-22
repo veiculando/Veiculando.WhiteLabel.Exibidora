@@ -2,17 +2,28 @@
 
 :root {
   /* Branding por tenant. Somente estes tres valores mudam em runtime. */
-  --primary-color: #a80009;
+  --primary-color: #8a0009;
   --secondary-color: #d9b442;
   --accent-color: #c2302c;
 
-  /* Variantes derivadas: nao fazem parte do contrato WhiteLabel. */
-  --primary-dark: color-mix(in srgb, var(--primary-color) 66%, #000000);
+  /*
+   * Variantes derivadas: nao fazem parte do contrato WhiteLabel.
+   * Permanecem como color-mix() sobre --primary-color/--secondary-color -
+   * nunca literais - para que a troca de tenant continue re-tematizando
+   * a aplicacao inteira (ADR-WL-015). Proporcoes calibradas para que,
+   * partindo do Aurum (#8a0009 / #d9b442), o resultado computado bata
+   * com a section Exibidora do Figma (204:2737).
+   */
+  --primary-dark: color-mix(in srgb, var(--primary-color) 54%, #000000);
   --primary-light: var(--accent-color);
   --header-footer-bg: color-mix(in srgb, var(--primary-color) 74%, #1a1a1b);
+  --shell-bg: color-mix(in srgb, var(--primary-color) 55%, #1a1a1b 45%);
+  --drawer-bg: color-mix(in srgb, var(--shell-bg) 92%, #000000 8%);
   --gold-accent: var(--secondary-color);
-  --gold-light: color-mix(in srgb, var(--secondary-color) 58%, #ffffff);
-  --gold-grad: linear-gradient(135deg, var(--secondary-color), var(--gold-light));
+  --gold-light: color-mix(in srgb, var(--secondary-color) 68%, #ffffff);
+  --eyebrow-color: color-mix(in srgb, var(--secondary-color) 68%, #000000);
+  --gold-grad: linear-gradient(90deg, #d6b23a, #debb4d 35%, #eecc72 70%, var(--gold-light));
+  --wine-grad: linear-gradient(90deg, var(--primary-color), #c2302c 60%, #a51f1f);
 
   /* Design system fixo e compartilhado por todas as exibidoras. */
   --paper-bg: #f9f7f2;
@@ -38,11 +49,11 @@
 
   /* Shapes & Shadows */
   --radius-sm: 6px;
-  --radius-md: 14px;
+  --radius-md: 18px;
   --radius-pill: 999px;
 
-  --shadow-base: 0 12px 34px rgba(74, 0, 5, 0.08);
-  --shadow-hover: 0 18px 42px rgba(74, 0, 5, 0.14);
+  --shadow-base: 0 8px 32px rgba(74, 14, 14, 0.10);
+  --shadow-hover: 0 16px 48px rgba(74, 14, 14, 0.18);
 
   /* Layout */
   --container-max-width: 1280px;

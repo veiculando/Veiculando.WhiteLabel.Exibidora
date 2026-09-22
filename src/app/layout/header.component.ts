@@ -25,7 +25,7 @@ import { PermissionService } from '../core/auth/permission.service';
     `,
     changeDetection: ChangeDetectionStrategy.Eager,
     styles: [`
-    .header-container { display: flex; justify-content: space-between; align-items: center; min-height: 68px; padding: 10px 24px; background: var(--header-footer-bg); color: var(--white); border-bottom: 3px solid var(--secondary-color); }
+    .header-container { display: flex; justify-content: space-between; align-items: center; min-height: 68px; padding: 10px 24px; background: var(--shell-bg); color: var(--white); border-bottom: 3px solid var(--secondary-color); }
     .header-brand { display: flex; align-items: center; gap: 12px; }
     .header-logo { width: auto; max-width: 150px; height: 42px; object-fit: contain; }
     .header-title { font-family: var(--font-display); font-weight: 600; font-size: 1.15rem; }

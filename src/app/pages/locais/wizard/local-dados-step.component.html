@@ -4,7 +4,9 @@
 
     <label>
       CEP
-      <input type="text" formControlName="cep" placeholder="00000-000" />
+      <input type="text" formControlName="cep" placeholder="00000-000" (blur)="aoSairDoCep()" />
+      @if (consultandoCep()) { <span class="wl-linha-secundaria">Consultando CEP…</span> }
+      @if (avisoCep()) { <span class="wl-linha-secundaria">{{ avisoCep() }}</span> }
     </label>
 
     <label>
@@ -48,6 +50,27 @@
       <input type="text" formControlName="referencia" />
     </label>
 
+    @if (mapaDisponivel()) {
+      <div class="local-dados-step__mapa">
+        <google-map
+          height="280px"
+          width="100%"
+          [center]="marcador"
+          [zoom]="16"
+          [options]="{ streetViewControl: false, mapTypeControl: false }"
+        >
+          <map-marker
+            [position]="marcador"
+            [options]="{ draggable: true }"
+            (mapDragend)="aoArrastarMarcador($event)"
+          />
+        </google-map>
+        <span class="wl-linha-secundaria">
+          Arraste o marcador para ajustar a posição exata, ou edite latitude/longitude abaixo.
+        </span>
+      </div>
+    }
+
     <label>
       Latitude
       <input type="number" formControlName="latitude" required />
@@ -75,5 +98,5 @@
     </label>
   </fieldset>
 
-  <button type="submit" class="btn btn--primary" [disabled]="salvando">{{ salvando ? 'Salvando…' : 'Salvar Dados do Local' }}</button>
+  <aurum-button tipo="submit" [desabilitado]="salvando">{{ salvando ? 'Salvando…' : 'Salvar Dados do Local' }}</aurum-button>
 </form>

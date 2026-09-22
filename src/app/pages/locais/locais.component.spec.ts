@@ -22,6 +22,11 @@ describe('LocaisComponent', () => {
       fonteOrigem: 1,
       fonteTimestamp: '2026-08-01T00:00:00Z',
       statusExibicao: StatusExibicao.AprovacaoPendente,
+      endereco: 'Av. Paulista, 1000',
+      suporte: null,
+      formatoDimensao: null,
+      valorPadrao: null,
+      periodicidade: null,
     },
     {
       id: 2,
@@ -32,6 +37,11 @@ describe('LocaisComponent', () => {
       fonteOrigem: 1,
       fonteTimestamp: '2026-08-01T00:00:00Z',
       statusExibicao: StatusExibicao.Ativo,
+      endereco: 'Av. Ana Costa, 200',
+      suporte: 'Digital Out of Home (DOOH)',
+      formatoDimensao: '9.00 x 3.00',
+      valorPadrao: 18500,
+      periodicidade: 2,
     },
   ];
 

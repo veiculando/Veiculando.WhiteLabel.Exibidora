@@ -15,6 +15,7 @@
     "@angular/compiler": "^22.1.2",
     "@angular/core": "^22.1.2",
     "@angular/forms": "^22.1.2",
+    "@angular/google-maps": "^22.1.2",
     "@angular/platform-browser": "^22.1.2",
     "@angular/platform-browser-dynamic": "^22.1.2",
     "@angular/router": "^22.1.2",
@@ -31,6 +32,7 @@
     "@angular/cli": "^22.1.4",
     "@angular/compiler-cli": "^22.1.2",
     "@types/crypto-js": "^4.2.2",
+    "@types/google.maps": "^3.66.3",
     "jsdom": "^29.1.1",
     "typescript": "~6.0.3",
     "vitest": "^4.0.8"

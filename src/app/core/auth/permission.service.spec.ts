@@ -38,19 +38,19 @@ describe('PermissionService', () => {
     });
 
     it('reconhece a claim quando vem como array', () => {
-        SecureStorage.setToken(environment.tokenKey, tokenCom({ permission: ['PecaGerenciar', 'Checking'] }));
+        SecureStorage.setToken(environment.tokenKey, tokenCom({ permission: ['PecaGerenciar', 'CheckingGerenciar'] }));
 
         expect(service.has('PecaGerenciar')).toBe(true);
-        expect(service.has('Checking')).toBe(true);
+        expect(service.has('CheckingGerenciar')).toBe(true);
         expect(service.has('UsuarioAfiliadaGerenciar')).toBe(false);
     });
 
     it('reconhece a claim quando vem como string unica', () => {
         // O AuthController emite uma claim `permission` por permissao; com apenas
         // uma, o decode devolve string em vez de array.
-        SecureStorage.setToken(environment.tokenKey, tokenCom({ permission: 'Checking' }));
+        SecureStorage.setToken(environment.tokenKey, tokenCom({ permission: 'CheckingGerenciar' }));
 
-        expect(service.has('Checking')).toBe(true);
+        expect(service.has('CheckingGerenciar')).toBe(true);
         expect(service.has('PecaGerenciar')).toBe(false);
     });
 

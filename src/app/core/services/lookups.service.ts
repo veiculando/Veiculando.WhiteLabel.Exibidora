@@ -1,8 +1,8 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, shareReplay, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { CidadeLookup, NomeadoLookup, PeriodoLookup } from '../models/wl.models';
+import { CidadeLookup, MapaConfig, NomeadoLookup, Periodicidade, PeriodoLookup } from '../models/wl.models';
 
 @Injectable({ providedIn: 'root' })
 export class LookupsService {
@@ -16,9 +16,9 @@ export class LookupsService {
    */
   private cache = new Map<string, Observable<unknown>>();
 
-  private get<T>(caminho: string): Observable<T> {
-    if (!this.cache.has(caminho)) {
-      const requisicao = this.http.get<T>(`${this.base}/${caminho}`).pipe(
+  private get<T>(caminho: string, chaveCache: string = caminho, params?: HttpParams): Observable<T> {
+    if (!this.cache.has(chaveCache)) {
+      const requisicao = this.http.get<T>(`${this.base}/${caminho}`, { params }).pipe(
         // `shareReplay` reemite tambem o ERRO para todo assinante futuro. Sem
         // descartar a entrada aqui, uma falha de rede na primeira chamada ficava
         // cacheada pelo resto da sessao: o dropdown de cidades do cadastro de
@@ -26,23 +26,35 @@ export class LookupsService {
         // permanentemente vazio e nenhuma tentativa posterior refazia a
         // requisicao — so recarregando a pagina.
         catchError((erro: unknown) => {
-          this.cache.delete(caminho);
+          this.cache.delete(chaveCache);
           return throwError(() => erro);
         }),
         shareReplay(1)
       );
 
-      this.cache.set(caminho, requisicao);
+      this.cache.set(chaveCache, requisicao);
     }
-    return this.cache.get(caminho) as Observable<T>;
+    return this.cache.get(chaveCache) as Observable<T>;
   }
 
   cidades(): Observable<CidadeLookup[]> {
     return this.get<CidadeLookup[]>('cidades');
   }
 
-  periodos(): Observable<PeriodoLookup[]> {
-    return this.get<PeriodoLookup[]>('periodos');
+  /**
+   * `GET /api/wl/lookups/periodos` — sem `periodicidade`, devolve todos os
+   * períodos ativos (comportamento antigo, preservado). Com `periodicidade`,
+   * filtra no servidor (`LookupsController.GetPeriodos`) — é o que VEI-RD-86
+   * usa para recarregar Período Inicial/Final quando a Periodicidade muda.
+   * Cada periodicidade tem seu próprio balde de cache: sem isso, trocar de
+   * Bissemana para Mensal serviria a lista de bi-semanas do cache errado.
+   */
+  periodos(periodicidade?: Periodicidade | null): Observable<PeriodoLookup[]> {
+    if (periodicidade == null) {
+      return this.get<PeriodoLookup[]>('periodos');
+    }
+    const params = new HttpParams().set('periodicidade', periodicidade);
+    return this.get<PeriodoLookup[]>('periodos', `periodos:${periodicidade}`, params);
   }
 
   suportes(): Observable<NomeadoLookup[]> {
@@ -55,5 +67,10 @@ export class LookupsService {
 
   pois(): Observable<NomeadoLookup[]> {
     return this.get<NomeadoLookup[]>('pois');
+  }
+
+  /** `GET /api/wl/lookups/mapa-config` (VEI-RD-87) — chave do Google Maps, autenticada. */
+  mapaConfig(): Observable<MapaConfig> {
+    return this.get<MapaConfig>('mapa-config');
   }
 }

@@ -1,0 +1,210 @@
+<aurum-page-header
+  eyebrow="Comercial"
+  titulo="Agências"
+  subtitulo="Agências parceiras vinculadas à exibidora e suas condições comerciais"
+>
+  <aurum-status-pill aurumPageHeaderBadge [rotulo]="total + ' agências'" tom="neutro" />
+  <aurum-button aurumPageHeaderAcoes variante="wine" (click)="abrirConsultaCnpj()">Nova Agência</aurum-button>
+</aurum-page-header>
+
+@if (erro) {
+  <p role="alert" class="agencias__vazio">{{ erro }}</p>
+}
+
+@if (formAberto) {
+  <aurum-card>
+    <h2>Nova agência</h2>
+
+    @if (!form) {
+      <!-- Passo obrigatório: consultar o CNPJ antes de abrir o formulário. CNPJ já
+           cadastrado propõe vínculo e nunca duplica a Agencia (PRD §8.14). -->
+      <aurum-filter-field rotulo="CNPJ" posicaoRotulo="acima">
+        <aurum-text-input
+          [valor]="cnpjConsulta"
+          (valorChange)="cnpjConsulta = $event"
+          placeholder="Somente números"
+          rotulo="CNPJ da agência"
+        />
+      </aurum-filter-field>
+      <div class="agencias__form-acoes">
+        <aurum-button variante="wine" (click)="consultarCnpj()">Consultar CNPJ</aurum-button>
+        <aurum-button variante="ghost" (click)="fecharForm()">Cancelar</aurum-button>
+      </div>
+    }
+
+    @if (consultaMensagem) {
+      <p class="agencias__aviso">{{ consultaMensagem }}</p>
+    }
+
+    @if (consultaCnpj && !consultaCnpj.JaVinculadaAEstaAfiliada) {
+      <div class="agencias__form-acoes">
+        <aurum-button variante="gold" (click)="vincular()">Vincular agência existente</aurum-button>
+        <aurum-button variante="ghost" (click)="fecharForm()">Cancelar</aurum-button>
+      </div>
+    }
+
+    @if (form) {
+      <!-- Afiliada é implícita: não existe seletor de exibidora neste formulário.
+           NÃO existe campo de prazo de pagamento — AgenciaCadastroCommand e a
+           entidade Agencia não têm o campo (PRD §5.5). -->
+      <div class="agencias__form">
+        <aurum-filter-field rotulo="Nome fantasia" posicaoRotulo="acima">
+          <aurum-text-input [valor]="form.Nome" (valorChange)="form.Nome = $event" rotulo="Nome fantasia" />
+        </aurum-filter-field>
+        <aurum-filter-field rotulo="Razão social" posicaoRotulo="acima">
+          <aurum-text-input [valor]="form.RazaoSocial" (valorChange)="form.RazaoSocial = $event" rotulo="Razão social" />
+        </aurum-filter-field>
+        <aurum-filter-field rotulo="CNPJ" posicaoRotulo="acima">
+          <aurum-text-input [valor]="form.Cnpj" (valorChange)="form.Cnpj = $event" rotulo="CNPJ" />
+        </aurum-filter-field>
+        <aurum-filter-field rotulo="Telefone" posicaoRotulo="acima">
+          <aurum-text-input [valor]="form.Telefone" (valorChange)="form.Telefone = $event" rotulo="Telefone" />
+        </aurum-filter-field>
+        <aurum-filter-field rotulo="E-mail" posicaoRotulo="acima">
+          <aurum-text-input [valor]="form.Email" (valorChange)="form.Email = $event" rotulo="E-mail" />
+        </aurum-filter-field>
+        <aurum-filter-field rotulo="Site" posicaoRotulo="acima">
+          <aurum-text-input [valor]="form.Site" (valorChange)="form.Site = $event" rotulo="Site" />
+        </aurum-filter-field>
+        <aurum-filter-field rotulo="Logradouro" posicaoRotulo="acima">
+          <aurum-text-input [valor]="form.Logradouro" (valorChange)="form.Logradouro = $event" rotulo="Logradouro" />
+        </aurum-filter-field>
+        <aurum-filter-field rotulo="Número" posicaoRotulo="acima">
+          <aurum-text-input [valor]="form.Numero" (valorChange)="form.Numero = $event" rotulo="Número" />
+        </aurum-filter-field>
+        <aurum-filter-field rotulo="Bairro" posicaoRotulo="acima">
+          <aurum-text-input [valor]="form.Bairro" (valorChange)="form.Bairro = $event" rotulo="Bairro" />
+        </aurum-filter-field>
+        <aurum-filter-field rotulo="CEP" posicaoRotulo="acima">
+          <aurum-text-input [valor]="form.Cep" (valorChange)="form.Cep = $event" rotulo="CEP" />
+        </aurum-filter-field>
+        <aurum-filter-field rotulo="Cidade" posicaoRotulo="acima">
+          <aurum-text-input [valor]="form.Cidade" (valorChange)="form.Cidade = $event" rotulo="Cidade" />
+        </aurum-filter-field>
+        <aurum-filter-field rotulo="UF" posicaoRotulo="acima">
+          <aurum-text-input [valor]="form.Uf" (valorChange)="form.Uf = $event" rotulo="UF" />
+        </aurum-filter-field>
+        <aurum-filter-field rotulo="Inscrição estadual" posicaoRotulo="acima">
+          <aurum-text-input [valor]="form.InscricaoEstadual" (valorChange)="form.InscricaoEstadual = $event" rotulo="Inscrição estadual" />
+        </aurum-filter-field>
+        <aurum-filter-field rotulo="Inscrição municipal" posicaoRotulo="acima">
+          <aurum-text-input [valor]="form.InscricaoMunicipal" (valorChange)="form.InscricaoMunicipal = $event" rotulo="Inscrição municipal" />
+        </aurum-filter-field>
+        <aurum-filter-field rotulo="Observações" posicaoRotulo="acima">
+          <aurum-text-input [valor]="form.ObservacoesAfiliada" (valorChange)="form.ObservacoesAfiliada = $event" rotulo="Observações" />
+        </aurum-filter-field>
+      </div>
+      <div class="agencias__form-acoes">
+        <aurum-button variante="wine" (click)="salvar()">Salvar agência</aurum-button>
+        <aurum-button variante="ghost" (click)="fecharForm()">Cancelar</aurum-button>
+      </div>
+    }
+  </aurum-card>
+}
+
+<div class="agencias__barra">
+  <div class="agencias__busca">
+    <aurum-filter-field rotulo="Buscar" posicaoRotulo="acima">
+      <aurum-text-input
+        [valor]="busca"
+        (valorChange)="busca = $event"
+        placeholder="Buscar por nome, razão social, CNPJ ou cidade…"
+        rotulo="Buscar agências"
+      />
+    </aurum-filter-field>
+  </div>
+
+  <!-- Filtros de status como ABAS, conforme o frame 233:11873. -->
+  <div class="agencias__abas" role="tablist" aria-label="Filtrar por status do vínculo">
+    @for (item of abas; track item) {
+      <button
+        type="button"
+        role="tab"
+        class="agencias__aba"
+        [attr.aria-selected]="aba === item"
+        (click)="selecionarAba(item)"
+      >
+        {{ item }}
+      </button>
+    }
+  </div>
+
+  <aurum-button variante="outline" (click)="carregar()">Aplicar</aurum-button>
+
+  <aurum-view-selector storageKey="agencias" [modo]="modo" (modoChange)="modo = $event" />
+</div>
+
+@if (carregando) {
+  <p class="agencias__vazio">Carregando agências…</p>
+} @else if (agencias.length === 0) {
+  <p class="agencias__vazio">Nenhuma agência encontrada para este filtro.</p>
+} @else if (modo === 'lista') {
+  <table aurumTable>
+    <thead>
+      <tr aurumTableRow>
+        <th aurumTableHeaderCell scope="col">Agência / Empresa</th>
+        <th aurumTableHeaderCell scope="col">Informações de Contato</th>
+        <th aurumTableHeaderCell scope="col">Status</th>
+        <th aurumTableHeaderCell scope="col">Campanhas</th>
+        <th aurumTableHeaderCell scope="col">Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (agencia of agencias; track agencia.Id) {
+        <tr aurumTableRow>
+          <td aurumTableCell>
+            <span class="agencias__empresa">
+              <strong>{{ agencia.Nome }}</strong>
+              <span class="agencias__razao">{{ agencia.RazaoSocial }}</span>
+            </span>
+          </td>
+          <td aurumTableCell>
+            <!-- Bloco agregado, como o Figma consolidou: CNPJ · Cidade/UF · e-mail · telefone -->
+            <span class="agencias__contato">
+              <span>{{ agencia.Cnpj }}</span>
+              <span>{{ agencia.Cidade }}/{{ agencia.Uf }}</span>
+              <span>{{ agencia.Email }}</span>
+              <span>{{ agencia.Telefone }}</span>
+            </span>
+          </td>
+          <td aurumTableCell>
+            <aurum-status-pill [rotulo]="rotuloDoStatus(agencia.Status)" [tom]="tomDoStatus(agencia.Status)" />
+          </td>
+          <td aurumTableCell>{{ agencia.Campanhas }} campanhas</td>
+          <td aurumTableCell>
+            <span class="agencias__acoes">
+              <aurum-button variante="ghost">Editar</aurum-button>
+              <!-- Inativação, não exclusão: o rótulo diz o que o sistema faz. -->
+              <aurum-button variante="outline" (click)="alternarStatus(agencia)">
+                {{ rotuloDaAcaoDeStatus(agencia) }}
+              </aurum-button>
+            </span>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+} @else {
+  <div class="agencias__cards">
+    @for (agencia of agencias; track agencia.Id) {
+      <aurum-card>
+        <strong>{{ agencia.Nome }}</strong>
+        <p class="agencias__razao">{{ agencia.RazaoSocial }}</p>
+        <p class="agencias__contato">
+          <span>{{ agencia.Cnpj }}</span>
+          <span>{{ agencia.Cidade }}/{{ agencia.Uf }}</span>
+          <span>{{ agencia.Email }}</span>
+          <span>{{ agencia.Telefone }}</span>
+        </p>
+        <aurum-status-pill [rotulo]="rotuloDoStatus(agencia.Status)" [tom]="tomDoStatus(agencia.Status)" />
+        <p>{{ agencia.Campanhas }} campanhas</p>
+        <span class="agencias__acoes">
+          <aurum-button variante="ghost">Editar</aurum-button>
+          <aurum-button variante="outline" (click)="alternarStatus(agencia)">
+            {{ rotuloDaAcaoDeStatus(agencia) }}
+          </aurum-button>
+        </span>
+      </aurum-card>
+    }
+  </div>
+}
