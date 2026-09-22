@@ -16,7 +16,21 @@ export interface LocalListItem {
   fonteOrigem: number | null;
   fonteTimestamp: string | null;
   statusExibicao: StatusExibicao;
+
+  // --- VEI-RD-87: colunas consolidadas da primeira peça ativa do Local ---
+  endereco: string | null;
+  suporte: string | null;
+  formatoDimensao: string | null;
+  valorPadrao: number | null;
+  /** `PeriodicidadeEnum` do Core: 1=Semanal, 2=Bissemanal, 3=Mensal. */
+  periodicidade: number | null;
 }
+
+export const PERIODICIDADE_LABEL: Record<number, string> = {
+  1: 'Semanal',
+  2: 'Bissemanal',
+  3: 'Mensal',
+};
 
 /**
  * Payload de "Dados do Local" (etapa 1 do wizard) — shape FLAT usado

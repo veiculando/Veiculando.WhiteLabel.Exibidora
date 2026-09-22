@@ -7,13 +7,24 @@ import { authGuard } from './core/auth/auth.guard';
  * Permissões granulares são configuradas via `data.permission` em cada rota protegida.
  * O `authGuard` lê essa propriedade e valida contra as claims do JWT (ADR-WL-007).
  *
- * Whitelist de permissões válidas (espelham WlPermissoesValidas do domínio):
+ * Whitelist de permissões válidas (espelha WlPermissoesValidas do domínio,
+ * item a item — lista canônica, VEI-RD-93. "Checking" foi reconciliado para
+ * "CheckingGerenciar", único nome sem verbo no repo até então; usuários com a
+ * claim antiga são migrados via RenomearCheckingEGrantProgramacaoVisualizar):
  *  - 'PecaGerenciar'
- *  - 'CheckingGerenciar' (renomeada de 'Checking' em VEI-RD-93 — confirmado
- *    lendo WlPermissoesValidas.cs real no workspace irmão `Veiculando`)
+ *  - 'CheckingGerenciar'
  *  - 'PedidoReservaGerenciar'
  *  - 'PedidoInsercaoGerenciar'
  *  - 'UsuarioAfiliadaGerenciar'
+ *  - 'ClienteGerenciar'      (Anunciantes, Agências, Análise KYC, Campanhas)
+ *  - 'PedidoCriar'           (Prospecção)
+ *  - 'ProgramacaoVisualizar'
+ *  - 'FinanceiroVisualizar'
+ *  - 'RelatorioExportar'
+ *  - 'FinanceiroVisualizar' (VEI-RD-85/92, Plano 2 — VEI-RD-93)
+ *  - 'RelatorioExportar' (VEI-RD-92, Plano 2 — VEI-RD-93)
+ *  - 'CheckingGerenciar' (renomeada de 'Checking' em VEI-RD-93 — confirmado
+ *    lendo WlPermissoesValidas.cs real no workspace irmão `Veiculando`)
  *  - 'ProgramacaoVisualizar' (VEI-RD-86e — ProgramacaoController real exige
  *    essa policy; ver a rota /programacao abaixo)
  *
@@ -95,6 +106,9 @@ export const routes: Routes = [
       {
         path: 'programacao',
         title: 'Programação',
+        // Antes exigia só sessão (guard do pai). Passa a exigir ProgramacaoVisualizar
+        // (VEI-RD-93) — quem já acessava é migrado via
+        // RenomearCheckingEGrantProgramacaoVisualizar, não perde acesso no deploy.
         // VEI-RD-86e: ProgramacaoController.cs real exige a policy
         // ProgramacaoVisualizar — confirmado lendo o controller no workspace
         // irmão do BFF. Mesmo padrão de /checking e /checkout neste arquivo.
@@ -194,6 +208,14 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/locais/pecas/peca-form.component').then(m => m.PecaFormComponent),
       },
+      {
+        path: 'pecas/valores',
+        title: 'Valores de peças',
+        data: { permission: 'PecaGerenciar' },
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./pages/pecas-valores/pecas-valores.component').then((m) => m.PecasValoresComponent),
+      },
 
       // --- Comercial ---
       {
@@ -215,6 +237,68 @@ export const routes: Routes = [
           import('./pages/pedidos-insercao/pedidos-insercao.component').then(
             (m) => m.PedidosInsercaoComponent
           ),
+      },
+
+      {
+        path: 'agencias',
+        title: 'Agências',
+        data: { permission: 'ClienteGerenciar' },
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./pages/agencias/agencias.component').then((m) => m.AgenciasComponent),
+      },
+      {
+        path: 'kyc',
+        title: 'Análise KYC',
+        data: { permission: 'ClienteGerenciar' },
+        canActivate: [authGuard],
+        loadComponent: () => import('./pages/kyc/kyc.component').then((m) => m.KycComponent),
+      },
+      {
+        path: 'kyc/:id',
+        title: 'Análise KYC',
+        data: { permission: 'ClienteGerenciar' },
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./pages/kyc/detalhe/kyc-detalhe.component').then((m) => m.KycDetalheComponent),
+      },
+      {
+        path: 'campanhas',
+        title: 'Campanhas de mídia',
+        data: { permission: 'ClienteGerenciar' },
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./pages/campanhas/campanhas.component').then((m) => m.CampanhasComponent),
+      },
+      {
+        path: 'prospeccao',
+        title: 'Prospecção',
+        data: { permission: 'PedidoCriar' },
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./pages/prospeccao/prospeccao.component').then((m) => m.ProspeccaoComponent),
+      },
+
+      // --- Configurações ---
+      {
+        path: 'configuracoes/cadastro-acesso',
+        title: 'Cadastro e acesso',
+        data: { permission: 'UsuarioAfiliadaGerenciar' },
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./pages/configuracoes/cadastro-acesso/cadastro-acesso.component').then(
+            (m) => m.CadastroAcessoComponent
+          ),
+      },
+
+      // --- Financeiro ---
+      {
+        path: 'relatorios',
+        title: 'Relatórios',
+        data: { permission: 'FinanceiroVisualizar' },
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./pages/relatorios/relatorios.component').then((m) => m.RelatoriosComponent),
       },
 
       // --- Administração ---

@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, shareReplay, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { CidadeLookup, NomeadoLookup, Periodicidade, PeriodoLookup } from '../models/wl.models';
+import { CidadeLookup, MapaConfig, NomeadoLookup, Periodicidade, PeriodoLookup } from '../models/wl.models';
 
 @Injectable({ providedIn: 'root' })
 export class LookupsService {
@@ -67,5 +67,10 @@ export class LookupsService {
 
   pois(): Observable<NomeadoLookup[]> {
     return this.get<NomeadoLookup[]>('pois');
+  }
+
+  /** `GET /api/wl/lookups/mapa-config` (VEI-RD-87) — chave do Google Maps, autenticada. */
+  mapaConfig(): Observable<MapaConfig> {
+    return this.get<MapaConfig>('mapa-config');
   }
 }
