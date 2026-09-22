@@ -57,12 +57,25 @@ export interface OperadorLogado {
 
 /**
  * Whitelist de permissoes — espelha `WlPermissoesValidas` no dominio.
- * Sao os 5 identificadores exatos aceitos pelo BFF em `POST/PUT /api/wl/usuarios`;
- * qualquer outro valor volta como 400.
+ * Sao os 5 identificadores exatos aceitos pelo BFF em `POST/PUT /api/wl/usuarios`
+ * que já têm rota/feature nesta sprint; qualquer outro valor volta como 400.
+ *
+ * `CheckingGerenciar` (não `'Checking'`): reconciliado no domínio em
+ * VEI-RD-93 — confirmado lendo `WlPermissoesValidas.cs` real no workspace
+ * irmão `Veiculando` em 2026-09-22 (`"Checking" era a única exceção no repo
+ * e foi reconciliada para "CheckingGerenciar"`). Usar o nome antigo aqui
+ * fazia o `authGuard` nunca bater contra a claim real do JWT — ninguém
+ * conseguia abrir `/checking` nem `/checkout`.
+ *
+ * `WlPermissoesValidas.Lista` no domínio tem 10 entradas no total
+ * (`ClienteGerenciar`, `PedidoCriar`, `ProgramacaoVisualizar`,
+ * `FinanceiroVisualizar`, `RelatorioExportar` além destas 5) — as outras 5
+ * ainda não têm rota/feature correspondente nesta sprint, então ficam de
+ * fora desta whitelist por ora.
  */
 export const PERMISSOES_WL = [
   'PecaGerenciar',
-  'Checking',
+  'CheckingGerenciar',
   'PedidoReservaGerenciar',
   'PedidoInsercaoGerenciar',
   'UsuarioAfiliadaGerenciar',
@@ -72,7 +85,7 @@ export type PermissaoWl = (typeof PERMISSOES_WL)[number];
 
 export const PERMISSOES_WL_ROTULOS: Record<PermissaoWl, string> = {
   PecaGerenciar: 'Gerenciar locais e peças',
-  Checking: 'Enviar checking',
+  CheckingGerenciar: 'Enviar checking',
   PedidoReservaGerenciar: 'Gerenciar pedidos de reserva',
   PedidoInsercaoGerenciar: 'Consultar pedidos de inserção',
   UsuarioAfiliadaGerenciar: 'Gerenciar operadores',

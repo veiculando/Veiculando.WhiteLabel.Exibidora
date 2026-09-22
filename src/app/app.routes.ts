@@ -9,7 +9,8 @@ import { authGuard } from './core/auth/auth.guard';
  *
  * Whitelist de permissões válidas (espelham WlPermissoesValidas do domínio):
  *  - 'PecaGerenciar'
- *  - 'Checking'
+ *  - 'CheckingGerenciar' (renomeada de 'Checking' em VEI-RD-93 — confirmado
+ *    lendo WlPermissoesValidas.cs real no workspace irmão `Veiculando`)
  *  - 'PedidoReservaGerenciar'
  *  - 'PedidoInsercaoGerenciar'
  *  - 'UsuarioAfiliadaGerenciar'
@@ -98,7 +99,7 @@ export const routes: Routes = [
       {
         path: 'checking',
         title: 'Checking',
-        data: { permission: 'Checking' },
+        data: { permission: 'CheckingGerenciar' },
         canActivate: [authGuard],
         loadComponent: () =>
           import('./pages/checking/checking.component').then((m) => m.CheckingComponent),
@@ -106,7 +107,7 @@ export const routes: Routes = [
       {
         path: 'checkout',
         title: 'Check out',
-        data: { permission: 'Checking' },
+        data: { permission: 'CheckingGerenciar' },
         canActivate: [authGuard],
         loadComponent: () =>
           import('./pages/checkout/checkout-listagem.component').then((m) => m.CheckoutListagemComponent),
@@ -114,7 +115,7 @@ export const routes: Routes = [
       {
         path: 'checkout/:id',
         title: 'Check out',
-        data: { permission: 'Checking' },
+        data: { permission: 'CheckingGerenciar' },
         canActivate: [authGuard],
         loadComponent: () =>
           import('./pages/checkout/checkout-detalhe.component').then((m) => m.CheckoutDetalheComponent),

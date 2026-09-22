@@ -87,7 +87,7 @@ describe('AuthService', () => {
             expiresInMinutes: 60,
             nome: 'Fulano',
             email: 'a@b.com',
-            permissoes: ['Checking'],
+            permissoes: ['CheckingGerenciar'],
         });
 
         expect(valida).toBe(true);
