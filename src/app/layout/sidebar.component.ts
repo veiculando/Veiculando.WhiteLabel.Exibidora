@@ -48,8 +48,8 @@ const GRUPOS: GrupoNav[] = [
   {
     titulo: 'Operacional',
     itens: [
-      { rotulo: 'Programação', rota: '/programacao' },
-      { rotulo: 'Checking', rota: '/checking', permissao: 'Checking' },
+      { rotulo: 'Programação', rota: '/programacao', permissao: 'ProgramacaoVisualizar' },
+      { rotulo: 'Checking', rota: '/checking', permissao: 'CheckingGerenciar' },
     ],
   },
   {
