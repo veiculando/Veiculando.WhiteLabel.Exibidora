@@ -32,7 +32,7 @@ describe('SidebarComponent', () => {
   }
 
   it('com todas as permissoes, segue a ordem de grupos do PRD secao 4, sem "Geral"', () => {
-    configurar(['PecaGerenciar', 'Checking', 'PedidoReservaGerenciar', 'PedidoInsercaoGerenciar', 'UsuarioAfiliadaGerenciar']);
+    configurar(['PecaGerenciar', 'CheckingGerenciar', 'ProgramacaoVisualizar', 'PedidoReservaGerenciar', 'PedidoInsercaoGerenciar', 'UsuarioAfiliadaGerenciar']);
     fixture.detectChanges();
 
     expect(textoGrupos()).toEqual(['Inventário', 'Comercial', 'Operacional', 'Configurações']);
@@ -47,7 +47,7 @@ describe('SidebarComponent', () => {
   });
 
   it('item sem rota nunca aparece (Prospecção, Agências, Valores de Peças, Relatórios, etc.)', () => {
-    configurar(['PecaGerenciar', 'Checking', 'PedidoReservaGerenciar', 'PedidoInsercaoGerenciar', 'UsuarioAfiliadaGerenciar']);
+    configurar(['PecaGerenciar', 'CheckingGerenciar', 'ProgramacaoVisualizar', 'PedidoReservaGerenciar', 'PedidoInsercaoGerenciar', 'UsuarioAfiliadaGerenciar']);
     fixture.detectChanges();
     const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
     for (const rotuloSemRota of [
@@ -59,7 +59,7 @@ describe('SidebarComponent', () => {
   });
 
   it('grupo sem nenhum item habilitado (Financeiro) nao renderiza nem o titulo', () => {
-    configurar(['PecaGerenciar', 'Checking', 'PedidoReservaGerenciar', 'PedidoInsercaoGerenciar', 'UsuarioAfiliadaGerenciar']);
+    configurar(['PecaGerenciar', 'CheckingGerenciar', 'ProgramacaoVisualizar', 'PedidoReservaGerenciar', 'PedidoInsercaoGerenciar', 'UsuarioAfiliadaGerenciar']);
     fixture.detectChanges();
     expect(textoGrupos()).not.toContain('Financeiro');
   });
@@ -72,15 +72,34 @@ describe('SidebarComponent', () => {
     expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('Locais');
   });
 
-  it('Programação nao exige permissao e aparece mesmo sem nenhuma concedida', () => {
+  // VEI-RD-93: os dois itens abaixo guardam permissao, e cada guarda e exercitada
+  // dos DOIS lados. O teste anterior afirmava que Programação nao exigia permissao
+  // nenhuma — era a regressao escrita como contrato.
+  it('Programação exige ProgramacaoVisualizar e some sem ela', () => {
+    configurar(['ProgramacaoVisualizar']);
+    fixture.detectChanges();
+    const comPermissao = (fixture.nativeElement as HTMLElement).querySelector('a[href="/programacao"]');
+    expect(comPermissao?.textContent?.trim()).toBe('Programação');
+
     configurar([]);
     fixture.detectChanges();
-    const link = (fixture.nativeElement as HTMLElement).querySelector('a[href="/programacao"]');
-    expect(link?.textContent?.trim()).toBe('Programação');
+    expect((fixture.nativeElement as HTMLElement).querySelector('a[href="/programacao"]')).toBeNull();
+  });
+
+  it('Checking exige CheckingGerenciar, e o nome antigo "Checking" nao abre a porta', () => {
+    configurar(['CheckingGerenciar']);
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelector('a[href="/checking"]')).not.toBeNull();
+
+    // A claim antiga foi renomeada pela migration RenomearCheckingEGrantProgramacaoVisualizar.
+    // Aceitar 'Checking' aqui reabriria a colisao que fazia o authGuard falhar aberto.
+    configurar(['Checking']);
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelector('a[href="/checking"]')).toBeNull();
   });
 
   it('nenhum item renderizado aponta para uma rota que nao existe no app', () => {
-    configurar(['PecaGerenciar', 'Checking', 'PedidoReservaGerenciar', 'PedidoInsercaoGerenciar', 'UsuarioAfiliadaGerenciar']);
+    configurar(['PecaGerenciar', 'CheckingGerenciar', 'ProgramacaoVisualizar', 'PedidoReservaGerenciar', 'PedidoInsercaoGerenciar', 'UsuarioAfiliadaGerenciar']);
     fixture.detectChanges();
     const rotasConhecidas = ['/dashboard', '/locais', '/programacao', '/checking', '/pedidos-reserva', '/pedidos-insercao', '/usuarios'];
     const links = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('a[href]'));
