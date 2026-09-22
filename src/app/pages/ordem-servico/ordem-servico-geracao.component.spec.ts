@@ -7,13 +7,18 @@ import { environment } from '../../../environments/environment';
 import { Periodicidade } from '../../core/models/wl.models';
 
 /**
- * OS — geração (VEI-RD-88b, Figma `186:86`). Após criar a OS, o modal de
- * entrega (VEI-RD-88c) abre automaticamente — sem essa etapa faltaria
- * caminho para imprimir a planilha logo depois de gerar.
+ * OS — geração (VEI-RD-88b, Figma `186:86`).
+ *
+ * `OrdensServicoController` real (BFF, 2026-09-22) não tem
+ * `/pecas-elegiveis` nem recebe `opcoes` no `POST /api/wl/ordens-servico`
+ * (só `idPeriodo`/`idPecas`) — a busca de peças reusa
+ * `POST /api/wl/programacao/listar` (VEI-RD-86), e a resposta de criação não
+ * devolve o período (o componente usa o que já tem localmente).
  */
 describe('OrdemServicoGeracaoComponent', () => {
   let httpMock: HttpTestingController;
-  const base = `${environment.bffUrl}/ordens-servico`;
+  const baseOs = `${environment.bffUrl}/ordens-servico`;
+  const baseProgramacao = `${environment.bffUrl}/programacao/listar`;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -36,29 +41,52 @@ describe('OrdemServicoGeracaoComponent', () => {
     return componente;
   }
 
-  it('busca pecas elegiveis via POST {bffUrl}/ordens-servico/pecas-elegiveis', () => {
+  it('busca pecas via POST {bffUrl}/programacao/listar, pinando o mesmo periodo nos dois limites', () => {
     const componente = criar();
     componente.idPeriodo = 10;
 
     componente.buscarPecas();
 
-    const req = httpMock.expectOne(`${base}/pecas-elegiveis`);
+    const req = httpMock.expectOne((r) => r.url === baseProgramacao);
     expect(req.request.method).toBe('POST');
-    req.flush([
-      { pecaId: 1, codigo: 'PC-1', tabu: 'T1', rota: 'R1', endereco: 'Rua A', bairro: 'Centro', campanhaAtual: null, campanhaAnterior: null, outQtd: 1, dataColagem: null, servico: null },
-    ]);
+    expect(req.request.body.idPeriodoInicial).toBe(10);
+    expect(req.request.body.idPeriodoFinal).toBe(10);
+    req.flush({
+      itens: [
+        { pecaId: 1, pecaCodigo: 'PC-1', localId: 1, localCodigo: 'L-1', periodoId: 10, periodoNome: 'Bissemana 16', status: 'Autorizada', endereco: 'Rua A', bairro: 'Centro' },
+      ],
+      page: 1,
+      pageSize: 100,
+      total: 1,
+      totalPaginas: 1,
+    });
 
     expect(componente.pecas.length).toBe(1);
+  });
+
+  it('nao chama /pecas-elegiveis (endpoint que nao existe no BFF real)', () => {
+    const componente = criar();
+    componente.idPeriodo = 10;
+    componente.buscarPecas();
+
+    httpMock.expectNone(`${baseOs}/pecas-elegiveis`);
+    httpMock.expectOne((r) => r.url === baseProgramacao).flush({ itens: [], page: 1, pageSize: 100, total: 0, totalPaginas: 0 });
   });
 
   it('selecionar todas marca/desmarca todas as pecas buscadas', () => {
     const componente = criar();
     componente.idPeriodo = 10;
     componente.buscarPecas();
-    httpMock.expectOne(`${base}/pecas-elegiveis`).flush([
-      { pecaId: 1, codigo: 'PC-1' } as never,
-      { pecaId: 2, codigo: 'PC-2' } as never,
-    ]);
+    httpMock.expectOne((r) => r.url === baseProgramacao).flush({
+      itens: [
+        { pecaId: 1, pecaCodigo: 'PC-1', localId: 1, localCodigo: 'L-1', periodoId: 10, periodoNome: 'Bissemana 16', status: 'Autorizada' },
+        { pecaId: 2, pecaCodigo: 'PC-2', localId: 1, localCodigo: 'L-1', periodoId: 10, periodoNome: 'Bissemana 16', status: 'Autorizada' },
+      ],
+      page: 1,
+      pageSize: 100,
+      total: 2,
+      totalPaginas: 1,
+    });
 
     componente.selecionarTodas(true);
     expect(componente.selecionadas.size).toBe(2);
@@ -72,24 +100,28 @@ describe('OrdemServicoGeracaoComponent', () => {
     const componente = criar();
     componente.idPeriodo = 10;
     componente.gerarOs();
-    httpMock.expectNone(base);
+    httpMock.expectNone(baseOs);
   });
 
-  it('gerar OS cria a ordem e abre o modal de entrega com o contexto certo', () => {
+  it('gerar OS envia so idPeriodo/idPecas (sem opcoes) e abre o modal com o periodo conhecido localmente', () => {
     const componente = criar();
     componente.idPeriodo = 10;
     componente.selecionadas.add(1);
 
     componente.gerarOs();
 
-    const req = httpMock.expectOne(base);
+    const req = httpMock.expectOne(baseOs);
     expect(req.request.method).toBe('POST');
-    expect(req.request.body.idPeriodo).toBe(10);
-    expect(req.request.body.idsPeca).toEqual([1]);
-    req.flush({ id: 99, numero: 42, periodoNome: 'Bissemana 16, 2026', pecasCount: 1 });
+    expect(req.request.body).toEqual({ idPeriodo: 10, idPecas: [1] });
+    req.flush({ id: 99, numeroFormatado: 'OS #0042', pecasCount: 1 });
 
     expect(componente.modalAberto).toBe(true);
-    expect(componente.contextoEntrega).toEqual({ id: 99, numero: 42, pecasCount: 1, periodoNome: 'Bissemana 16, 2026' });
+    expect(componente.contextoEntrega).toEqual({
+      id: 99,
+      numeroFormatado: 'OS #0042',
+      pecasCount: 1,
+      periodoNome: 'Bissemana 16',
+    });
   });
 
   it('trocar periodicidade recarrega periodos e limpa o periodo selecionado', () => {
@@ -112,7 +144,7 @@ describe('OrdemServicoGeracaoComponent', () => {
     componente.idPeriodo = 10;
     componente.selecionadas.add(1);
     componente.gerarOs();
-    httpMock.expectOne(base).flush({ id: 99, numero: 42, periodoNome: 'Bissemana 16, 2026', pecasCount: 1 });
+    httpMock.expectOne(baseOs).flush({ id: 99, numeroFormatado: 'OS #0042', pecasCount: 1 });
 
     componente.fecharModalEIrParaDetalhe();
 

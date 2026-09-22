@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { mensagemDeErro } from '../../core/http/api-error';
-import { CidadeLookup, OsListItem, PeriodoLookup, STATUS_OS } from '../../core/models/wl.models';
+import { CidadeLookup, OsListItem, PeriodoLookup, STATUS_OS, STATUS_OS_ROTULOS } from '../../core/models/wl.models';
 import { LookupsService } from '../../core/services/lookups.service';
 import { OrdemServicoService } from '../../core/services/ordem-servico.service';
 import { PaginadorComponent } from '../../shared/paginador.component';
@@ -101,24 +101,19 @@ const TODOS = '';
           <tbody>
             @for (os of ordens; track os.id) {
               <tr aurumTableRow>
-                <td aurumTableCell>OS #{{ numeroFormatado(os.numero) }}</td>
-                <td aurumTableCell>{{ os.periodoNome }}</td>
+                <td aurumTableCell>{{ os.numeroFormatado }}</td>
+                <td aurumTableCell>{{ os.periodo || '—' }}</td>
                 <td aurumTableCell>{{ os.cidades.length > 0 ? os.cidades.join(', ') : '—' }}</td>
                 <td aurumTableCell>
-                  @if (os.responsavelNome) {
-                    <span class="os-responsavel">
-                      @if (os.responsavelAvatarUrl) {
-                        <img class="os-avatar" [src]="os.responsavelAvatarUrl" [alt]="os.responsavelNome" />
-                      }
-                      {{ os.responsavelNome }}
-                    </span>
+                  @if (os.responsavel) {
+                    {{ os.responsavel }}
                   } @else {
                     <span class="vazio">Não atribuída</span>
                   }
                 </td>
                 <td aurumTableCell>{{ os.pecasCount }}</td>
-                <td aurumTableCell><aurum-status-pill [rotulo]="os.status" tom="neutro" /></td>
-                <td aurumTableCell>{{ os.criadaEm | date: 'dd/MM/yyyy HH:mm' }}</td>
+                <td aurumTableCell><aurum-status-pill [rotulo]="rotuloStatus(os.status)" tom="neutro" /></td>
+                <td aurumTableCell>{{ os.dataCadastro | date: 'dd/MM/yyyy HH:mm' }}</td>
                 <td aurumTableCell class="os-acoes">
                   <a class="os-link" [routerLink]="['/ordens-servico', os.id]">Ver detalhe</a>
                   <aurum-button variante="ghost" (click)="abrirEntrega(os)">Entregar</aurum-button>
@@ -175,17 +170,6 @@ const TODOS = '';
         gap: 12px;
         margin-bottom: 16px;
       }
-      .os-responsavel {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-      }
-      .os-avatar {
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        object-fit: cover;
-      }
       .os-acoes {
         display: flex;
         align-items: center;
@@ -213,7 +197,7 @@ export class OrdemServicoListagemComponent implements OnInit {
   readonly String = String;
   readonly opcoesStatus: AurumDropdownOpcao[] = [
     { valor: TODOS, rotulo: 'Todos' },
-    ...STATUS_OS.map((s) => ({ valor: s, rotulo: s })),
+    ...STATUS_OS.map((s) => ({ valor: s, rotulo: STATUS_OS_ROTULOS[s] })),
   ];
   /**
    * Sem endpoint de responsáveis/coladores nesta sprint (não existe fluxo de
@@ -299,12 +283,12 @@ export class OrdemServicoListagemComponent implements OnInit {
     this.carregar(1);
   }
 
-  numeroFormatado(numero: number): string {
-    return String(numero).padStart(4, '0');
+  rotuloStatus(status: string): string {
+    return STATUS_OS_ROTULOS[status] || status;
   }
 
   abrirEntrega(os: OsListItem): void {
-    this.contextoEntrega = { id: os.id, numero: os.numero, pecasCount: os.pecasCount, periodoNome: os.periodoNome };
+    this.contextoEntrega = { id: os.id, numeroFormatado: os.numeroFormatado, pecasCount: os.pecasCount, periodoNome: os.periodo };
     this.modalAberto = true;
   }
 

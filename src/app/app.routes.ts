@@ -112,7 +112,7 @@ export const routes: Routes = [
           import('./pages/checkout/checkout-listagem.component').then((m) => m.CheckoutListagemComponent),
       },
       {
-        path: 'checkout/:codigo',
+        path: 'checkout/:id',
         title: 'Check out',
         data: { permission: 'Checking' },
         canActivate: [authGuard],
@@ -121,11 +121,9 @@ export const routes: Routes = [
       },
       // --- Ordem de Serviço (VEI-RD-88) ---
       //
-      // Sem `data.permission`: nenhuma das 5 permissões da whitelist cobre OS
-      // semanticamente, e a whitelist é fixa (WlPermissoesValidas do domínio)
-      // — inventar uma aqui quebraria `app.routes.spec.ts`. Mesmo padrão de
-      // /programacao: exige sessão (authGuard no nó pai), não uma claim
-      // específica.
+      // `OrdensServicoController` real reusa a policy `PecaGerenciar` (já na
+      // whitelist — uma OS é, no fim, uma operação sobre peças). Confirmado
+      // lendo o controller no workspace irmão do BFF, 2026-09-22.
       //
       // ⚠️ Nenhuma rota `/atribuir` ou `/reatribuir` aqui — regra dura,
       // decisão humana 2026-09-17: a atribuição de colador não existe nesta
@@ -133,6 +131,8 @@ export const routes: Routes = [
       {
         path: 'ordens-servico',
         title: 'Ordem de Serviço',
+        data: { permission: 'PecaGerenciar' },
+        canActivate: [authGuard],
         loadComponent: () =>
           import('./pages/ordem-servico/ordem-servico-listagem.component').then(
             (m) => m.OrdemServicoListagemComponent
@@ -141,6 +141,8 @@ export const routes: Routes = [
       {
         path: 'ordens-servico/nova',
         title: 'Gerar Ordem de Serviço',
+        data: { permission: 'PecaGerenciar' },
+        canActivate: [authGuard],
         loadComponent: () =>
           import('./pages/ordem-servico/ordem-servico-geracao.component').then(
             (m) => m.OrdemServicoGeracaoComponent
@@ -149,6 +151,8 @@ export const routes: Routes = [
       {
         path: 'ordens-servico/:id',
         title: 'Ordem de Serviço',
+        data: { permission: 'PecaGerenciar' },
+        canActivate: [authGuard],
         loadComponent: () =>
           import('./pages/ordem-servico/ordem-servico-detalhe.component').then(
             (m) => m.OrdemServicoDetalheComponent

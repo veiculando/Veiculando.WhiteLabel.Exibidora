@@ -8,22 +8,26 @@ import { environment } from '../../../environments/environment';
 /**
  * Check out — detalhe (VEI-RD-91, Figma `184:501`).
  *
+ * `GET /api/wl/checking/{id:int}` (confirmado lendo `CheckingController.GetById`
+ * real no workspace irmão do BFF, 2026-09-22). O "histórico de avaliação" é
+ * o estado ATUAL de cada foto (`itens[].fotos[]`), não uma timeline — o
+ * domínio sobrescreve o estado anterior, não guarda avaliações passadas.
+ *
  * VEI-RD-91d (regra dura desta sprint): "Aprovar Checking"/"Recusar
- * Checking" não podem existir no DOM — nem como botão desabilitado. Um
- * controle que existe e não funciona ensina errado ao usuário.
+ * Checking" não podem existir no DOM — nem como botão desabilitado.
  */
 describe('CheckoutDetalheComponent', () => {
   let httpMock: HttpTestingController;
-  const base = `${environment.bffUrl}/checkout`;
+  const base = `${environment.bffUrl}/checking`;
 
-  function configurar(codigo = 'PI-1') {
+  function configurar(id = '1') {
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
         {
           provide: ActivatedRoute,
-          useValue: { snapshot: { paramMap: convertToParamMap({ codigo }) } },
+          useValue: { snapshot: { paramMap: convertToParamMap({ id }) } },
         },
       ],
     });
@@ -32,77 +36,103 @@ describe('CheckoutDetalheComponent', () => {
 
   afterEach(() => httpMock.verify());
 
-  it('nunca renderiza Aprovar Checking / Recusar Checking, nem desabilitados', () => {
-    configurar();
-    const fixture = TestBed.createComponent(CheckoutDetalheComponent);
-    // Um unico detectChanges() dispara o ngOnInit — nunca chamar ngOnInit()
-    // manualmente E TAMBEM detectChanges(): o Angular invocaria ngOnInit de
-    // novo no primeiro detectChanges, disparando a requisicao em dobro.
-    fixture.detectChanges();
-
-    httpMock.expectOne(`${base}/PI-1`).flush({
+  function detalhePadrao() {
+    return {
       id: 1,
-      codigo: 'PI-1',
+      status: 'Iniciado',
+      dataCadastro: '2026-07-01T10:00:00',
+      dataAtualizacao: null,
+      piCodigo: 'PI-1',
       campanha: 'Campanha X',
       anunciante: 'Anunciante Y',
-      cidade: 'São Paulo',
-      periodoVeiculacaoInicio: '2026-07-01',
-      periodoVeiculacaoFim: '2026-07-31',
-      status: 'Checking',
       itens: [
         {
           idPedidoItem: 1,
           pecaCodigo: 'PC-1',
-          fotoUrl: null,
-          endereco: 'Rua A, 100',
-          enderecoMapaUrl: 'https://maps.example/x',
-          statusItem: 'Autorizado',
-          statusChecking: 'Aguardando foto',
-          fotosRecebidas: [],
-          historicoAvaliacao: [],
+          localCodigo: 'L-1',
+          localDescricao: 'Rua A, 100',
+          cidade: 'São Paulo',
+          periodo: 'Bissemana 16',
+          status: 'Iniciado',
+          fotos: [
+            {
+              id: 10,
+              downloadUrl: '/api/wl/checking/item/1/fotos/10/arquivo',
+              status: 'Recebido',
+              nota: null,
+              observacaoAvaliacao: null,
+              observacaoPublicacao: null,
+              geolocalizacao: { latitude: -23.5, longitude: -46.6 },
+              distanciaPeca: 12.3,
+              enviadaEm: '2026-07-02T10:00:00',
+              avaliadaEm: null,
+            },
+          ],
         },
       ],
-    });
+    };
+  }
+
+  it('nunca renderiza Aprovar Checking / Recusar Checking, nem desabilitados', () => {
+    configurar();
+    const fixture = TestBed.createComponent(CheckoutDetalheComponent);
+    fixture.detectChanges();
+
+    httpMock.expectOne(`${base}/1`).flush(detalhePadrao());
 
     fixture.detectChanges();
     const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
     expect(texto).not.toContain('Aprovar Checking');
     expect(texto).not.toContain('Recusar Checking');
-    expect(fixture.nativeElement.querySelectorAll('button, aurum-button').length).toBeLessThanOrEqual(1);
   });
 
-  it('renderiza o link para mapa quando o endereço tem enderecoMapaUrl', () => {
+  it('renderiza um card por foto, nao uma timeline de historicoAvaliacao', () => {
     configurar();
     const fixture = TestBed.createComponent(CheckoutDetalheComponent);
     fixture.detectChanges();
 
-    httpMock.expectOne(`${base}/PI-1`).flush({
-      id: 1,
-      codigo: 'PI-1',
-      campanha: null,
-      anunciante: null,
-      cidade: null,
-      periodoVeiculacaoInicio: null,
-      periodoVeiculacaoFim: null,
-      status: 'Novo',
-      itens: [
-        {
-          idPedidoItem: 1,
-          pecaCodigo: 'PC-1',
-          fotoUrl: null,
-          endereco: 'Rua A, 100',
-          enderecoMapaUrl: 'https://maps.example/x',
-          statusItem: 'Autorizado',
-          statusChecking: null,
-          fotosRecebidas: [],
-          historicoAvaliacao: [],
-        },
-      ],
-    });
+    httpMock.expectOne(`${base}/1`).flush(detalhePadrao());
 
     fixture.detectChanges();
-    const link = (fixture.nativeElement as HTMLElement).querySelector('a[href="https://maps.example/x"]');
-    expect(link?.textContent?.trim()).toBe('Ver no mapa');
+    const cards = (fixture.nativeElement as HTMLElement).querySelectorAll('.cd-foto-card');
+    expect(cards.length).toBe(1);
+    const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(texto).toContain('Recebido');
+    expect(texto).toContain('-23.5');
+  });
+
+  it('link de mapa e montado no cliente a partir de localDescricao/cidade', () => {
+    configurar();
+    const fixture = TestBed.createComponent(CheckoutDetalheComponent);
+    fixture.detectChanges();
+
+    httpMock.expectOne(`${base}/1`).flush(detalhePadrao());
+
+    fixture.detectChanges();
+    const link = (fixture.nativeElement as HTMLElement).querySelector('a.cd-mapa');
+    expect(link?.getAttribute('href')).toBe(
+      'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent('Rua A, 100, São Paulo')
+    );
+  });
+
+  it('abrir foto baixa como blob pelo HttpClient (nao um <img src> direto, que voltaria 401)', () => {
+    configurar();
+    const fixture = TestBed.createComponent(CheckoutDetalheComponent);
+    fixture.detectChanges();
+    httpMock.expectOne(`${base}/1`).flush(detalhePadrao());
+    fixture.detectChanges();
+
+    vi.spyOn(window, 'open').mockReturnValue(null);
+    vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:local');
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
+
+    fixture.componentInstance.abrirFoto(detalhePadrao().itens[0].fotos[0]);
+
+    const req = httpMock.expectOne('/api/wl/checking/item/1/fotos/10/arquivo');
+    expect(req.request.responseType).toBe('blob');
+    req.flush(new Blob(['x']));
+
+    expect(window.open).toHaveBeenCalledWith('blob:local', '_blank');
   });
 
   it('falha ao carregar mostra mensagem, sem quebrar', () => {
@@ -110,7 +140,7 @@ describe('CheckoutDetalheComponent', () => {
     const fixture = TestBed.createComponent(CheckoutDetalheComponent);
     fixture.detectChanges();
 
-    httpMock.expectOne(`${base}/PI-1`).flush(null, { status: 404, statusText: 'Not Found' });
+    httpMock.expectOne(`${base}/1`).flush(null, { status: 404, statusText: 'Not Found' });
 
     expect(fixture.componentInstance.erro).toBeTruthy();
     expect(fixture.componentInstance.detalhe).toBeNull();

@@ -2,11 +2,11 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { mensagemDeErro } from '../../core/http/api-error';
-import { OsDetalhe } from '../../core/models/wl.models';
+import { OsDetalhe, STATUS_OS_ROTULOS } from '../../core/models/wl.models';
 import { OrdemServicoService } from '../../core/services/ordem-servico.service';
 import { AurumButtonComponent } from '../../shared/aurum/aurum-button.component';
 import { AurumCardComponent } from '../../shared/aurum/aurum-card.component';
-import { AurumHistoryCardComponent } from '../../shared/aurum/aurum-history-card.component';
+import { AurumHistoryCardComponent, AurumHistoryEvento } from '../../shared/aurum/aurum-history-card.component';
 import { AurumPageHeaderComponent } from '../../shared/aurum/aurum-page-header.component';
 import { AurumStatusPillComponent } from '../../shared/aurum/aurum-status-pill.component';
 import {
@@ -18,6 +18,13 @@ import {
 
 /**
  * Ordem de Serviço — detalhe (VEI-RD-88d, Figma `198:546`).
+ *
+ * `GET /api/wl/ordens-servico/{id}` e `GET /{id}/pdf` (não `/planilha-pdf`)
+ * confirmados lendo `OrdensServicoController` real no workspace irmão do
+ * BFF, 2026-09-22. `numeroFormatado` já vem pronto ("OS #0042") — sem
+ * zero-padding no cliente. Peças não trazem `bairro`/`campanhaAtual` (o BFF
+ * não os projeta em `GetById`) — a tabela usa os campos que existem
+ * (`localCodigo`/`localDescricao`/`cidade`).
  *
  * **Sem bloco `RESPONSÁVEL (COLADOR)` e sem botão `REATRIBUIR COLADOR`** —
  * regra dura, mesma decisão humana de VEI-RD-88c (2026-09-17): não existe
@@ -44,9 +51,9 @@ import {
     AurumTableHeaderCellComponent,
   ],
   template: `
-    <aurum-page-header [titulo]="detalhe ? ('OS #' + numeroFormatado(detalhe.numero)) : 'Ordem de Serviço'">
+    <aurum-page-header [titulo]="detalhe?.numeroFormatado || 'Ordem de Serviço'">
       @if (detalhe; as os) {
-        <aurum-status-pill aurumPageHeaderBadge [rotulo]="os.status" tom="neutro" />
+        <aurum-status-pill aurumPageHeaderBadge [rotulo]="rotuloStatus(os.status)" tom="neutro" />
       }
       <a aurumPageHeaderAcoes class="od-voltar" routerLink="/ordens-servico">← Voltar para Ordem de Serviço</a>
       @if (detalhe) {
@@ -57,7 +64,7 @@ import {
     </aurum-page-header>
 
     @if (detalhe; as os) {
-      <p class="od-subtitulo">{{ os.periodoNome }} — {{ os.cidades.join(', ') || '—' }} · gerada em {{ os.criadaEm | date: 'dd/MM/yyyy HH:mm' }}</p>
+      <p class="od-subtitulo">{{ os.periodo || '—' }} — {{ os.cidades.join(', ') || '—' }} · gerada em {{ os.dataCadastro | date: 'dd/MM/yyyy HH:mm' }}</p>
     }
 
     @if (carregando) {
@@ -79,11 +86,11 @@ import {
       <aurum-card class="od-info">
         <div class="od-info__item">
           <span class="od-info__rotulo">Status</span>
-          <aurum-status-pill [rotulo]="os.status" tom="neutro" />
+          <aurum-status-pill [rotulo]="rotuloStatus(os.status)" tom="neutro" />
         </div>
         <div class="od-info__item">
           <span class="od-info__rotulo">Peças na OS</span>
-          <span class="od-info__valor">{{ os.pecasCount }}</span>
+          <span class="od-info__valor">{{ os.pecas.length }}</span>
         </div>
         <div class="od-info__item">
           <span class="od-info__rotulo">Criada por</span>
@@ -100,9 +107,9 @@ import {
             <thead>
               <tr aurumTableRow>
                 <th aurumTableHeaderCell>Código</th>
+                <th aurumTableHeaderCell>Local</th>
                 <th aurumTableHeaderCell>Endereço</th>
-                <th aurumTableHeaderCell>Bairro</th>
-                <th aurumTableHeaderCell>Campanha Atual</th>
+                <th aurumTableHeaderCell>Cidade</th>
                 <th aurumTableHeaderCell>Data Colagem</th>
                 <th aurumTableHeaderCell>Status Colagem</th>
               </tr>
@@ -111,9 +118,9 @@ import {
               @for (peca of os.pecas; track peca.codigo) {
                 <tr aurumTableRow>
                   <td aurumTableCell>{{ peca.codigo }}</td>
-                  <td aurumTableCell>{{ peca.endereco || '—' }}</td>
-                  <td aurumTableCell>{{ peca.bairro || '—' }}</td>
-                  <td aurumTableCell>{{ peca.campanhaAtual || '—' }}</td>
+                  <td aurumTableCell>{{ peca.localCodigo || '—' }}</td>
+                  <td aurumTableCell>{{ peca.localDescricao || '—' }}</td>
+                  <td aurumTableCell>{{ peca.cidade || '—' }}</td>
                   <td aurumTableCell>{{ peca.dataColagem || '—' }}</td>
                   <td aurumTableCell>{{ peca.statusColagem }}</td>
                 </tr>
@@ -123,7 +130,7 @@ import {
         </div>
       }
 
-      <aurum-history-card titulo="Histórico da OS" [eventos]="os.historico" />
+      <aurum-history-card titulo="Histórico da OS" [eventos]="eventosHistorico(os)" />
     }
   `,
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -213,8 +220,13 @@ export class OrdemServicoDetalheComponent implements OnInit {
     });
   }
 
-  numeroFormatado(numero: number): string {
-    return String(numero).padStart(4, '0');
+  rotuloStatus(status: string): string {
+    return STATUS_OS_ROTULOS[status] || status;
+  }
+
+  /** `aurum-history-card` espera `{evento, timestamp, autor}`; o BFF devolve `{evento, dataHora, usuario}`. */
+  eventosHistorico(os: OsDetalhe): AurumHistoryEvento[] {
+    return os.historico.map((h) => ({ evento: h.evento, timestamp: h.dataHora, autor: h.usuario || '—' }));
   }
 
   baixarPlanilha(): void {
@@ -223,7 +235,7 @@ export class OrdemServicoDetalheComponent implements OnInit {
     this.baixando = true;
     this.erroPlanilha = null;
 
-    this.service.planilhaPdf(this.detalhe.id).subscribe({
+    this.service.pdf(this.detalhe.id).subscribe({
       next: (blob) => {
         this.baixando = false;
         const url = URL.createObjectURL(blob);

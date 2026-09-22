@@ -8,6 +8,15 @@ import { environment } from '../../../environments/environment';
 /**
  * OS — detalhe (VEI-RD-88d, Figma `198:546`).
  *
+ * Contrato confirmado lendo `OrdensServicoController.GetById` real no
+ * workspace irmão do BFF, 2026-09-22: `numeroFormatado` pronto, `periodo`
+ * (não `periodoNome`), `dataCadastro` (não `criadaEm`), sem `pecasCount`
+ * própria (a UI usa `pecas.length`), peças sem `bairro`/`campanhaAtual` (só
+ * `localCodigo`/`localDescricao`/`cidade`), histórico com
+ * `{evento, dataHora, usuario}` (não `{evento, timestamp, autor}` — mapeado
+ * na hora de passar para `aurum-history-card`). PDF é `GET /{id}/pdf`, não
+ * `/planilha-pdf`.
+ *
  * Regras duras, mesma decisão humana de VEI-RD-88c (2026-09-17): sem bloco
  * RESPONSÁVEL (COLADOR), sem botão REATRIBUIR COLADOR, sem o contador "N de
  * M peças confirmadas na tela de Colagem" — nenhuma tela de Colagem existe
@@ -33,19 +42,29 @@ describe('OrdemServicoDetalheComponent', () => {
   function detalhePadrao() {
     return {
       id: 42,
-      numero: 42,
+      numeroFormatado: 'OS #0042',
       status: 'Aberta',
-      periodoNome: 'Bissemana 16 — 2026',
+      periodo: 'Bissemana 16 — 2026',
       cidades: ['Bertioga', 'São Sebastião'],
-      criadaEm: '2026-08-10T09:20:00',
+      responsavel: null,
       criadaPor: 'Operador X',
-      pecasCount: 3,
+      dataCadastro: '2026-08-10T09:20:00',
       pecas: [
-        { codigo: 'PC-1', endereco: 'Rua A', bairro: 'Centro', campanhaAtual: 'Campanha X', dataColagem: null, statusColagem: 'Pendente' },
+        { codigo: 'PC-1', localCodigo: 'L-1', localDescricao: 'Rua A, 100', cidade: 'Bertioga', dataColagem: null, statusColagem: 'Pendente' },
       ],
-      historico: [{ evento: 'OS gerada com 3 peças selecionadas', timestamp: '10/08/2026 09:20', autor: 'Operador X' }],
+      historico: [{ evento: 'OS gerada com 3 peças selecionadas', dataHora: '2026-08-10T09:20:00', usuario: 'Operador X' }],
     };
   }
+
+  it('renderiza numeroFormatado direto, sem zero-padding no cliente', () => {
+    configurar();
+    const fixture = TestBed.createComponent(OrdemServicoDetalheComponent);
+    fixture.detectChanges();
+    httpMock.expectOne(`${base}/42`).flush(detalhePadrao());
+    fixture.detectChanges();
+
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('OS #0042');
+  });
 
   it('nunca renderiza RESPONSAVEL (COLADOR) nem REATRIBUIR COLADOR', () => {
     configurar();
@@ -66,8 +85,6 @@ describe('OrdemServicoDetalheComponent', () => {
   it('nunca renderiza o contador "N de M pecas confirmadas na tela de Colagem"', () => {
     configurar();
     const fixture = TestBed.createComponent(OrdemServicoDetalheComponent);
-    // Um unico detectChanges() dispara o ngOnInit — nunca chamar ngOnInit()
-    // manualmente E TAMBEM detectChanges(): dispararia a requisicao em dobro.
     fixture.detectChanges();
     httpMock.expectOne(`${base}/42`).flush(detalhePadrao());
 
@@ -85,8 +102,6 @@ describe('OrdemServicoDetalheComponent', () => {
   it('data colagem e status colagem sao sempre "—"/"Pendente"', () => {
     configurar();
     const fixture = TestBed.createComponent(OrdemServicoDetalheComponent);
-    // Um unico detectChanges() dispara o ngOnInit — nunca chamar ngOnInit()
-    // manualmente E TAMBEM detectChanges(): dispararia a requisicao em dobro.
     fixture.detectChanges();
     httpMock.expectOne(`${base}/42`).flush(detalhePadrao());
 
@@ -97,11 +112,9 @@ describe('OrdemServicoDetalheComponent', () => {
     expect(textos).toContain('Pendente');
   });
 
-  it('info card mostra STATUS, PEÇAS NA OS e CRIADA POR', () => {
+  it('info card mostra STATUS, PEÇAS NA OS (a partir de pecas.length) e CRIADA POR', () => {
     configurar();
     const fixture = TestBed.createComponent(OrdemServicoDetalheComponent);
-    // Um unico detectChanges() dispara o ngOnInit — nunca chamar ngOnInit()
-    // manualmente E TAMBEM detectChanges(): dispararia a requisicao em dobro.
     fixture.detectChanges();
     httpMock.expectOne(`${base}/42`).flush(detalhePadrao());
 
@@ -111,19 +124,31 @@ describe('OrdemServicoDetalheComponent', () => {
     expect(texto).toContain('Peças na OS');
     expect(texto).toContain('Criada por');
     expect(texto).toContain('Operador X');
+    expect(fixture.componentInstance.detalhe?.pecas.length).toBe(1);
   });
 
-  it('baixa a planilha como blob, sem navegar para pagina quebrada em caso de erro', () => {
+  it('mapeia historico {evento,dataHora,usuario} para o formato do aurum-history-card {evento,timestamp,autor}', () => {
     configurar();
     const fixture = TestBed.createComponent(OrdemServicoDetalheComponent);
-    // Um unico detectChanges() dispara o ngOnInit — nunca chamar ngOnInit()
-    // manualmente E TAMBEM detectChanges(): dispararia a requisicao em dobro.
+    fixture.detectChanges();
+    httpMock.expectOne(`${base}/42`).flush(detalhePadrao());
+    fixture.detectChanges();
+
+    const eventos = fixture.componentInstance.eventosHistorico(fixture.componentInstance.detalhe!);
+    expect(eventos).toEqual([
+      { evento: 'OS gerada com 3 peças selecionadas', timestamp: '2026-08-10T09:20:00', autor: 'Operador X' },
+    ]);
+  });
+
+  it('baixa a planilha via GET {id}/pdf (nao /planilha-pdf), sem navegar para pagina quebrada em caso de erro', () => {
+    configurar();
+    const fixture = TestBed.createComponent(OrdemServicoDetalheComponent);
     fixture.detectChanges();
     httpMock.expectOne(`${base}/42`).flush(detalhePadrao());
     fixture.detectChanges();
 
     fixture.componentInstance.baixarPlanilha();
-    httpMock.expectOne(`${base}/42/planilha-pdf`).flush(null, { status: 502, statusText: 'Bad Gateway' });
+    httpMock.expectOne(`${base}/42/pdf`).flush(null, { status: 502, statusText: 'Bad Gateway' });
 
     expect(fixture.componentInstance.erroPlanilha).toBeTruthy();
     expect(fixture.componentInstance.baixando).toBe(false);

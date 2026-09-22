@@ -558,96 +558,147 @@ export interface PedidosInsercaoFiltro {
 // ---------------------------------------------------------------- Check out (VEI-RD-91)
 
 /**
- * Ainda sem controller no BFF (checado em 2026-09-22 contra
- * `Veiculando.WhiteLabel.Api/Controllers`: só existe `CheckingController`,
- * que é o fluxo de upload de foto por PI/item — não esta listagem
- * supervisória). Modelado aqui contra a interface que o Figma pede
- * (`184:2` listagem, `184:501` detalhe), nos moldes de
- * `PedidosInsercaoController` (mesmo envelope de paginação, mesmos nomes de
- * campo em camelCase, filtros na query string).
+ * `StatusCheckingEnum` do core — 5 status oficiais. Nomes já limpos (sem
+ * acento faltando), o `ToString()` cru serve como rótulo direto.
+ */
+export const STATUS_CHECKING = ['Iniciado', 'Finalizado', 'Aprovado', 'Recusado', 'Cancelado'] as const;
+export type StatusChecking = (typeof STATUS_CHECKING)[number];
+
+export const TOM_STATUS_CHECKING: Record<string, 'neutro' | 'sucesso' | 'aviso' | 'perigo' | 'primario'> = {
+  Iniciado: 'neutro',
+  Finalizado: 'sucesso',
+  Aprovado: 'primario',
+  Recusado: 'perigo',
+  Cancelado: 'perigo',
+};
+
+/**
+ * `GET /api/wl/checking` — espelha `CheckingController.GetAll` (lido no
+ * código real do BFF em 2026-09-22, workspace irmão
+ * `Veiculando.WhiteLabel.Api`). A rota é `api/wl/checking`, não
+ * `api/wl/checkout` — `CheckingController` cobre as duas features
+ * (upload de foto, já consumido por `checking.service.ts`, e esta listagem
+ * supervisória de VEI-RD-91); a Angular ROUTE continua `/checkout` (nome do
+ * card), só a URL do BFF é `checking`.
  *
- * SEM coluna Afiliada (regra do card — a listagem já é recortada por
- * tenant, uma coluna de afiliada não diz nada de novo aqui). `Período` é o
- * intervalo de datas de VEICULAÇÃO da PI (ex. `01/07–31/07`), não o período
- * comercial/id de período — os dois nomes (`periodoVeiculacaoInicio`/`Fim`)
- * deixam a distinção explícita no contrato.
+ * SEM coluna Afiliada (a listagem já é recortada por tenant no servidor).
+ *
+ * O controller só tem UM campo de busca textual (`busca`, contra
+ * Campanha.Nome OU Cliente.Nome) — não dois campos independentes de
+ * campanha/anunciante como o Figma sugeria; a UI usa um único campo de
+ * busca.
  */
 export interface CheckoutFiltro {
-  idPeriodo?: number | null;
+  busca?: string | null;
   status?: string | null;
   idCidade?: number | null;
-  campanha?: string | null;
-  anunciante?: string | null;
+  idPeriodoInicial?: number | null;
+  idPeriodoFinal?: number | null;
 }
 
+/**
+ * Item da listagem. As 4 colunas numéricas (VEI-RD-91c, commit `e15a1d1`,
+ * lido no BFF real em 2026-09-22): `itensPi` é o total de itens da PI
+ * (comprados, tenham ou não entrado em checking); `itensChecados` é quantos
+ * já entraram no fluxo (têm ao menos uma foto enviada — o antigo
+ * `itensCount` renomeado); `itensAprovados`/`itensRecebidos` são o recorte
+ * por status dentro desse subconjunto. `StatusCheckingItemEnum` só tem
+ * Recusado/ErroGeolocalizacao/Recebido/Aprovado — não existe um terceiro
+ * estado "em checking" distinto do "recebido"/"aprovado".
+ *
+ * Sem `periodo`: a listagem não projeta um intervalo de veiculação
+ * agregado (só filtra por ele) — a coluna Período fica "—".
+ */
 export interface CheckoutListItem {
   id: number;
-  codigo: string;
+  status: string;
+  dataCadastro: string;
+  dataAtualizacao: string | null;
+  piCodigo: string | null;
   campanha: string | null;
   anunciante: string | null;
-  cidade: string | null;
   itensPi: number;
-  itensChecking: number;
+  itensChecados: number;
   itensAprovados: number;
   itensRecebidos: number;
-  periodoVeiculacaoInicio: string | null;
-  periodoVeiculacaoFim: string | null;
+  cidades: string[];
+}
+
+export interface CheckoutGeolocalizacao {
+  latitude: number;
+  longitude: number;
+}
+
+/**
+ * Uma foto de checking, com seu estado ATUAL de avaliação —
+ * `CheckingFoto.AvaliarFoto` sobrescreve o estado anterior no domínio, não
+ * existe log append-only de avaliações passadas (documentado no
+ * `CheckingController.GetById`). Por isso o detalhe renderiza um card por
+ * foto (estado corrente), não uma timeline de eventos.
+ */
+export interface CheckoutFoto {
+  id: number;
+  downloadUrl: string;
   status: string;
-}
-
-export interface CheckoutFotoRecebida {
-  url: string;
-  dataEnvio: string;
-}
-
-export interface CheckoutAvaliacaoEvento {
-  evento: string;
-  timestamp: string;
-  autor: string;
+  nota: number | null;
+  observacaoAvaliacao: string | null;
+  observacaoPublicacao: string | null;
+  geolocalizacao: CheckoutGeolocalizacao | null;
+  distanciaPeca: number | null;
+  enviadaEm: string;
+  avaliadaEm: string | null;
 }
 
 export interface CheckoutItemDetalhe {
   idPedidoItem: number;
   pecaCodigo: string | null;
-  fotoUrl: string | null;
-  endereco: string | null;
-  /** Link externo para mapa (Google Maps etc.) — a UI só renderiza o link, nunca embute um mapa. */
-  enderecoMapaUrl: string | null;
-  statusItem: string;
-  statusChecking: string | null;
-  fotosRecebidas: CheckoutFotoRecebida[];
-  historicoAvaliacao: CheckoutAvaliacaoEvento[];
+  localCodigo: string | null;
+  localDescricao: string | null;
+  cidade: string | null;
+  periodo: string | null;
+  status: string;
+  fotos: CheckoutFoto[];
 }
 
 /**
  * Detalhe de VEI-RD-91 (`184:501`). **VEI-RD-91d (decisão fechada): esta
  * sprint não renderiza "Aprovar Checking"/"Recusar Checking"** — nenhum
  * campo de ação de aprovação entra aqui de propósito; a tela é somente
- * leitura.
+ * leitura. `id` é sempre o int do checking (`GET /api/wl/checking/{id:int}`),
+ * não um código de PI.
  */
 export interface CheckoutDetalhe {
   id: number;
-  codigo: string;
+  status: string;
+  dataCadastro: string;
+  dataAtualizacao: string | null;
+  piCodigo: string | null;
   campanha: string | null;
   anunciante: string | null;
-  cidade: string | null;
-  periodoVeiculacaoInicio: string | null;
-  periodoVeiculacaoFim: string | null;
-  status: string;
   itens: CheckoutItemDetalhe[];
 }
 
 // ---------------------------------------------------------------- Ordem de Serviço (VEI-RD-88)
 
 /**
- * 4 valores do Figma. Nesta sprint toda OS nasce e permanece em `Aberta` —
- * não existe UI de transição de status nem rota `/atribuir`/`/reatribuir`
- * (regra dura, decisão humana 2026-09-17). Sem controller no BFF ainda
- * (checado em 2026-09-22); contrato modelado contra a interface esperada.
+ * `StatusOrdemServicoEnum` do core — 4 valores. Nesta sprint toda OS nasce e
+ * permanece em `Aberta`: não existe, em nenhuma classe do domínio, gatilho
+ * que transicione para os outros três (comentário do próprio enum no core).
+ * Sem UI de transição nem rota `/atribuir`/`/reatribuir` (regra dura,
+ * decisão humana 2026-09-17). Nomes crus do enum (sem espaço/acento — é o
+ * que `Status.ToString()` devolve: `EmExecucao`, não `Em execução`).
  */
-export const STATUS_OS = ['Aberta', 'Atribuída', 'Em execução', 'Concluída'] as const;
+export const STATUS_OS = ['Aberta', 'Atribuida', 'EmExecucao', 'Concluida'] as const;
 export type StatusOs = (typeof STATUS_OS)[number];
 
+export const STATUS_OS_ROTULOS: Record<string, string> = {
+  Aberta: 'Aberta',
+  Atribuida: 'Atribuída',
+  EmExecucao: 'Em execução',
+  Concluida: 'Concluída',
+};
+
+/** Lido em `OrdensServicoController.GetAll` (workspace irmão do BFF, 2026-09-22). */
 export interface OsFiltro {
   idPeriodoInicial?: number | null;
   idPeriodoFinal?: number | null;
@@ -655,103 +706,76 @@ export interface OsFiltro {
   idResponsavel?: number | null;
 }
 
-/** Linha da listagem (`198:2`). `numero` alimenta o zero-padding `OS #0042`. */
+/**
+ * Linha da listagem (`198:2`). `numeroFormatado` já vem pronto do domínio
+ * (`OrdemServico.NumeroFormatado => $"OS #{Numero:D4}"`) — a UI renderiza
+ * direto, sem zero-padding no cliente. Sem `responsavelAvatarUrl`: o BFF só
+ * devolve o nome (`Responsavel?.Nome`); como não há atribuição de colador
+ * nesta sprint, o campo é sempre `null` na prática.
+ */
 export interface OsListItem {
   id: number;
-  numero: number;
-  periodoNome: string;
+  numeroFormatado: string;
+  periodo: string | null;
   cidades: string[];
-  responsavelNome: string | null;
-  responsavelAvatarUrl: string | null;
+  responsavel: string | null;
   pecasCount: number;
   status: string;
-  criadaEm: string;
-}
-
-/** Filtro da tela de geração (`186:86`) — periodicidade e status reaproveitam os mesmos enums de VEI-RD-86. */
-export interface OsGeracaoFiltro {
-  periodicidade?: Periodicidade | null;
-  idPeriodo?: number | null;
-  idCidade?: number | null;
-  status?: StatusPecaPeriodo | null;
-}
-
-/** As 4 opções de exibição da tela de geração — vão dentro do payload de criação, não só de UI local. */
-export interface OsOpcoesExibicao {
-  comQuadrosAnteriores: boolean;
-  semResumoFinal: boolean;
-  ordemInicial: boolean;
-  ordemFinal: boolean;
-}
-
-/** Uma peça elegível para entrar na OS — colunas da tela de geração. */
-export interface OsPecaElegivel {
-  pecaId: number;
-  codigo: string;
-  tabu: string | null;
-  rota: string | null;
-  endereco: string | null;
-  bairro: string | null;
-  campanhaAtual: string | null;
-  campanhaAnterior: string | null;
-  outQtd: number | null;
-  dataColagem: string | null;
-  servico: string | null;
-}
-
-export interface OsCriarPayload {
-  idPeriodo: number;
-  idsPeca: number[];
-  opcoes: OsOpcoesExibicao;
-}
-
-export interface OsCriadaResultado {
-  id: number;
-  numero: number;
-  periodoNome: string;
-  pecasCount: number;
+  dataCadastro: string;
 }
 
 /**
- * `POST /ordens-servico/{id}/entregar` — modo fixo `'impressa'` nesta
- * sprint. O modal de entrega (`187:1364`) só renderiza a opção "Impressa
- * (PDF)"; "Atribuir a um Colador" está fora do DOM (regra dura, decisão
- * humana 2026-09-17), então não existe um segundo `modo` para escolher.
+ * `POST /api/wl/ordens-servico` — espelha `OrdemServicoCriarRequest`
+ * (`IdPeriodo`/`IdPecas`, sem campo de opções: o backend não recebe nem usa
+ * as 4 opções de exibição da tela de geração — o PDF é gerado de forma fixa
+ * pelo servidor). As opções continuam na UI por fidelidade ao Figma, mas
+ * não fazem parte deste payload.
  */
-export interface OsEntregaResultado {
-  message: string;
+export interface OsCriarPayload {
+  idPeriodo: number;
+  idPecas: number[];
 }
 
-/** Linha da tabela "Peças incluídas nesta OS" (`198:546`). `dataColagem` e `statusColagem` são sempre "—"/"Pendente" nesta sprint — não existe tela de Colagem que os preencha. */
+/** Resposta de `POST /api/wl/ordens-servico`. Sem `periodo`: quem chama já conhece o período escolhido (é o mesmo enviado no payload). */
+export interface OsCriadaResultado {
+  id: number;
+  numeroFormatado: string;
+  pecasCount: number;
+}
+
+/** Linha da tabela "Peças incluídas nesta OS" (`198:546`), como `OrdensServicoController.MontarPecasDto` projeta. `dataColagem`/`statusColagem` são sempre `null`/"Pendente" nesta sprint. Sem `bairro`/`campanhaAtual`: o BFF não os projeta neste endpoint — a UI mostra "—". `localDescricao` é o que mais se aproxima de um endereço textual disponível. */
 export interface OsPecaIncluida {
   codigo: string;
-  endereco: string | null;
-  bairro: string | null;
-  campanhaAtual: string | null;
+  localCodigo: string | null;
+  localDescricao: string | null;
+  cidade: string | null;
   dataColagem: string | null;
   statusColagem: string;
 }
 
+/** Espelha `OrdensServicoController.MontarHistoricoDto` (`Evento`/`DataHora`/`Usuario`). */
 export interface OsHistoricoEvento {
   evento: string;
-  timestamp: string;
-  autor: string;
+  dataHora: string;
+  usuario: string | null;
 }
 
 /**
  * Detalhe da OS (`198:546`). Sem `responsavelColador`/`podeReatribuir`: o
  * bloco "RESPONSÁVEL (COLADOR)" e o botão "REATRIBUIR COLADOR" não existem
- * nesta sprint (regra dura). `historico` é append-only, só exibição.
+ * nesta sprint (regra dura). Sem `pecasCount` própria — o BFF não a projeta
+ * em `GetById`; a UI usa `pecas.length`. `historico` é append-only, só
+ * exibição.
  */
 export interface OsDetalhe {
   id: number;
-  numero: number;
+  numeroFormatado: string;
   status: string;
-  periodoNome: string;
+  periodo: string | null;
   cidades: string[];
-  criadaEm: string;
+  responsavel: string | null;
   criadaPor: string | null;
-  pecasCount: number;
+  dataCadastro: string;
   pecas: OsPecaIncluida[];
   historico: OsHistoricoEvento[];
 }

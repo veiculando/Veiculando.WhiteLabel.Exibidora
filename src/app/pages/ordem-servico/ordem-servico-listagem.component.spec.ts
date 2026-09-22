@@ -6,8 +6,12 @@ import { OrdemServicoListagemComponent } from './ordem-servico-listagem.componen
 import { environment } from '../../../environments/environment';
 
 /**
- * OS — listagem (VEI-RD-88a, Figma `198:2`). Sem controller no BFF ainda;
- * fixa o contrato esperado (`GET /api/wl/ordens-servico`).
+ * OS — listagem (VEI-RD-88a, Figma `198:2`).
+ *
+ * Contrato confirmado lendo `OrdensServicoController.GetAll` real no
+ * workspace irmão do BFF, 2026-09-22: `numeroFormatado` já vem pronto
+ * ("OS #0042"), `periodo`/`responsavel` (não `periodoNome`/`responsavelNome`),
+ * sem `responsavelAvatarUrl`, `dataCadastro` (não `criadaEm`).
  */
 describe('OrdemServicoListagemComponent', () => {
   let httpMock: HttpTestingController;
@@ -34,14 +38,13 @@ describe('OrdemServicoListagemComponent', () => {
       itens: [
         {
           id: 1,
-          numero: 42,
-          periodoNome: 'Bissemana 16 — 2026',
+          numeroFormatado: 'OS #0042',
+          periodo: 'Bissemana 16 — 2026',
           cidades: ['Bertioga', 'São Sebastião'],
-          responsavelNome: null,
-          responsavelAvatarUrl: null,
+          responsavel: null,
           pecasCount: 3,
           status: 'Aberta',
-          criadaEm: '2026-08-10T09:20:00',
+          dataCadastro: '2026-08-10T09:20:00',
         },
       ],
       page: 1,
@@ -53,7 +56,7 @@ describe('OrdemServicoListagemComponent', () => {
     return fixture;
   }
 
-  it('formata "OS Nº" com zero-padding: OS #0042', () => {
+  it('renderiza numeroFormatado direto, sem zero-padding no cliente', () => {
     const fixture = criar();
     fixture.detectChanges();
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('OS #0042');
@@ -90,10 +93,14 @@ describe('OrdemServicoListagemComponent', () => {
     expect(link?.textContent?.trim()).toContain('Nova Ordem de Serviço');
   });
 
-  it('acao Entregar abre o modal com o contexto da OS', () => {
+  it('acao Entregar abre o modal com o contexto da OS (numeroFormatado pronto, sem POST de entrega)', () => {
     const fixture = criar();
     fixture.componentInstance.abrirEntrega(fixture.componentInstance.ordens[0]);
     expect(fixture.componentInstance.modalAberto).toBe(true);
-    expect(fixture.componentInstance.contextoEntrega?.numero).toBe(42);
+    expect(fixture.componentInstance.contextoEntrega?.numeroFormatado).toBe('OS #0042');
+    expect(fixture.componentInstance.contextoEntrega?.periodoNome).toBe('Bissemana 16 — 2026');
+
+    // Confirmar entrega no modal so baixa o PDF — nao existe /entregar no BFF.
+    httpMock.expectNone(`${base}/1/entregar`);
   });
 });

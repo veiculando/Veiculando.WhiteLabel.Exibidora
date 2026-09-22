@@ -38,19 +38,18 @@ describe('SidebarComponent', () => {
     expect(textoGrupos()).toEqual(['Inventário', 'Comercial', 'Operacional', 'Configurações']);
   });
 
-  it('Check out e Ordem de Servico aparecem no grupo Operacional', () => {
-    configurar(['Checking']);
+  it('Check out e Ordem de Servico aparecem no grupo Operacional, cada um com sua permissao', () => {
+    configurar(['Checking', 'PecaGerenciar']);
     fixture.detectChanges();
     const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
     expect(texto).toContain('Check out');
     expect(texto).toContain('Ordem de Serviço');
   });
 
-  it('Ordem de Servico nao exige permissao e aparece mesmo sem nenhuma concedida', () => {
-    configurar([]);
+  it('Ordem de Servico exige PecaGerenciar (mesma policy do OrdensServicoController real) e some sem ela', () => {
+    configurar(['Checking']);
     fixture.detectChanges();
-    const link = (fixture.nativeElement as HTMLElement).querySelector('a[href="/ordens-servico"]');
-    expect(link?.textContent?.trim()).toBe('Ordem de Serviço');
+    expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('Ordem de Serviço');
   });
 
   it('Check out some sem a permissao Checking', () => {

@@ -8,11 +8,12 @@ import {
   Periodicidade,
   PERIODICIDADE_ROTULOS,
   PeriodoLookup,
-  OsPecaElegivel,
+  ProgramacaoGradeItem,
   StatusPecaPeriodo,
 } from '../../core/models/wl.models';
 import { LookupsService } from '../../core/services/lookups.service';
 import { OrdemServicoService } from '../../core/services/ordem-servico.service';
+import { ProgramacaoService } from '../../core/services/programacao.service';
 import { AurumButtonComponent } from '../../shared/aurum/aurum-button.component';
 import { AurumCheckboxComponent } from '../../shared/aurum/aurum-checkbox.component';
 import { AurumDropdownComponent, AurumDropdownOpcao } from '../../shared/aurum/aurum-dropdown.component';
@@ -27,6 +28,8 @@ import {
 import { OrdemServicoEntregaModalComponent, OsEntregaContexto } from './ordem-servico-entrega-modal.component';
 
 const TODOS = '';
+/** Teto do servidor por página (`WlPaginacao.PageSizeMaximo`) — ver aviso quando o filtro tem mais peças do que isso. */
+const PAGE_SIZE_MAXIMO = 100;
 
 /**
  * Ordem de Serviço — geração (VEI-RD-88b, Figma `186:86`).
@@ -35,6 +38,19 @@ const TODOS = '';
  * período." Ao confirmar, a OS nasce em `Aberta` e o modal de entrega
  * (VEI-RD-88c) abre na sequência — sem essa etapa faltaria caminho para
  * imprimir a planilha logo depois de gerar.
+ *
+ * **Sem endpoint dedicado de "peças elegíveis".** `OrdensServicoController`
+ * (lido no BFF real, 2026-09-22) não tem `/pecas-elegiveis` — as peças vêm
+ * de `POST /api/wl/programacao/listar` (mesmo `ProgramacaoService` de
+ * VEI-RD-86), pinando `idPeriodoInicial`/`idPeriodoFinal` no MESMO período
+ * escolhido aqui. Colunas Tabu/Rota/Campanha Atual/Campanha Anterior/Out/
+ * Serviço não existem nessa resposta (a grade de programação não as
+ * projeta) — ficam "—"; só Código/Endereço/Bairro vêm preenchidos.
+ *
+ * **As 4 opções de exibição não vão para o servidor.**
+ * `OrdemServicoCriarRequest` só aceita `IdPeriodo`/`IdPecas` — o PDF é
+ * gerado de forma fixa. Os checkboxes continuam na tela por fidelidade ao
+ * Figma, mas são só estado local, sem efeito na chamada.
  */
 @Component({
   selector: 'app-ordem-servico-geracao',
@@ -70,7 +86,7 @@ const TODOS = '';
       <aurum-filter-field rotulo="Status" posicaoRotulo="acima">
         <aurum-dropdown [opcoes]="opcoesStatus" [valor]="status === null ? TODOS : String(status)" (valorChange)="mudarFiltro('status', $event)" />
       </aurum-filter-field>
-      <aurum-button variante="outline" (click)="buscarPecas()">Buscar peças</aurum-button>
+      <aurum-button variante="outline" [desabilitado]="!idPeriodo" (click)="buscarPecas()">Buscar peças</aurum-button>
     </div>
 
     <div class="og-opcoes">
@@ -84,12 +100,23 @@ const TODOS = '';
       <div class="wl-estado wl-estado--erro">{{ erro }}</div>
     }
 
+    @if (!idPeriodo) {
+      <div class="wl-estado wl-estado--vazio">Escolha um período para buscar as peças.</div>
+    }
+
     @if (carregandoPecas) {
-      <div class="wl-estado wl-estado--carregando">Buscando peças elegíveis…</div>
+      <div class="wl-estado wl-estado--carregando">Buscando peças…</div>
     }
 
     @if (!carregandoPecas && buscou && pecas.length === 0) {
-      <div class="wl-estado wl-estado--vazio">Nenhuma peça elegível para os filtros selecionados.</div>
+      <div class="wl-estado wl-estado--vazio">Nenhuma peça encontrada para os filtros selecionados.</div>
+    }
+
+    @if (totalPecas > PAGE_SIZE_MAXIMO) {
+      <div class="wl-estado wl-estado--erro" role="note">
+        Este período/filtro tem {{ totalPecas }} peças; só as {{ PAGE_SIZE_MAXIMO }} primeiras estão listadas
+        abaixo. Refine por Cidade ou Status para ver o restante.
+      </div>
     }
 
     @if (pecas.length > 0) {
@@ -116,18 +143,18 @@ const TODOS = '';
             @for (peca of pecas; track peca.pecaId) {
               <tr aurumTableRow>
                 <td aurumTableCell>
-                  <aurum-checkbox [rotulo]="'Selecionar ' + peca.codigo" [marcado]="selecionadas.has(peca.pecaId)" (marcadoChange)="alternarSelecao(peca.pecaId, $event)" />
+                  <aurum-checkbox [rotulo]="'Selecionar ' + peca.pecaCodigo" [marcado]="selecionadas.has(peca.pecaId)" (marcadoChange)="alternarSelecao(peca.pecaId, $event)" />
                 </td>
-                <td aurumTableCell>{{ peca.codigo }}</td>
-                <td aurumTableCell>{{ peca.tabu || '—' }}</td>
-                <td aurumTableCell>{{ peca.rota || '—' }}</td>
+                <td aurumTableCell>{{ peca.pecaCodigo }}</td>
+                <td aurumTableCell>—</td>
+                <td aurumTableCell>—</td>
                 <td aurumTableCell>{{ peca.endereco || '—' }}</td>
                 <td aurumTableCell>{{ peca.bairro || '—' }}</td>
-                <td aurumTableCell>{{ peca.campanhaAtual || '—' }}</td>
-                <td aurumTableCell>{{ peca.campanhaAnterior || '—' }}</td>
-                <td aurumTableCell>{{ peca.outQtd ?? '—' }}</td>
-                <td aurumTableCell>{{ peca.dataColagem || '—' }}</td>
-                <td aurumTableCell>{{ peca.servico || '—' }}</td>
+                <td aurumTableCell>—</td>
+                <td aurumTableCell>—</td>
+                <td aurumTableCell>—</td>
+                <td aurumTableCell>—</td>
+                <td aurumTableCell>—</td>
               </tr>
             }
           </tbody>
@@ -181,12 +208,14 @@ const TODOS = '';
   ],
 })
 export class OrdemServicoGeracaoComponent implements OnInit {
-  private service = inject(OrdemServicoService);
+  private ordemServicoService = inject(OrdemServicoService);
+  private programacaoService = inject(ProgramacaoService);
   private lookups = inject(LookupsService);
   private router = inject(Router);
 
   readonly TODOS = TODOS;
   readonly String = String;
+  readonly PAGE_SIZE_MAXIMO = PAGE_SIZE_MAXIMO;
 
   readonly opcoesPeriodicidade: AurumDropdownOpcao[] = [
     { valor: String(Periodicidade.Semanal), rotulo: PERIODICIDADE_ROTULOS[Periodicidade.Semanal] },
@@ -213,7 +242,9 @@ export class OrdemServicoGeracaoComponent implements OnInit {
 
   opcoes = { comQuadrosAnteriores: false, semResumoFinal: false, ordemInicial: true, ordemFinal: false };
 
-  pecas: OsPecaElegivel[] = [];
+  /** Uma linha por peça, já deduplicada — `programacao/listar` filtrado a um único período devolve no máximo uma célula por peça. */
+  pecas: ProgramacaoGradeItem[] = [];
+  totalPecas = 0;
   selecionadas = new Set<number>();
   buscou = false;
   carregandoPecas = false;
@@ -260,23 +291,38 @@ export class OrdemServicoGeracaoComponent implements OnInit {
     else this.status = numerico;
   }
 
+  /** Reusa `ProgramacaoService.listar` (VEI-RD-86) pinando os dois limites do intervalo no mesmo período — não existe endpoint próprio de "peças elegíveis". */
   buscarPecas(): void {
+    if (!this.idPeriodo) return;
+
     this.carregandoPecas = true;
     this.erro = null;
     this.buscou = true;
     this.selecionadas.clear();
 
-    this.service
-      .pecasElegiveis({ periodicidade: this.periodicidade, idPeriodo: this.idPeriodo, idCidade: this.idCidade, status: this.status })
+    this.programacaoService
+      .listar(
+        {
+          periodicidade: this.periodicidade,
+          idPeriodoInicial: this.idPeriodo,
+          idPeriodoFinal: this.idPeriodo,
+          idCidade: this.idCidade,
+          status: this.status,
+          anunciante: null,
+        },
+        { page: 1, pageSize: PAGE_SIZE_MAXIMO }
+      )
       .subscribe({
-        next: (pecas) => {
-          this.pecas = pecas;
+        next: (pagina) => {
+          this.pecas = pagina.itens;
+          this.totalPecas = pagina.total;
           this.carregandoPecas = false;
         },
         error: (erro: unknown) => {
           this.carregandoPecas = false;
           this.pecas = [];
-          this.erro = mensagemDeErro(erro, 'Não foi possível buscar as peças elegíveis.');
+          this.totalPecas = 0;
+          this.erro = mensagemDeErro(erro, 'Não foi possível buscar as peças.');
         },
       });
   }
@@ -301,19 +347,25 @@ export class OrdemServicoGeracaoComponent implements OnInit {
   gerarOs(): void {
     if (this.selecionadas.size === 0 || this.gerando || !this.idPeriodo) return;
 
+    const idPeriodo = this.idPeriodo;
+    const periodoNome = this.periodosCarregados.find((p) => p.id === idPeriodo)?.nome ?? null;
+
     this.gerando = true;
     this.erro = null;
 
-    this.service
-      .criar({ idPeriodo: this.idPeriodo, idsPeca: [...this.selecionadas], opcoes: this.opcoes })
+    this.ordemServicoService
+      // Só `idPeriodo`/`idPecas` — `OrdemServicoCriarRequest` não tem campo de opções.
+      .criar({ idPeriodo, idPecas: [...this.selecionadas] })
       .subscribe({
         next: (resultado) => {
           this.gerando = false;
           this.contextoEntrega = {
             id: resultado.id,
-            numero: resultado.numero,
+            numeroFormatado: resultado.numeroFormatado,
             pecasCount: resultado.pecasCount,
-            periodoNome: resultado.periodoNome,
+            // A resposta de criação não devolve o período — quem chama já
+            // sabe qual é (é o mesmo enviado no payload).
+            periodoNome,
           };
           this.modalAberto = true;
         },

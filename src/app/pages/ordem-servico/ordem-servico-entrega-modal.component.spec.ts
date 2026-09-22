@@ -10,6 +10,10 @@ import { environment } from '../../../environments/environment';
  * Regra dura, decisão humana fechada 2026-09-17: só "Impressa (PDF) —
  * Planilha de Programação" é renderizada. "Atribuir a um Colador" não pode
  * existir no DOM em NENHUMA circunstância — nem desabilitada.
+ *
+ * `OrdensServicoController` real (BFF, 2026-09-22) não tem
+ * `POST /{id}/entregar` — "entregar" é só abrir `GET /{id}/pdf`, sem
+ * nenhuma mutação de estado no servidor antes.
  */
 describe('OrdemServicoEntregaModalComponent', () => {
   let httpMock: HttpTestingController;
@@ -27,7 +31,7 @@ describe('OrdemServicoEntregaModalComponent', () => {
   it('nunca renderiza "Atribuir a um Colador", em nenhum estado', () => {
     const fixture = TestBed.createComponent(OrdemServicoEntregaModalComponent);
     fixture.componentInstance.aberto = true;
-    fixture.componentInstance.contexto = { id: 42, numero: 42, pecasCount: 3, periodoNome: 'Bissemana 16, 2026' };
+    fixture.componentInstance.contexto = { id: 42, numeroFormatado: 'OS #0042', pecasCount: 3, periodoNome: 'Bissemana 16, 2026' };
 
     fixture.detectChanges();
 
@@ -39,7 +43,7 @@ describe('OrdemServicoEntregaModalComponent', () => {
   it('so renderiza a opcao Impressa (PDF) — Planilha de Programação', () => {
     const fixture = TestBed.createComponent(OrdemServicoEntregaModalComponent);
     fixture.componentInstance.aberto = true;
-    fixture.componentInstance.contexto = { id: 42, numero: 42, pecasCount: 3, periodoNome: 'Bissemana 16, 2026' };
+    fixture.componentInstance.contexto = { id: 42, numeroFormatado: 'OS #0042', pecasCount: 3, periodoNome: 'Bissemana 16, 2026' };
 
     fixture.detectChanges();
 
@@ -52,7 +56,7 @@ describe('OrdemServicoEntregaModalComponent', () => {
   it('titulo e subtitulo seguem o texto exato do card', () => {
     const fixture = TestBed.createComponent(OrdemServicoEntregaModalComponent);
     fixture.componentInstance.aberto = true;
-    fixture.componentInstance.contexto = { id: 42, numero: 42, pecasCount: 3, periodoNome: 'Bissemana 16, 2026' };
+    fixture.componentInstance.contexto = { id: 42, numeroFormatado: 'OS #0042', pecasCount: 3, periodoNome: 'Bissemana 16, 2026' };
 
     fixture.detectChanges();
 
@@ -72,41 +76,39 @@ describe('OrdemServicoEntregaModalComponent', () => {
     expect((fixture.nativeElement as HTMLElement).querySelector('[role="dialog"]')).toBeNull();
   });
 
-  it('confirmar entrega chama entregar() e depois baixa a planilha como blob', () => {
+  it('confirmar entrega baixa o PDF direto — sem chamar /entregar, que nao existe no BFF', () => {
     const fixture = TestBed.createComponent(OrdemServicoEntregaModalComponent);
     fixture.componentInstance.aberto = true;
-    fixture.componentInstance.contexto = { id: 42, numero: 42, pecasCount: 3, periodoNome: 'Bissemana 16, 2026' };
+    fixture.componentInstance.contexto = { id: 42, numeroFormatado: 'OS #0042', pecasCount: 3, periodoNome: 'Bissemana 16, 2026' };
     vi.spyOn(window, 'open').mockReturnValue(null);
     vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:local');
     vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
 
     fixture.detectChanges();
 
-    fixture.componentInstance.confirmarEntrega();
+    fixture.componentInstance.baixarPdf();
 
-    const reqEntregar = httpMock.expectOne(`${base}/42/entregar`);
-    expect(reqEntregar.request.body).toEqual({ modo: 'impressa' });
-    reqEntregar.flush({ message: 'ok' });
+    httpMock.expectNone(`${base}/42/entregar`);
 
-    const reqPdf = httpMock.expectOne(`${base}/42/planilha-pdf`);
+    const reqPdf = httpMock.expectOne(`${base}/42/pdf`);
     expect(reqPdf.request.responseType).toBe('blob');
     reqPdf.flush(new Blob(['%PDF-']));
 
-    expect(fixture.componentInstance.entregando).toBe(false);
+    expect(window.open).toHaveBeenCalledWith('blob:local', '_blank');
+    expect(fixture.componentInstance.baixando).toBe(false);
   });
 
-  it('falha ao entregar mostra mensagem, sem baixar planilha', () => {
+  it('falha ao baixar o PDF mostra mensagem no modal', () => {
     const fixture = TestBed.createComponent(OrdemServicoEntregaModalComponent);
     fixture.componentInstance.aberto = true;
-    fixture.componentInstance.contexto = { id: 42, numero: 42, pecasCount: 3, periodoNome: 'Bissemana 16, 2026' };
+    fixture.componentInstance.contexto = { id: 42, numeroFormatado: 'OS #0042', pecasCount: 3, periodoNome: 'Bissemana 16, 2026' };
     fixture.detectChanges();
 
-    fixture.componentInstance.confirmarEntrega();
+    fixture.componentInstance.baixarPdf();
 
-    httpMock.expectOne(`${base}/42/entregar`).flush(null, { status: 500, statusText: 'Erro' });
+    httpMock.expectOne(`${base}/42/pdf`).flush(null, { status: 500, statusText: 'Erro' });
 
     expect(fixture.componentInstance.erro).toBeTruthy();
-    expect(fixture.componentInstance.entregando).toBe(false);
-    httpMock.expectNone(`${base}/42/planilha-pdf`);
+    expect(fixture.componentInstance.baixando).toBe(false);
   });
 });

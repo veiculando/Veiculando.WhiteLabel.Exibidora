@@ -45,7 +45,7 @@ const GRUPOS: GrupoNav[] = [
       { rotulo: 'Programação', rota: '/programacao' },
       { rotulo: 'Checking', rota: '/checking', permissao: 'Checking' },
       { rotulo: 'Check out', rota: '/checkout', permissao: 'Checking' },
-      { rotulo: 'Ordem de Serviço', rota: '/ordens-servico' },
+      { rotulo: 'Ordem de Serviço', rota: '/ordens-servico', permissao: 'PecaGerenciar' },
     ],
   },
   {

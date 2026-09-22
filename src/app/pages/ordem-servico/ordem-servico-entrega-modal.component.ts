@@ -6,9 +6,9 @@ import { AurumButtonComponent } from '../../shared/aurum/aurum-button.component'
 
 export interface OsEntregaContexto {
   id: number;
-  numero: number;
+  numeroFormatado: string;
   pecasCount: number;
-  periodoNome: string;
+  periodoNome: string | null;
 }
 
 /**
@@ -20,6 +20,11 @@ export interface OsEntregaContexto {
  * está aqui. Como sobra uma única opção, o layout é o de uma confirmação com
  * uma ação primária, não uma grade de dois cards com um buraco no lugar do
  * segundo.
+ *
+ * **Sem mutação de estado no servidor.** `OrdensServicoController` (lido no
+ * BFF real, 2026-09-22) não tem `POST /{id}/entregar` — como a única opção
+ * que sobrou é o PDF, "entregar" é só abrir `GET /api/wl/ordens-servico/{id}/pdf`,
+ * igual ao padrão de "Baixar PI". Nenhuma chamada POST acontece aqui.
  */
 @Component({
   selector: 'app-os-entrega-modal',
@@ -38,17 +43,14 @@ export interface OsEntregaContexto {
         >
           <h2 id="oem-titulo" class="oem-titulo">Entregar Ordem de Serviço</h2>
           @if (contexto) {
-            <p id="oem-subtitulo" class="oem-subtitulo">
-              OS #{{ numeroFormatado(contexto.numero) }} gerada com {{ contexto.pecasCount }}
-              {{ contexto.pecasCount === 1 ? 'peça' : 'peças' }} — {{ contexto.periodoNome }}
-            </p>
+            <p id="oem-subtitulo" class="oem-subtitulo">{{ subtitulo(contexto) }}</p>
           }
 
           @if (erro) {
             <div class="wl-estado wl-estado--erro">{{ erro }}</div>
           }
 
-          <button type="button" class="oem-opcao" [disabled]="entregando" (click)="confirmarEntrega()">
+          <button type="button" class="oem-opcao" [disabled]="baixando" (click)="baixarPdf()">
             <span class="oem-opcao__icone" aria-hidden="true">🖨</span>
             <span class="oem-opcao__texto">
               <strong>Impressa (PDF)</strong>
@@ -57,9 +59,9 @@ export interface OsEntregaContexto {
           </button>
 
           <div class="oem-acoes">
-            <aurum-button variante="ghost" [desabilitado]="entregando" (click)="fechar.emit()">Cancelar</aurum-button>
-            <aurum-button variante="wine" [desabilitado]="entregando" (click)="confirmarEntrega()">
-              {{ entregando ? 'Entregando…' : 'Confirmar entrega' }}
+            <aurum-button variante="ghost" [desabilitado]="baixando" (click)="fechar.emit()">Cancelar</aurum-button>
+            <aurum-button variante="wine" [desabilitado]="baixando" (click)="baixarPdf()">
+              {{ baixando ? 'Abrindo…' : 'Confirmar entrega' }}
             </aurum-button>
           </div>
         </div>
@@ -144,46 +146,42 @@ export class OrdemServicoEntregaModalComponent {
   @Input() contexto: OsEntregaContexto | null = null;
 
   @Output() fechar = new EventEmitter<void>();
-  /** Emitido depois que a entrega foi confirmada no servidor E o PDF foi aberto. */
+  /** Emitido depois que o PDF foi aberto com sucesso. */
   @Output() entregue = new EventEmitter<void>();
 
-  entregando = false;
+  baixando = false;
   erro: string | null = null;
 
-  numeroFormatado(numero: number): string {
-    return String(numero).padStart(4, '0');
+  /**
+   * Monta o subtítulo numa única interpolação — evitar `@if` aninhado num
+   * nó de texto: espaços de indentação entre nós vizinhos colapsam para um
+   * espaço CADA UM, e o resultado saía com espaço duplo antes do travessão.
+   */
+  subtitulo(contexto: OsEntregaContexto): string {
+    const pecas = contexto.pecasCount === 1 ? 'peça' : 'peças';
+    const periodo = contexto.periodoNome ? ` — ${contexto.periodoNome}` : '';
+    return `${contexto.numeroFormatado} gerada com ${contexto.pecasCount} ${pecas}${periodo}`;
   }
 
-  confirmarEntrega(): void {
-    if (this.entregando || !this.contexto) return;
+  baixarPdf(): void {
+    if (this.baixando || !this.contexto) return;
     const id = this.contexto.id;
 
-    this.entregando = true;
+    this.baixando = true;
     this.erro = null;
 
-    this.service.entregar(id).subscribe({
-      next: () => this.baixarPlanilha(id),
-      error: (erro: unknown) => {
-        this.entregando = false;
-        this.erro = mensagemDeErro(erro, 'Não foi possível entregar esta ordem de serviço.');
-      },
-    });
-  }
-
-  private baixarPlanilha(id: number): void {
-    this.service.planilhaPdf(id).subscribe({
+    this.service.pdf(id).subscribe({
       next: (blob) => {
-        this.entregando = false;
+        this.baixando = false;
         const url = URL.createObjectURL(blob);
         window.open(url, '_blank');
         setTimeout(() => URL.revokeObjectURL(url), 60_000);
         this.entregue.emit();
       },
       error: (erro: unknown) => {
-        this.entregando = false;
-        // A entrega já foi confirmada no servidor; só o download falhou —
-        // nunca navega para uma página quebrada, só avisa e deixa tentar de novo.
-        this.erro = mensagemDeErro(erro, 'Ordem de serviço entregue, mas não foi possível baixar a planilha agora.');
+        this.baixando = false;
+        // Erro vira mensagem no modal — nunca navega para uma página quebrada.
+        this.erro = mensagemDeErro(erro, 'Não foi possível abrir a planilha desta ordem de serviço.');
       },
     });
   }

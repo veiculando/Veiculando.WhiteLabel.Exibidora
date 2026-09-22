@@ -2,13 +2,12 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { mensagemDeErro } from '../../core/http/api-error';
-import { formatarDiaMes } from '../../core/http/datas';
 import {
   CheckoutListItem,
   CidadeLookup,
   PeriodoLookup,
-  STATUS_PEDIDO_INSERCAO,
-  TOM_STATUS_PEDIDO_INSERCAO,
+  STATUS_CHECKING,
+  TOM_STATUS_CHECKING,
 } from '../../core/models/wl.models';
 import { CheckoutService } from '../../core/services/checkout.service';
 import { LookupsService } from '../../core/services/lookups.service';
@@ -31,11 +30,21 @@ const TODOS = '';
 /**
  * Check out — listagem (VEI-RD-91, Figma `184:2`).
  *
+ * `GET /api/wl/checking` (confirmado lendo `CheckingController.GetAll` real
+ * no workspace irmão do BFF, 2026-09-22) — só tem UM campo de busca
+ * textual (`busca`, contra Campanha OU Cliente), não campos independentes
+ * de campanha/anunciante; e um INTERVALO de período
+ * (`idPeriodoInicial`/`idPeriodoFinal`), não um único id — o dropdown
+ * "Período" abaixo pina os dois limites no mesmo período escolhido.
+ *
  * Colunas abreviadas Check./Aprov./Receb. levam `title`/`aria-label` com o
  * nome completo (acessibilidade — regra do card). SEM coluna Afiliada: a
- * listagem já é recortada por tenant no servidor. `Período` mostra o
- * intervalo de datas de VEICULAÇÃO da PI (ex. `01/07–31/07`), não o período
- * comercial.
+ * listagem já é recortada por tenant no servidor.
+ *
+ * As 4 colunas numéricas (Itens PI/Check./Aprov./Receb.) vêm prontas do BFF
+ * desde VEI-RD-91c (`itensPi`/`itensChecados`/`itensAprovados`/
+ * `itensRecebidos`). A coluna Período continua "—": a listagem não projeta
+ * um intervalo de veiculação agregado, só filtra por ele.
  */
 @Component({
   selector: 'app-checkout-listagem',
@@ -60,7 +69,7 @@ const TODOS = '';
     <div class="co-filtros">
       <div class="co-filtros__linha">
         <aurum-filter-field rotulo="Período">
-          <aurum-dropdown [opcoes]="opcoesPeriodo" [valor]="idPeriodo === null ? TODOS : String(idPeriodo)" (valorChange)="mudarFiltro('idPeriodo', $event)" />
+          <aurum-dropdown [opcoes]="opcoesPeriodo" [valor]="idPeriodo === null ? TODOS : String(idPeriodo)" (valorChange)="mudarPeriodo($event)" />
         </aurum-filter-field>
         <aurum-filter-field rotulo="Status">
           <aurum-dropdown [opcoes]="opcoesStatus" [valor]="status === null ? TODOS : status" (valorChange)="mudarFiltro('status', $event)" />
@@ -68,8 +77,7 @@ const TODOS = '';
         <aurum-filter-field rotulo="Cidade">
           <aurum-dropdown [opcoes]="opcoesCidade" [valor]="idCidade === null ? TODOS : String(idCidade)" (valorChange)="mudarFiltro('idCidade', $event)" />
         </aurum-filter-field>
-        <aurum-text-input placeholder="Buscar por campanha" rotulo="Buscar por campanha" [valor]="campanha" (valorChange)="mudarBusca('campanha', $event)" />
-        <aurum-text-input placeholder="Buscar por anunciante" rotulo="Buscar por anunciante" [valor]="anunciante" (valorChange)="mudarBusca('anunciante', $event)" />
+        <aurum-text-input placeholder="Buscar por campanha ou anunciante" rotulo="Buscar por campanha ou anunciante" [valor]="busca" (valorChange)="mudarBusca($event)" />
         <aurum-button variante="ghost" (click)="limparFiltros()">Limpar Filtros</aurum-button>
       </div>
     </div>
@@ -112,18 +120,18 @@ const TODOS = '';
               <tr aurumTableRow>
                 <td aurumTableCell>{{ item.campanha || '—' }}</td>
                 <td aurumTableCell>{{ item.anunciante || '—' }}</td>
-                <td aurumTableCell>{{ item.cidade || '—' }}</td>
+                <td aurumTableCell>{{ item.cidades.length > 0 ? item.cidades.join(', ') : '—' }}</td>
                 <td aurumTableCell>{{ item.itensPi }}</td>
-                <td aurumTableCell>{{ item.itensChecking }}</td>
+                <td aurumTableCell>{{ item.itensChecados }}</td>
                 <td aurumTableCell>{{ item.itensAprovados }}</td>
                 <td aurumTableCell>{{ item.itensRecebidos }}</td>
-                <td aurumTableCell>{{ periodoTexto(item) }}</td>
-                <td aurumTableCell>{{ item.codigo }}</td>
+                <td aurumTableCell>—</td>
+                <td aurumTableCell>{{ item.piCodigo || '—' }}</td>
                 <td aurumTableCell>
                   <aurum-status-pill [rotulo]="item.status" [tom]="tomStatus(item.status)" />
                 </td>
                 <td aurumTableCell>
-                  <a class="co-link" [routerLink]="['/checkout', item.codigo]">Ver detalhe</a>
+                  <a class="co-link" [routerLink]="['/checkout', item.id]">Ver detalhe</a>
                 </td>
               </tr>
             }
@@ -171,7 +179,7 @@ export class CheckoutListagemComponent implements OnInit {
   readonly String = String;
   readonly opcoesStatus: AurumDropdownOpcao[] = [
     { valor: TODOS, rotulo: 'Todos' },
-    ...STATUS_PEDIDO_INSERCAO.map((status) => ({ valor: status, rotulo: status })),
+    ...STATUS_CHECKING.map((status) => ({ valor: status, rotulo: status })),
   ];
   opcoesPeriodo: AurumDropdownOpcao[] = [{ valor: TODOS, rotulo: 'Todos' }];
   opcoesCidade: AurumDropdownOpcao[] = [{ valor: TODOS, rotulo: 'Todas' }];
@@ -182,8 +190,7 @@ export class CheckoutListagemComponent implements OnInit {
   idPeriodo: number | null = null;
   status: string | null = null;
   idCidade: number | null = null;
-  campanha = '';
-  anunciante = '';
+  busca = '';
 
   itens: CheckoutListItem[] = [];
   carregando = false;
@@ -221,11 +228,13 @@ export class CheckoutListagemComponent implements OnInit {
     this.service
       .listar(
         {
-          idPeriodo: this.idPeriodo,
+          // Um unico dropdown de Periodo pina os dois limites do intervalo
+          // que o BFF aceita — nao existe um "idPeriodo" unico no contrato.
+          idPeriodoInicial: this.idPeriodo,
+          idPeriodoFinal: this.idPeriodo,
           status: this.status,
           idCidade: this.idCidade,
-          campanha: this.campanha.trim() || null,
-          anunciante: this.anunciante.trim() || null,
+          busca: this.busca.trim() || null,
         },
         { page, pageSize: this.pageSize }
       )
@@ -246,20 +255,22 @@ export class CheckoutListagemComponent implements OnInit {
       });
   }
 
-  mudarFiltro(campo: 'idPeriodo' | 'status' | 'idCidade', valor: string): void {
+  mudarPeriodo(valor: string): void {
+    this.idPeriodo = valor === TODOS ? null : Number(valor);
+    this.carregar(1);
+  }
+
+  mudarFiltro(campo: 'status' | 'idCidade', valor: string): void {
     if (campo === 'status') {
       this.status = valor === TODOS ? null : valor;
     } else {
-      const numerico = valor === TODOS ? null : Number(valor);
-      if (campo === 'idPeriodo') this.idPeriodo = numerico;
-      else this.idCidade = numerico;
+      this.idCidade = valor === TODOS ? null : Number(valor);
     }
     this.carregar(1);
   }
 
-  mudarBusca(campo: 'campanha' | 'anunciante', valor: string): void {
-    if (campo === 'campanha') this.campanha = valor;
-    else this.anunciante = valor;
+  mudarBusca(valor: string): void {
+    this.busca = valor;
     clearTimeout(this.timerBusca);
     this.timerBusca = setTimeout(() => this.carregar(1), 400);
   }
@@ -268,18 +279,11 @@ export class CheckoutListagemComponent implements OnInit {
     this.idPeriodo = null;
     this.status = null;
     this.idCidade = null;
-    this.campanha = '';
-    this.anunciante = '';
+    this.busca = '';
     this.carregar(1);
   }
 
   tomStatus(status: string): 'neutro' | 'sucesso' | 'aviso' | 'perigo' | 'primario' {
-    return TOM_STATUS_PEDIDO_INSERCAO[status] ?? 'neutro';
-  }
-
-  /** `01/07–31/07`, formatado a partir das datas de veiculação (não o período comercial). */
-  periodoTexto(item: CheckoutListItem): string {
-    if (!item.periodoVeiculacaoInicio || !item.periodoVeiculacaoFim) return '—';
-    return `${formatarDiaMes(item.periodoVeiculacaoInicio)}–${formatarDiaMes(item.periodoVeiculacaoFim)}`;
+    return TOM_STATUS_CHECKING[status] ?? 'neutro';
   }
 }
