@@ -1,0 +1,315 @@
+import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { mensagemDeErro } from '../../core/http/api-error';
+import { CidadeLookup, OsListItem, PeriodoLookup, STATUS_OS } from '../../core/models/wl.models';
+import { LookupsService } from '../../core/services/lookups.service';
+import { OrdemServicoService } from '../../core/services/ordem-servico.service';
+import { PaginadorComponent } from '../../shared/paginador.component';
+import { AurumButtonComponent } from '../../shared/aurum/aurum-button.component';
+import { AurumDropdownComponent, AurumDropdownOpcao } from '../../shared/aurum/aurum-dropdown.component';
+import { AurumFilterFieldComponent } from '../../shared/aurum/aurum-filter-field.component';
+import { AurumPageHeaderComponent } from '../../shared/aurum/aurum-page-header.component';
+import { AurumStatusPillComponent } from '../../shared/aurum/aurum-status-pill.component';
+import {
+  AurumTableCellComponent,
+  AurumTableComponent,
+  AurumTableHeaderCellComponent,
+  AurumTableRowComponent,
+} from '../../shared/aurum/aurum-table.component';
+import { OrdemServicoEntregaModalComponent, OsEntregaContexto } from './ordem-servico-entrega-modal.component';
+
+const TODOS = '';
+
+/**
+ * Ordem de Serviço — listagem (VEI-RD-88a, Figma `198:2`).
+ *
+ * Status de OS tem 4 valores no Figma, mas nesta sprint toda OS nasce e
+ * permanece `Aberta` — não existe UI de transição de status aqui, e
+ * `RESPONSÁVEL` é sempre "Não atribuída": não existe fluxo de atribuição de
+ * colador nesta sprint (regra dura, decisão humana 2026-09-17), então o
+ * campo nunca é preenchido pela UI.
+ *
+ * A ação "Entregar" abre o modal de VEI-RD-88c; "BAIXAR PLANILHA (PDF)" sem
+ * passar pelo modal fica só no detalhe (VEI-RD-88d).
+ */
+@Component({
+  selector: 'app-ordem-servico-listagem',
+  imports: [
+    CommonModule,
+    RouterLink,
+    PaginadorComponent,
+    AurumPageHeaderComponent,
+    AurumButtonComponent,
+    AurumDropdownComponent,
+    AurumFilterFieldComponent,
+    AurumStatusPillComponent,
+    AurumTableComponent,
+    AurumTableRowComponent,
+    AurumTableCellComponent,
+    AurumTableHeaderCellComponent,
+    OrdemServicoEntregaModalComponent,
+  ],
+  template: `
+    <aurum-page-header titulo="Ordem de Serviço" subtitulo="Rotas e autorizações de colagem geradas por período.">
+      <a aurumPageHeaderAcoes class="os-link-primario" routerLink="/ordens-servico/nova">+ Nova Ordem de Serviço</a>
+    </aurum-page-header>
+
+    <div class="os-filtros">
+      <aurum-filter-field rotulo="Período">
+        <aurum-dropdown [opcoes]="opcoesPeriodo" [valor]="filtroPeriodo === null ? TODOS : String(filtroPeriodo)" (valorChange)="mudarPeriodo($event)" />
+      </aurum-filter-field>
+      <aurum-filter-field rotulo="Status">
+        <aurum-dropdown [opcoes]="opcoesStatus" [valor]="status === null ? TODOS : status" (valorChange)="mudarStatus($event)" />
+      </aurum-filter-field>
+      <aurum-filter-field rotulo="Responsável">
+        <aurum-dropdown [opcoes]="opcoesResponsavel" valor="" (valorChange)="carregar(1)" />
+      </aurum-filter-field>
+      <aurum-button variante="ghost" (click)="limparFiltros()">Limpar Filtros</aurum-button>
+    </div>
+
+    @if (carregando) {
+      <div class="wl-estado wl-estado--carregando">Carregando ordens de serviço…</div>
+    }
+
+    @if (erro) {
+      <div class="wl-estado wl-estado--erro">
+        {{ erro }}
+        <aurum-button variante="ghost" (click)="carregar()">Tentar novamente</aurum-button>
+      </div>
+    }
+
+    @if (!carregando && !erro && ordens.length === 0) {
+      <div class="wl-estado wl-estado--vazio">Nenhuma ordem de serviço encontrada.</div>
+    }
+
+    @if (ordens.length > 0) {
+      <div class="wl-tabela--rolavel">
+        <table aurumTable>
+          <thead>
+            <tr aurumTableRow>
+              <th aurumTableHeaderCell>OS Nº</th>
+              <th aurumTableHeaderCell>Período</th>
+              <th aurumTableHeaderCell>Cidade(s)</th>
+              <th aurumTableHeaderCell>Responsável</th>
+              <th aurumTableHeaderCell>Peças</th>
+              <th aurumTableHeaderCell>Status</th>
+              <th aurumTableHeaderCell>Criada em</th>
+              <th aurumTableHeaderCell>Ação</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (os of ordens; track os.id) {
+              <tr aurumTableRow>
+                <td aurumTableCell>OS #{{ numeroFormatado(os.numero) }}</td>
+                <td aurumTableCell>{{ os.periodoNome }}</td>
+                <td aurumTableCell>{{ os.cidades.length > 0 ? os.cidades.join(', ') : '—' }}</td>
+                <td aurumTableCell>
+                  @if (os.responsavelNome) {
+                    <span class="os-responsavel">
+                      @if (os.responsavelAvatarUrl) {
+                        <img class="os-avatar" [src]="os.responsavelAvatarUrl" [alt]="os.responsavelNome" />
+                      }
+                      {{ os.responsavelNome }}
+                    </span>
+                  } @else {
+                    <span class="vazio">Não atribuída</span>
+                  }
+                </td>
+                <td aurumTableCell>{{ os.pecasCount }}</td>
+                <td aurumTableCell><aurum-status-pill [rotulo]="os.status" tom="neutro" /></td>
+                <td aurumTableCell>{{ os.criadaEm | date: 'dd/MM/yyyy HH:mm' }}</td>
+                <td aurumTableCell class="os-acoes">
+                  <a class="os-link" [routerLink]="['/ordens-servico', os.id]">Ver detalhe</a>
+                  <aurum-button variante="ghost" (click)="abrirEntrega(os)">Entregar</aurum-button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <app-paginador
+        [page]="page"
+        [pageSize]="pageSize"
+        [total]="total"
+        [totalPaginas]="totalPaginas"
+        [carregando]="carregando"
+        (pagina)="carregar($event)"
+      />
+    }
+
+    <app-os-entrega-modal
+      [aberto]="modalAberto"
+      [contexto]="contextoEntrega"
+      (fechar)="modalAberto = false"
+      (entregue)="aoEntregar()"
+    />
+  `,
+  changeDetection: ChangeDetectionStrategy.Eager,
+  styles: [
+    `
+      .os-link-primario {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--radius-pill);
+        padding: 10px 20px;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        background: var(--primary-color);
+        color: var(--white);
+        text-decoration: none;
+        box-shadow: var(--shadow-base);
+      }
+      .os-link-primario:hover {
+        background: var(--primary-dark);
+        box-shadow: var(--shadow-hover);
+      }
+      .os-filtros {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+      .os-responsavel {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .os-avatar {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+      .os-acoes {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        white-space: nowrap;
+      }
+      .os-link {
+        color: var(--primary-color);
+        text-decoration: none;
+      }
+      .os-link:hover {
+        text-decoration: underline;
+      }
+      .vazio {
+        color: color-mix(in srgb, var(--on-surface) 50%, transparent);
+      }
+    `,
+  ],
+})
+export class OrdemServicoListagemComponent implements OnInit {
+  private service = inject(OrdemServicoService);
+  private lookups = inject(LookupsService);
+
+  readonly TODOS = TODOS;
+  readonly String = String;
+  readonly opcoesStatus: AurumDropdownOpcao[] = [
+    { valor: TODOS, rotulo: 'Todos' },
+    ...STATUS_OS.map((s) => ({ valor: s, rotulo: s })),
+  ];
+  /**
+   * Sem endpoint de responsáveis/coladores nesta sprint (não existe fluxo de
+   * atribuição — regra dura). O filtro aparece no Figma, então o campo fica
+   * na tela com a única opção possível hoje, sem fingir uma lista que a UI
+   * não tem como preencher.
+   */
+  readonly opcoesResponsavel: AurumDropdownOpcao[] = [{ valor: TODOS, rotulo: 'Todos' }];
+
+  opcoesPeriodo: AurumDropdownOpcao[] = [{ valor: TODOS, rotulo: 'Todos' }];
+  private periodosCarregados: PeriodoLookup[] = [];
+  private cidadesCarregadas: CidadeLookup[] = [];
+
+  filtroPeriodo: number | null = null;
+  status: string | null = null;
+
+  ordens: OsListItem[] = [];
+  carregando = false;
+  erro: string | null = null;
+
+  page = 1;
+  pageSize = 25;
+  total = 0;
+  totalPaginas = 0;
+
+  modalAberto = false;
+  contextoEntrega: OsEntregaContexto | null = null;
+
+  ngOnInit(): void {
+    this.lookups.periodos().subscribe({
+      next: (periodos) => {
+        this.periodosCarregados = periodos;
+        this.opcoesPeriodo = [{ valor: TODOS, rotulo: 'Todos' }, ...periodos.map((p) => ({ valor: String(p.id), rotulo: p.nome }))];
+      },
+      error: () => (this.periodosCarregados = []),
+    });
+    this.lookups.cidades().subscribe({
+      next: (cidades) => (this.cidadesCarregadas = cidades),
+      error: () => (this.cidadesCarregadas = []),
+    });
+    this.carregar();
+  }
+
+  carregar(page = this.page): void {
+    this.carregando = true;
+    this.erro = null;
+
+    this.service
+      .listar(
+        { idPeriodoInicial: this.filtroPeriodo, idPeriodoFinal: this.filtroPeriodo, status: this.status },
+        { page, pageSize: this.pageSize }
+      )
+      .subscribe({
+        next: (pagina) => {
+          this.ordens = pagina.itens;
+          this.page = pagina.page;
+          this.pageSize = pagina.pageSize;
+          this.total = pagina.total;
+          this.totalPaginas = pagina.totalPaginas;
+          this.carregando = false;
+        },
+        error: (erro: unknown) => {
+          this.carregando = false;
+          this.ordens = [];
+          this.erro = mensagemDeErro(erro, 'Não foi possível carregar as ordens de serviço.');
+        },
+      });
+  }
+
+  mudarPeriodo(valor: string): void {
+    this.filtroPeriodo = valor === TODOS ? null : Number(valor);
+    this.carregar(1);
+  }
+
+  mudarStatus(valor: string): void {
+    this.status = valor === TODOS ? null : valor;
+    this.carregar(1);
+  }
+
+  limparFiltros(): void {
+    this.filtroPeriodo = null;
+    this.status = null;
+    this.carregar(1);
+  }
+
+  numeroFormatado(numero: number): string {
+    return String(numero).padStart(4, '0');
+  }
+
+  abrirEntrega(os: OsListItem): void {
+    this.contextoEntrega = { id: os.id, numero: os.numero, pecasCount: os.pecasCount, periodoNome: os.periodoNome };
+    this.modalAberto = true;
+  }
+
+  aoEntregar(): void {
+    this.modalAberto = false;
+    this.contextoEntrega = null;
+  }
+}
