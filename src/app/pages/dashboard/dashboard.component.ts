@@ -54,7 +54,6 @@ const TOM_STATUS_RESERVA: Record<string, AurumStatusPillTom> = {
     AurumStatCardComponent,
   ],
   templateUrl: './dashboard.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [
     `
       .periodo {
