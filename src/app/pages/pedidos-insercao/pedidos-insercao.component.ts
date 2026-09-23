@@ -13,10 +13,12 @@ import { formatarDiaMes } from '../../core/http/datas';
 import { PedidosInsercaoService } from '../../core/services/pedidos.service';
 import { PaginadorComponent } from '../../shared/paginador.component';
 import { AurumButtonComponent } from '../../shared/aurum/aurum-button.component';
-import { AurumCardComponent } from '../../shared/aurum/aurum-card.component';
 import { AurumDropdownComponent, AurumDropdownOpcao } from '../../shared/aurum/aurum-dropdown.component';
 import { AurumFilterFieldComponent } from '../../shared/aurum/aurum-filter-field.component';
 import { AurumPageHeaderComponent } from '../../shared/aurum/aurum-page-header.component';
+import { AurumStatCardComponent } from '../../shared/aurum/aurum-stat-card.component';
+import { AurumFilterBarComponent } from '../../shared/aurum/aurum-filter-bar.component';
+import { AurumModalComponent } from '../../shared/aurum/aurum-modal.component';
 import { AurumStatusPillComponent } from '../../shared/aurum/aurum-status-pill.component';
 import { AurumTextInputComponent } from '../../shared/aurum/aurum-text-input.component';
 import {
@@ -63,56 +65,51 @@ const OPCOES_ORDENACAO: { valor: PedidosInsercaoOrdenacao; rotulo: string }[] = 
     PaginadorComponent,
     AurumPageHeaderComponent,
     AurumButtonComponent,
-    AurumCardComponent,
     AurumDropdownComponent,
     AurumFilterFieldComponent,
     AurumTextInputComponent,
     AurumStatusPillComponent,
+    AurumStatCardComponent,
+    AurumFilterBarComponent,
+    AurumModalComponent,
     AurumTableComponent,
     AurumTableRowComponent,
     AurumTableCellComponent,
     AurumTableHeaderCellComponent,
   ],
   template: `
-    <aurum-page-header titulo="Pedidos de Inserção (PIs)" subtitulo="PIs autorizadas para esta exibidora.">
-      @if (resumo?.afiliadaId; as afiliadaId) {
-        <span aurumPageHeaderBadge class="pi-badge">Afiliada #{{ afiliadaId }}</span>
-      }
-    </aurum-page-header>
+    <aurum-page-header
+      titulo="Pedidos de Inserção (PIs)"
+      [badge]="resumo?.afiliadaId ? 'Afiliada #' + resumo?.afiliadaId : ''"
+      subtitulo="Documentos formais de veiculação e download de PDFs de Pedidos de Inserção."
+    />
 
     @if (resumo; as r) {
       <div class="pi-dashboard">
-        <aurum-card class="pi-kpi">
-          <span class="pi-kpi__rotulo">Total de Pedidos</span>
-          <span class="pi-kpi__valor">{{ r.totalPIs }}</span>
-          <span class="pi-kpi__sub">{{ r.totalPecas }} {{ r.totalPecas === 1 ? 'peça' : 'peças' }}</span>
-        </aurum-card>
-        <aurum-card class="pi-kpi">
-          <span class="pi-kpi__rotulo">Valor Líquido Total</span>
-          <span class="pi-kpi__valor">{{ r.valorLiquidoTotal | currency: 'BRL' : 'symbol' : '1.2-2' }}</span>
-        </aurum-card>
-        <aurum-card class="pi-kpi">
-          <span class="pi-kpi__rotulo">PIs em Checking</span>
-          <span class="pi-kpi__valor">{{ quantidadePorStatus(r, 'Checking') }}</span>
-        </aurum-card>
-        <aurum-card class="pi-kpi">
-          <span class="pi-kpi__rotulo">PIs Veiculadas</span>
-          <span class="pi-kpi__valor">{{ quantidadePorStatus(r, 'Veiculado') }}</span>
-        </aurum-card>
+        <aurum-stat-card rotulo="Total de pedidos" [valor]="r.totalPIs">
+          {{ r.totalPecas }} {{ r.totalPecas === 1 ? 'peça atrelada' : 'peças atreladas' }}
+        </aurum-stat-card>
+        <aurum-stat-card rotulo="Valor líquido total" [valor]="moeda(r.valorLiquidoTotal)">Total contratado</aurum-stat-card>
+        <aurum-stat-card rotulo="PIs veiculadas" tomRotulo="sucesso" [valor]="quantidadePorStatus(r, 'Veiculado')">
+          {{ moeda(valorPorStatus(r, 'Veiculado')) }}
+        </aurum-stat-card>
+        <aurum-stat-card rotulo="PIs em checking" tomRotulo="aviso" [valor]="quantidadePorStatus(r, 'Checking')">
+          {{ moeda(valorPorStatus(r, 'Checking')) }}
+        </aurum-stat-card>
       </div>
     }
 
-    <div class="pi-filtros">
-      <aurum-text-input placeholder="Buscar por PI, anunciante, agência ou campanha" rotulo="Buscar" [valor]="busca" (valorChange)="mudarBusca($event)" />
+    <aurum-filter-bar>
+      <aurum-text-input placeholder="Buscar por PI, anunciante, agência ou campanha…" rotulo="Buscar" [valor]="busca" (valorChange)="mudarBusca($event)" />
       <aurum-filter-field rotulo="Status">
         <aurum-dropdown [opcoes]="opcoesStatus" [valor]="status === null ? TODOS : status" (valorChange)="mudarStatus($event)" />
       </aurum-filter-field>
       <aurum-filter-field rotulo="Ordenar">
         <aurum-dropdown [opcoes]="opcoesOrdenacao" [valor]="ordenarPor" (valorChange)="mudarOrdenacao($event)" />
       </aurum-filter-field>
-      <aurum-button variante="ghost" (click)="alternarDirecao()">{{ desc ? '↓ Mais recente' : '↑ Mais antigo' }}</aurum-button>
-      <aurum-button variante="ghost" (click)="limparFiltros()">Limpar Filtros</aurum-button>
-    </div>
+      <aurum-button variante="outline" tamanho="sm" (click)="alternarDirecao()">{{ desc ? '↓ Mais recente' : '↑ Mais antigo' }}</aurum-button>
+      <aurum-button variante="outline" tamanho="sm" (click)="limparFiltros()">Limpar filtros</aurum-button>
+    </aurum-filter-bar>
 
     @if (carregando) {
       <div class="wl-estado wl-estado--carregando">Carregando PIs…</div>
@@ -121,7 +118,7 @@ const OPCOES_ORDENACAO: { valor: PedidosInsercaoOrdenacao; rotulo: string }[] = 
     @if (erro) {
       <div class="wl-estado wl-estado--erro">
         {{ erro }}
-        <aurum-button variante="ghost" (click)="carregar()">Tentar novamente</aurum-button>
+        <aurum-button variante="outline" tamanho="sm" (click)="carregar()">Tentar novamente</aurum-button>
       </div>
     }
 
@@ -133,10 +130,9 @@ const OPCOES_ORDENACAO: { valor: PedidosInsercaoOrdenacao; rotulo: string }[] = 
 
     @if (pedidos.length > 0) {
       <div class="wl-tabela--rolavel">
-        <table aurumTable>
+        <table aurumTable class="aurum-table--densa">
           <thead>
             <tr aurumTableRow>
-              <th aurumTableHeaderCell>Status</th>
               <th aurumTableHeaderCell>Pedido</th>
               <th aurumTableHeaderCell>Cidade</th>
               <th aurumTableHeaderCell>Período</th>
@@ -146,29 +142,26 @@ const OPCOES_ORDENACAO: { valor: PedidosInsercaoOrdenacao; rotulo: string }[] = 
               <th aurumTableHeaderCell>Peças</th>
               <th aurumTableHeaderCell>Valor Líquido</th>
               <th aurumTableHeaderCell>Data</th>
+              <th aurumTableHeaderCell>Status</th>
               <th aurumTableHeaderCell>Ação</th>
             </tr>
           </thead>
           <tbody>
             @for (pedido of pedidos; track pedido.id) {
               <tr aurumTableRow>
-                <td aurumTableCell><aurum-status-pill [rotulo]="pedido.status" [tom]="tomStatus(pedido.status)" /></td>
-                <td aurumTableCell>{{ pedido.codigo }}</td>
-                <td aurumTableCell>{{ pedido.cidade || '—' }}</td>
-                <td aurumTableCell>{{ periodoTexto(pedido) }}</td>
-                <td aurumTableCell>{{ pedido.anunciante || '—' }}</td>
-                <td aurumTableCell>{{ pedido.agencia }}</td>
+                <td aurumTableCell class="pi-codigo">{{ pedido.codigo }}</td>
+                <td aurumTableCell class="pi-forte">{{ pedido.cidade || '—' }}</td>
+                <td aurumTableCell class="pi-apagado">{{ periodoTexto(pedido) }}</td>
+                <td aurumTableCell class="pi-anunciante">{{ pedido.anunciante || '—' }}</td>
+                <td aurumTableCell class="pi-apagado">{{ pedido.agencia }}</td>
                 <td aurumTableCell>{{ pedido.campanha || '—' }}</td>
-                <td aurumTableCell>{{ pedido.itensCount }}</td>
-                <td aurumTableCell>{{ pedido.valorLiquidoVeiculacao | currency: 'BRL' : 'symbol' : '1.2-2' }}</td>
-                <td aurumTableCell>{{ pedido.dataCadastro | date: 'dd/MM/yyyy HH:mm' }}</td>
+                <td aurumTableCell class="pi-forte">{{ pedido.itensCount }}</td>
+                <td aurumTableCell class="pi-valor">{{ moeda(pedido.valorLiquidoVeiculacao) }}</td>
+                <td aurumTableCell class="pi-apagado">{{ pedido.dataCadastro | date: 'dd/MM/yyyy HH:mm' }}</td>
+                <td aurumTableCell><aurum-status-pill [rotulo]="pedido.status" [tom]="tomStatus(pedido.status)" compacto /></td>
                 <td aurumTableCell>
-                  <aurum-button
-                    variante="ghost"
-                    [desabilitado]="baixando === pedido.codigo"
-                    (click)="baixarPi(pedido.codigo)"
-                  >
-                    {{ baixando === pedido.codigo ? 'Abrindo…' : 'Baixar PI' }}
+                  <aurum-button variante="gold" tamanho="xs" [desabilitado]="baixando === pedido.codigo" (click)="baixarPi(pedido.codigo)">
+                    ⭳ {{ baixando === pedido.codigo ? 'Abrindo…' : 'Baixar PI' }}
                   </aurum-button>
                 </td>
               </tr>
@@ -186,52 +179,104 @@ const OPCOES_ORDENACAO: { valor: PedidosInsercaoOrdenacao; rotulo: string }[] = 
         (pagina)="carregar($event)"
       />
     }
+
+    <!-- Retorno do download (Figma 420:27221 carregando / 420:26637 sucesso). -->
+    <aurum-modal [aberto]="!!baixando || !!baixado" largura="sm" [semFechar]="!!baixando" (fechar)="baixado = null">
+      <div class="pi-download" role="status" aria-live="polite">
+        <span class="aurum-ico pi-download__icone" style="--ico: url(/assets/aurum/icon-pedidos-insercao.svg)"></span>
+        <h2>{{ baixando || baixado }} — Download do PI</h2>
+        @if (baixando) {
+          <p>Gerando o documento para a Afiliada{{ resumo?.afiliadaId ? ' #' + resumo?.afiliadaId : '' }}.</p>
+          <strong class="pi-download__estado">Preparando documento em PDF…</strong>
+          <span class="pi-download__barra"><span></span></span>
+        } @else {
+          <p>O PDF foi aberto em uma nova aba.</p>
+          <aurum-button variante="wine" tamanho="sm" (click)="baixado = null">OK, Entendido</aurum-button>
+        }
+      </div>
+    </aurum-modal>
   `,
   changeDetection: ChangeDetectionStrategy.Eager,
   styles: [
     `
-      .pi-badge {
-        display: inline-flex;
-        align-items: center;
-        border-radius: var(--radius-pill);
-        background: var(--surface-muted);
-        color: var(--on-surface);
-        font-size: 0.75rem;
-        font-weight: 600;
-        padding: 4px 12px;
-      }
       .pi-dashboard {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 12px;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: 16px;
         margin-bottom: 20px;
       }
-      .pi-kpi {
+      .pi-codigo {
+        font-family: var(--font-mono);
+        font-weight: 700;
+        color: var(--primary-color);
+        white-space: nowrap;
+      }
+      .pi-anunciante {
+        font-weight: 700;
+        color: var(--primary-dark);
+      }
+      .pi-forte {
+        font-weight: 600;
+      }
+      .pi-apagado {
+        color: var(--on-surface);
+      }
+      .pi-valor {
+        font-family: var(--font-display);
+        font-weight: 700;
+        color: var(--primary-dark);
+        white-space: nowrap;
+      }
+      .pi-download {
         display: flex;
         flex-direction: column;
-        gap: 4px;
+        align-items: center;
+        gap: 8px;
+        text-align: center;
       }
-      .pi-kpi__rotulo {
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        color: var(--on-surface);
+      .pi-download__icone {
+        width: 32px;
+        height: 32px;
+        color: var(--primary-color);
       }
-      .pi-kpi__valor {
-        font-size: 1.5rem;
+      .pi-download h2 {
+        margin: 4px 0 0;
+        font-size: 1.125rem;
         font-weight: 700;
-        color: var(--charcoal);
       }
-      .pi-kpi__sub {
-        font-size: 0.75rem;
+      .pi-download p {
+        margin: 0 0 8px;
+        font-size: 0.78125rem;
         color: var(--on-surface);
       }
-      .pi-filtros {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: flex-end;
-        gap: 12px;
-        margin-bottom: 16px;
+      .pi-download__estado {
+        font-size: 0.78125rem;
+        color: var(--primary-dark);
+      }
+      .pi-download__barra {
+        width: 100%;
+        height: 6px;
+        overflow: hidden;
+        border-radius: var(--radius-pill);
+        background: rgba(0, 0, 0, 0.08);
+      }
+      .pi-download__barra span {
+        display: block;
+        width: 40%;
+        height: 100%;
+        border-radius: inherit;
+        background: var(--gold-grad);
+        animation: pi-progresso 1.2s ease-in-out infinite;
+      }
+      @keyframes pi-progresso {
+        from { transform: translateX(-100%); }
+        to { transform: translateX(250%); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .pi-download__barra span {
+          width: 100%;
+          animation: none;
+        }
       }
     `,
   ],
@@ -253,6 +298,8 @@ export class PedidosInsercaoComponent implements OnInit {
 
   /** Código da PI cujo PDF está sendo baixado, para desabilitar só aquele botão. */
   baixando: string | null = null;
+  /** Código do último PI aberto — mostra o diálogo de sucesso do Figma. */
+  baixado: string | null = null;
 
   busca = '';
   status: StatusPedidoInsercao | null = null;
@@ -327,6 +374,15 @@ export class PedidosInsercaoComponent implements OnInit {
     this.carregar(1);
   }
 
+  valorPorStatus(resumo: PedidosInsercaoResumo, status: StatusPedidoInsercao): number {
+    return resumo.porStatus.find((s) => s.status === status)?.valor ?? 0;
+  }
+
+  /** `pt-BR` sem centavos, como os valores do Figma ("R$ 127.600"). */
+  moeda(valor: number | null | undefined): string {
+    return (valor ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
+  }
+
   quantidadePorStatus(resumo: PedidosInsercaoResumo, status: StatusPedidoInsercao): number {
     return resumo.porStatus.find((s) => s.status === status)?.quantidade ?? 0;
   }
@@ -353,6 +409,7 @@ export class PedidosInsercaoComponent implements OnInit {
 
         const url = URL.createObjectURL(blob);
         window.open(url, '_blank');
+        this.baixado = codigo;
 
         // O objectURL segura o blob em memória até ser revogado. A aba nova já
         // leu o conteúdo quando o timer dispara; revogar na hora abortaria o
