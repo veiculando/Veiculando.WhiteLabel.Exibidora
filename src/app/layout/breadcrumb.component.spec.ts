@@ -36,6 +36,14 @@ describe('BreadcrumbComponent', () => {
     expect(link?.getAttribute('href')).toBe('/dashboard');
 
     const atual = root.querySelector('[aria-current="page"]');
-    expect(atual?.textContent?.trim()).toBe('locais');
+    expect(atual?.textContent?.trim()).toBe('Locais');
+  });
+
+  it('rota com parametro usa o nome da tela do Figma, nao o id', async () => {
+    fixture.detectChanges();
+    await router.navigateByUrl('/checkout/42');
+    fixture.detectChanges();
+    const atual = (fixture.nativeElement as HTMLElement).querySelector('[aria-current="page"]');
+    expect(atual?.textContent?.trim()).toBe('Operacional — Check out — Detalhe');
   });
 });

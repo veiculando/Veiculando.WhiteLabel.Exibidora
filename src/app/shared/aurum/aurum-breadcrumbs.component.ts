@@ -21,7 +21,9 @@ export interface AurumBreadcrumbItem {
               <span aria-current="page">{{ item.rotulo }}</span>
             }
             @if (!ultimo) {
-              <span class="aurum-breadcrumbs__separador" aria-hidden="true">/</span>
+              <svg class="aurum-breadcrumbs__separador" viewBox="0 0 8 12" width="8" height="12" aria-hidden="true" focusable="false">
+                <path d="M2 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
             }
           </li>
         }
@@ -34,7 +36,7 @@ export interface AurumBreadcrumbItem {
       .aurum-breadcrumbs ol {
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 8px;
         list-style: none;
         margin: 0;
         padding: 0;
@@ -43,7 +45,8 @@ export interface AurumBreadcrumbItem {
       .aurum-breadcrumbs li {
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 8px;
+        min-height: 24px;
       }
       .aurum-breadcrumbs a {
         color: var(--on-surface);
@@ -54,11 +57,11 @@ export interface AurumBreadcrumbItem {
         text-decoration: underline;
       }
       .aurum-breadcrumbs [aria-current='page'] {
-        color: var(--charcoal);
+        color: var(--primary-color);
         font-weight: 600;
       }
       .aurum-breadcrumbs__separador {
-        color: var(--border);
+        color: var(--on-surface);
       }
     `,
   ],

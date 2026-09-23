@@ -22,39 +22,45 @@ import { SidebarComponent } from './sidebar.component';
     imports: [RouterOutlet, HeaderComponent, SidebarComponent, BreadcrumbComponent, FooterComponent],
     template: `
     <div class="shell">
-      <app-header />
+      <app-sidebar />
       <div class="shell__corpo">
-        <app-sidebar />
+        <app-header />
         <main class="shell__conteudo">
           <app-breadcrumb />
           <router-outlet />
         </main>
+        <app-footer />
       </div>
-      <app-footer />
     </div>
   `,
     changeDetection: ChangeDetectionStrategy.Eager,
     styles: [
         `
+      /* Figma Aurum: sidebar de altura total à esquerda; header e footer
+         ocupam só a coluna de conteúdo. */
       .shell {
         display: flex;
-        flex-direction: column;
         min-height: 100vh;
+        background: var(--paper-bg);
       }
       .shell__corpo {
         display: flex;
+        flex-direction: column;
         flex: 1;
-        align-items: stretch;
+        min-width: 0;
       }
       .shell__conteudo {
         flex: 1;
         min-width: 0;
-        padding: 20px 24px;
+        padding: 24px 40px 40px;
         background: var(--paper-bg);
       }
       @media (max-width: 900px) {
-        .shell__corpo {
+        .shell {
           flex-direction: column;
+        }
+        .shell__conteudo {
+          padding: 16px;
         }
       }
     `,

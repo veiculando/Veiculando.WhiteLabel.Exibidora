@@ -19,6 +19,8 @@
   --header-footer-bg: color-mix(in srgb, var(--primary-color) 74%, #1a1a1b);
   --shell-bg: color-mix(in srgb, var(--primary-color) 55%, #1a1a1b 45%);
   --drawer-bg: color-mix(in srgb, var(--shell-bg) 92%, #000000 8%);
+  /* Sidebar do Figma (#5e0f1a sobre o Aurum), sob a textura. */
+  --sidebar-bg: color-mix(in srgb, var(--primary-color) 61%, #1a1a1b);
   --gold-accent: var(--secondary-color);
   --gold-light: color-mix(in srgb, var(--secondary-color) 68%, #ffffff);
   --eyebrow-color: color-mix(in srgb, var(--secondary-color) 68%, #000000);
