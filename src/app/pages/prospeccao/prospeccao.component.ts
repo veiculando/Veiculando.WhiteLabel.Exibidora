@@ -3,7 +3,6 @@ import { ProspeccaoService } from '../../core/services/comercial.service';
 import { ProspeccaoSessao } from '../../core/models/comercial.models';
 import { AurumButtonComponent } from '../../shared/aurum/aurum-button.component';
 import { AurumCardComponent } from '../../shared/aurum/aurum-card.component';
-import { AurumEyebrowComponent } from '../../shared/aurum/aurum-eyebrow.component';
 import { AurumPageHeaderComponent } from '../../shared/aurum/aurum-page-header.component';
 
 /**
@@ -22,19 +21,27 @@ import { AurumPageHeaderComponent } from '../../shared/aurum/aurum-page-header.c
     AurumPageHeaderComponent,
     AurumButtonComponent,
     AurumCardComponent,
-    AurumEyebrowComponent,
   ],
   templateUrl: './prospeccao.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styles: [
     `
-      .prospeccao__grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; align-items: start; }
-      .prospeccao__destaque { background: var(--drawer-bg); color: var(--white); border-radius: var(--radius-md); padding: 24px; }
-      .prospeccao__destaque h2 { margin: 8px 0 12px; }
-      .prospeccao__item { margin-bottom: 16px; }
-      .prospeccao__item strong { display: block; margin-bottom: 2px; }
-      .prospeccao__item span { color: var(--on-surface); font-size: 0.9rem; }
-      .prospeccao__erro { color: var(--erro, #b00020); margin-top: 12px; }
+      .prospeccao__grade { display: grid; grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr); gap: 20px; align-items: start; }
+      @media (max-width: 900px) { .prospeccao__grade { grid-template-columns: 1fr; } }
+      .prospeccao__destaque { padding: 28px 24px; border-radius: 18px; background: var(--sidebar-bg); color: var(--paper-bg); box-shadow: var(--shadow-card); }
+      .prospeccao__eyebrow { display: inline-flex; align-items: center; gap: 10px; font-size: 0.6875rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--secondary-color); }
+      .prospeccao__eyebrow::before { content: ''; width: 36px; height: 2px; background: var(--secondary-color); }
+      .prospeccao__destaque h2 { margin: 14px 0 12px; font-size: 1.25rem; color: var(--paper-bg); }
+      .prospeccao__destaque p { max-width: 520px; margin: 0 0 24px; font-size: 0.84375rem; line-height: 1.7; color: color-mix(in srgb, var(--paper-bg) 88%, transparent); }
+      .prospeccao__ico { width: 14px; height: 14px; }
+      .prospeccao__como h2 { margin: 0 0 18px; font-size: 1.0625rem; }
+      .prospeccao__item { display: flex; gap: 12px; margin-bottom: 16px; }
+      .prospeccao__item:last-child { margin-bottom: 0; }
+      .prospeccao__item-icone { display: grid; place-items: center; flex: none; width: 32px; height: 32px; border: 1px solid var(--line-search); border-radius: 8px; background: color-mix(in srgb, var(--primary-color) 4%, var(--white)); color: var(--primary-color); }
+      .prospeccao__item-icone .aurum-ico { width: 15px; height: 15px; }
+      .prospeccao__item strong { display: block; font-size: 0.8125rem; color: var(--charcoal); }
+      .prospeccao__item span span { font-size: 0.75rem; color: var(--on-surface); }
+      .prospeccao__erro { margin: 12px 0 0; color: var(--gold-light); }
     `,
   ],
 })
@@ -46,9 +53,9 @@ export class ProspeccaoComponent {
 
   /** Copy literal do Figma — nada de jargão técnico na interface. */
   readonly comoFunciona = [
-    { titulo: 'Token temporário', texto: 'Entra automaticamente, sem senha.' },
-    { titulo: 'Identificação', texto: 'Vinculado ao operador para rastrear a origem do pedido.' },
-    { titulo: 'Expira automaticamente', texto: 'O acesso encerra depois de um tempo.' },
+    { titulo: 'Token temporário', texto: 'Entra automaticamente, sem senha.', icone: 'chave' },
+    { titulo: 'Identificação', texto: 'Vinculado ao operador para rastrear a origem do pedido.', icone: 'escudo' },
+    { titulo: 'Expira automaticamente', texto: 'O acesso encerra depois de um tempo.', icone: 'relogio' },
   ];
 
   iniciar(): void {
