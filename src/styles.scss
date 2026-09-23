@@ -89,6 +89,16 @@ textarea {
   height: 16px;
 }
 
+/* Texto só para leitores de tela. */
+.aurum-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
 :focus-visible {
   outline: 3px solid color-mix(in srgb, var(--secondary-color) 70%, #ffffff);
   outline-offset: 2px;
