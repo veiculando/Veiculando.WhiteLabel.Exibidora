@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { PecaService } from '../services/peca.service';
 import { PecaListItem } from '../models/peca.model';
@@ -28,6 +28,7 @@ import {
  */
 @Component({
   selector: 'app-local-pecas-step',
+  changeDetection: ChangeDetectionStrategy.Eager,
   standalone: true,
   imports: [
     CommonModule,

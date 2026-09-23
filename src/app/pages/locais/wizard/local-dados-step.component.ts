@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, ElementRef, EventEmitter, Input, OnChanges, OnInit, Output, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, EventEmitter, Input, OnChanges, OnInit, Output, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { GoogleMap, MapMarker } from '@angular/google-maps';
 import { firstValueFrom } from 'rxjs';
@@ -36,6 +36,7 @@ const CENTRO_PADRAO: google.maps.LatLngLiteral = { lat: -23.5505, lng: -46.6333 
  */
 @Component({
   selector: 'app-local-dados-step',
+  changeDetection: ChangeDetectionStrategy.Eager,
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, AurumButtonComponent, GoogleMap, MapMarker],
   templateUrl: './local-dados-step.component.html',

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { LocalPublicoPayload, emptyLocalPublicoPayload } from '../models/local-publico.model';
 import { AurumButtonComponent } from '../../../shared/aurum/aurum-button.component';
@@ -20,6 +20,7 @@ import { AurumButtonComponent } from '../../../shared/aurum/aurum-button.compone
  */
 @Component({
   selector: 'app-local-demografia-step',
+  changeDetection: ChangeDetectionStrategy.Eager,
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, AurumButtonComponent],
   templateUrl: './local-demografia-step.component.html',

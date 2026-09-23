@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { PecaService } from '../services/peca.service';
@@ -26,6 +26,7 @@ import { AurumCardComponent } from '../../../shared/aurum/aurum-card.component';
  */
 @Component({
   selector: 'app-peca-form',
+  changeDetection: ChangeDetectionStrategy.Eager,
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, AurumCardComponent, AurumButtonComponent],
   templateUrl: './peca-form.component.html',

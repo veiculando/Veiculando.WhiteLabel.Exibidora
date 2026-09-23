@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { mensagemDeErro } from '../../core/http/api-error';
 import { PeriodoLookup, RelatorioResumo } from '../../core/models/wl.models';
@@ -31,6 +31,7 @@ import { RelatoriosService } from './services/relatorios.service';
  */
 @Component({
   selector: 'app-relatorios',
+  changeDetection: ChangeDetectionStrategy.Eager,
   standalone: true,
   imports: [
     CommonModule,
