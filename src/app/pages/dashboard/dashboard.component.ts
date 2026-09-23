@@ -42,6 +42,7 @@ const TOM_STATUS_RESERVA: Record<string, AurumStatusPillTom> = {
 
 @Component({
   selector: 'app-dashboard',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
     CommonModule,
     FormsModule,
