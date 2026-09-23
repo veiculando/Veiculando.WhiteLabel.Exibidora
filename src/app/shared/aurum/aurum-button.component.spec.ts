@@ -22,7 +22,7 @@ describe('AurumButtonComponent', () => {
     fixture = TestBed.createComponent(HostComponent);
   });
 
-  it('projeta o rotulo e aplica a classe da variante em pill uppercase', () => {
+  it('projeta o rotulo e aplica a classe da variante em pill', () => {
     fixture.detectChanges();
     const btn = (fixture.nativeElement as HTMLElement).querySelector('button')!;
     expect(btn.textContent?.trim()).toBe('Nova Agência');

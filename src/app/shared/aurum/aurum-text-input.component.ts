@@ -6,7 +6,7 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from 
   imports: [],
   template: `
     <span class="aurum-text-input">
-      <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">
+      <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">
         <circle cx="6.5" cy="6.5" r="4.5" fill="none" stroke="currentColor" stroke-width="1.4" />
         <line x1="10" y1="10" x2="14.5" y2="14.5" stroke="currentColor" stroke-width="1.4" />
       </svg>
@@ -23,14 +23,18 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from 
   styles: [
     `
       .aurum-text-input {
-        display: inline-flex;
+        display: flex;
         align-items: center;
-        gap: 8px;
-        border: 1px solid var(--border);
-        border-radius: var(--radius-pill);
-        background: var(--white);
-        padding: 6px 12px;
-        color: var(--on-surface);
+        gap: 12px;
+        border: 1px solid var(--line-search);
+        border-radius: var(--radius-search);
+        background: var(--paper-bg);
+        padding: 10px 16px;
+        color: var(--primary-color);
+        font-size: 0.875rem;
+      }
+      .aurum-text-input:focus-within {
+        border-color: color-mix(in srgb, var(--primary-color) 40%, transparent);
       }
       .aurum-text-input input {
         border: none;
@@ -40,6 +44,9 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from 
         color: var(--charcoal);
         flex: 1;
         min-width: 0;
+      }
+      .aurum-text-input input::placeholder {
+        color: rgba(10, 10, 10, 0.5);
       }
     `,
   ],
