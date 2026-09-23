@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { LocalService } from './services/local.service';
 import { LocalListItem, PERIODICIDADE_LABEL } from './models/local.model';
@@ -41,6 +41,7 @@ const ABAS: { valor: Aba; rotulo: string }[] = [
  */
 @Component({
   selector: 'app-locais',
+  changeDetection: ChangeDetectionStrategy.Eager,
   standalone: true,
   imports: [
     CommonModule,
