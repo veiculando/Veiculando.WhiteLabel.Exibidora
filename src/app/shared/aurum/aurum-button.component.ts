@@ -1,14 +1,16 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 
-export type AurumButtonVariante = 'wine' | 'gold' | 'outline' | 'ghost' | 'perigo' | 'sucesso';
-export type AurumButtonTamanho = 'md' | 'sm';
+export type AurumButtonVariante = 'wine' | 'gold' | 'outline' | 'ghost' | 'perigo' | 'sucesso' | 'suave';
+export type AurumButtonTamanho = 'md' | 'sm' | 'xs';
 
 /**
  * Botão pill (999px, sentence case) — variantes do Figma Aurum:
  * `wine` (ação primária), `gold` (gradiente — Baixar PI, Confirmar
  * alteração), `outline` (Limpar filtros, Ver fotos), `ghost` (Cancelar em
  * modal), e os contornos `perigo`/`sucesso` (Recusar/Aprovar checking).
- * `tamanho="sm"` é o botão de rodapé de modal (9×20, 13px).
+ * `suave` é a ação de linha/cartão ("Editar": cinza translúcido, texto vinho).
+ * `tamanho="sm"` é o botão de rodapé de modal (9×20, 13px); `xs` é a ação
+ * de linha (6×12, 12px).
  * Sem `@Output` próprio: o `<button>` nativo por dentro faz o clique borbulhar
  * através do host (sem shadow DOM), então `(click)` no elemento de quem
  * hospeda funciona direto, e `[disabled]` bloqueia o clique nativamente.
@@ -17,7 +19,7 @@ export type AurumButtonTamanho = 'md' | 'sm';
   selector: 'aurum-button',
   imports: [],
   template: `
-    <button [type]="tipo" [class]="'aurum-button aurum-button--' + variante + (tamanho === 'sm' ? ' aurum-button--sm' : '')" [disabled]="desabilitado">
+    <button [type]="tipo" [class]="'aurum-button aurum-button--' + variante + (tamanho === 'md' ? '' : ' aurum-button--' + tamanho)" [disabled]="desabilitado">
       <ng-content />
     </button>
   `,
@@ -53,6 +55,11 @@ export type AurumButtonTamanho = 'md' | 'sm';
       .aurum-button--sm {
         padding: 9px 20px;
         font-size: 0.8125rem;
+      }
+      .aurum-button--xs {
+        gap: 6px;
+        padding: 6px 12px;
+        font-size: 0.75rem;
       }
       .aurum-button:disabled {
         opacity: 0.5;
@@ -105,6 +112,13 @@ export type AurumButtonTamanho = 'md' | 'sm';
       }
       .aurum-button--sucesso:not(:disabled):hover {
         background: var(--tone-success-bg);
+      }
+      .aurum-button--suave {
+        background: var(--chip-bg);
+        color: var(--primary-color);
+      }
+      .aurum-button--suave:not(:disabled):hover {
+        background: var(--wine-tint);
       }
     `,
   ],

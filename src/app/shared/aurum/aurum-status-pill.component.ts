@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { booleanAttribute, ChangeDetectionStrategy, Component, Input } from '@angular/core';
 
 export type AurumStatusPillTom =
   | 'neutro'
@@ -103,5 +103,5 @@ export class AurumStatusPillComponent {
   @Input() rotulo = '';
   @Input() tom: AurumStatusPillTom = 'neutro';
   /** Status Tag de linha de tabela/cartão (11px bold, 3×10) — Locais, Agências. */
-  @Input() compacto = false;
+  @Input({ transform: booleanAttribute }) compacto = false;
 }

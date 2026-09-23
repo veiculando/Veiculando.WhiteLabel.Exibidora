@@ -92,7 +92,13 @@ export class AurumViewSelectorComponent implements OnInit {
 
   ngOnInit(): void {
     const persistido = this.lerPersistido();
-    if (persistido) this.modo = persistido;
+    if (persistido && persistido !== this.modo) {
+      this.modo = persistido;
+      // Quem hospeda decide o que renderizar pelo modo: sem avisar, a tela
+      // abria em lista com o botão de cartão marcado. Emitido após o ciclo
+      // atual para não alterar o pai durante a verificação dele.
+      queueMicrotask(() => this.modoChange.emit(persistido));
+    }
   }
 
   selecionar(modo: AurumViewSelectorModo): void {
