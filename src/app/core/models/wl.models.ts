@@ -461,6 +461,17 @@ export interface PedidoReservaListItem {
   itensCount: number;
 }
 
+/** Status oficiais da reserva (PRD §5.8) nos tons do Figma: pendente âmbar, aprovada verde. */
+export const TOM_STATUS_PEDIDO_RESERVA: Record<string, 'neutro' | 'sucesso' | 'aviso' | 'perigo' | 'primario' | 'info'> = {
+  Solicitado: 'aviso',
+  Revisado: 'info',
+  Confirmado: 'sucesso',
+  'Itens Indisponíveis': 'perigo',
+  Cancelado: 'perigo',
+  Reservado: 'sucesso',
+  Indisponível: 'perigo',
+};
+
 export interface PedidoReservaItemDetalhe {
   id: number;
   pecaCodigo: string | null;

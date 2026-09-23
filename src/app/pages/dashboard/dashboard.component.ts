@@ -10,6 +10,7 @@ import {
   DashboardReservaItem,
   PeriodoLookup,
   TOM_STATUS_PEDIDO_INSERCAO,
+  TOM_STATUS_PEDIDO_RESERVA,
 } from '../../core/models/wl.models';
 import { DashboardService } from '../../core/services/dashboard.service';
 import { LookupsService } from '../../core/services/lookups.service';
@@ -30,15 +31,6 @@ import { AurumStatusPillComponent, AurumStatusPillTom } from '../../shared/aurum
  * O botão "Testar Erro" do Figma é instrumentação de desenvolvimento
  * (plano tático, seção 5) — não implementado aqui, de propósito.
  */
-/** Status oficiais da reserva (PRD §5.8) nos tons do Figma: pendente âmbar, aprovada verde. */
-const TOM_STATUS_RESERVA: Record<string, AurumStatusPillTom> = {
-  Solicitado: 'aviso',
-  Revisado: 'info',
-  Confirmado: 'sucesso',
-  'Itens Indisponíveis': 'perigo',
-  Cancelado: 'perigo',
-};
-
 @Component({
   selector: 'app-dashboard',
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -380,7 +372,7 @@ export class DashboardComponent implements OnInit {
   }
 
   tomReserva(status: string): AurumStatusPillTom {
-    return TOM_STATUS_RESERVA[status] ?? 'neutro';
+    return TOM_STATUS_PEDIDO_RESERVA[status] ?? 'neutro';
   }
 
   tomPedidoInsercao(status: string): AurumStatusPillTom {
