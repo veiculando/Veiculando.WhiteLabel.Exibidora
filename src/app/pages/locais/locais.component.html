@@ -1,39 +1,27 @@
-<aurum-page-header
-  titulo="Gestão de Locais e Pontos OOH"
-  subtitulo="Pontos de exibição atrelados à afiliada {{ nomeAfiliada || 'desta instância' }}."
->
-  <aurum-status-pill
-    aurumPageHeaderBadge
-    [rotulo]="locais().length + ' ponto' + (locais().length === 1 ? '' : 's')"
-    tom="neutro"
-  />
-  <a aurumPageHeaderAcoes class="locais__link-primario" routerLink="/locais/novo">Novo Local</a>
+<aurum-page-header titulo="Gestão de Locais e Pontos OOH" [badge]="locais().length + ' ponto' + (locais().length === 1 ? '' : 's')">
+  <p aurumPageHeaderSubtitulo class="locais__subtitulo">
+    Pontos de exibição atrelados à Afiliada
+    <strong>{{ afiliadaId ? '#' + afiliadaId : '' }}{{ nomeAfiliada ? ' (' + nomeAfiliada + ')' : '' }}</strong>.
+  </p>
+  <aurum-button aurumPageHeaderAcoes variante="wine" routerLink="/locais/novo">
+    <span class="aurum-ico locais__ico-mais" style="--ico: url(/assets/aurum/icon-mais.svg)"></span>
+    Novo Local
+  </aurum-button>
 </aurum-page-header>
 
-<div class="locais__abas">
-  @for (aba of abas; track aba.valor) {
-    <button
-      type="button"
-      class="locais__aba"
-      [class.locais__aba--ativa]="abaAtiva === aba.valor"
-      (click)="selecionarAba(aba.valor)"
-    >
-      {{ aba.rotulo }}
-    </button>
-  }
-</div>
-
-<div class="locais__toolbar">
+<aurum-filter-bar>
   <aurum-text-input
     placeholder="Buscar por código, endereço, cidade ou tipo de suporte…"
     rotulo="Buscar por código, endereço, cidade ou tipo de suporte…"
     (valorChange)="buscar($event)"
   />
+  <aurum-chip-group rotulo="Status" [opcoes]="abas" [valor]="abaAtiva" (valorChange)="selecionarAba($event)" />
+  <span aurumFilterBarDivisor></span>
   <aurum-view-selector storageKey="locais" [(modo)]="modoVisualizacao" />
-</div>
+</aurum-filter-bar>
 
-@if (erroAcao()) { <p role="alert">{{ erroAcao() }}</p> }
-@if (sucesso()) { <p role="status">{{ sucesso() }}</p> }
+@if (erroAcao()) { <div class="wl-estado wl-estado--erro" role="alert">{{ erroAcao() }}</div> }
+@if (sucesso()) { <div class="wl-estado wl-estado--sucesso" role="status">{{ sucesso() }}</div> }
 
 @if (carregando()) {
   <div class="wl-estado wl-estado--carregando">Carregando locais…</div>
@@ -52,52 +40,44 @@
           <th aurumTableHeaderCell>Localização / Endereço</th>
           <th aurumTableHeaderCell>Status</th>
           <th aurumTableHeaderCell>Suporte / Formato</th>
-          <th aurumTableHeaderCell>Valor Padrão</th>
-          <th aurumTableHeaderCell>Ações</th>
+          <th aurumTableHeaderCell class="locais__direita">Valor Padrão</th>
+          <th aurumTableHeaderCell class="locais__centro">Ações</th>
         </tr>
       </thead>
       <tbody>
         @for (local of locais(); track local.id) {
           <tr aurumTableRow>
-            <td aurumTableCell>{{ local.codigo }}</td>
+            <td aurumTableCell><aurum-code>{{ local.codigo }}</aurum-code></td>
             <td aurumTableCell>
-              <div>{{ local.endereco || '—' }}</div>
-              <div class="wl-linha-secundaria">{{ local.descricao || local.cidade }}{{ local.uf ? ', ' + local.uf : '' }}</div>
+              <div class="locais__endereco">{{ local.endereco || local.descricao || '—' }}</div>
+              <div class="locais__local">{{ localidade(local) }}</div>
             </td>
             <td aurumTableCell>
-              <aurum-status-pill
-                [rotulo]="statusLabel[local.statusExibicao]"
-                [tom]="
-                  local.statusExibicao === StatusExibicao.Ativo
-                    ? 'sucesso'
-                    : local.statusExibicao === StatusExibicao.AprovacaoPendente
-                      ? 'aviso'
-                      : 'neutro'
-                "
-              />
+              <aurum-status-pill [rotulo]="statusLabel[local.statusExibicao]" [tom]="tomStatus(local.statusExibicao)" compacto />
             </td>
-            <td aurumTableCell>
-              <div>Suporte: {{ local.suporte || '—' }}</div>
-              <div class="wl-linha-secundaria">Formato: {{ local.formatoDimensao || '—' }}</div>
+            <td aurumTableCell class="locais__tipo">
+              <div>Suporte: <strong>{{ local.suporte || '—' }}</strong></div>
+              <div>Formato: <strong>{{ local.formatoDimensao || '—' }}</strong></div>
             </td>
-            <td aurumTableCell>
+            <td aurumTableCell class="locais__direita">
               @if (local.valorPadrao !== null) {
-                <div>{{ local.valorPadrao | currency: 'BRL' }}</div>
-                <div class="wl-linha-secundaria">{{ periodicidadeLabel[local.periodicidade ?? 0] || '—' }}</div>
+                <div class="locais__valor">{{ formatarMoeda(local.valorPadrao) }}</div>
+                <div class="locais__periodicidade">{{ periodicidadeLabel[local.periodicidade ?? 0] || '—' }}</div>
               } @else {
                 —
               }
             </td>
-            <td aurumTableCell class="locais__acoes">
-              <a class="locais__link" [routerLink]="['/locais', local.id]">Editar</a>
-              <a class="locais__link" [routerLink]="['/locais', local.id, 'pecas', 'nova']">+ Peça</a>
-              <aurum-button
-                variante="ghost"
-                [desabilitado]="excluindoId() !== null"
-                (click)="excluir(local)"
-              >
-                {{ excluindoId() === local.id ? 'Atualizando…' : rotuloAcao(local) }}
-              </aurum-button>
+            <td aurumTableCell>
+              <div class="locais__acoes">
+                <aurum-button variante="suave" tamanho="xs" [routerLink]="['/locais', local.id]">
+                  <span class="aurum-ico locais__ico-editar" style="--ico: url(/assets/aurum/icon-editar.svg)"></span>
+                  Editar
+                </aurum-button>
+                <aurum-button variante="suave" tamanho="xs" [routerLink]="['/locais', local.id, 'pecas', 'nova']">+ Peça</aurum-button>
+                <aurum-button variante="outline" tamanho="xs" [desabilitado]="excluindoId() !== null" (click)="excluir(local)">
+                  {{ excluindoId() === local.id ? 'Atualizando…' : rotuloAcao(local) }}
+                </aurum-button>
+              </div>
             </td>
           </tr>
         }
@@ -107,33 +87,43 @@
 } @else {
   <div class="locais__cards">
     @for (local of locais(); track local.id) {
-      <aurum-card class="locais__card">
-        <div class="locais__card-codigo">{{ local.codigo }}</div>
-        <aurum-status-pill
-          [rotulo]="statusLabel[local.statusExibicao]"
-          [tom]="
-            local.statusExibicao === StatusExibicao.Ativo
-              ? 'sucesso'
-              : local.statusExibicao === StatusExibicao.AprovacaoPendente
-                ? 'aviso'
-                : 'neutro'
-          "
-        />
-        <div class="locais__card-linha">{{ local.endereco || '—' }}</div>
-        <div class="locais__card-linha">{{ local.cidade }}{{ local.uf ? ', ' + local.uf : '' }}</div>
-        <div class="locais__card-linha">Suporte: {{ local.suporte || '—' }}</div>
-        <div class="locais__card-linha">
-          @if (local.valorPadrao !== null) {
-            {{ local.valorPadrao | currency: 'BRL' }} · {{ periodicidadeLabel[local.periodicidade ?? 0] || '—' }}
-          } @else {
-            Sem peça cadastrada
-          }
+      <article class="locais__card">
+        <div class="locais__card-topo">
+          <aurum-code>{{ local.codigo }}</aurum-code>
+          <aurum-status-pill [rotulo]="statusLabel[local.statusExibicao]" [tom]="tomStatus(local.statusExibicao)" compacto />
         </div>
-        <div class="locais__card-acoes">
-          <a class="locais__link" [routerLink]="['/locais', local.id]">Editar</a>
-          <a class="locais__link" [routerLink]="['/locais', local.id, 'pecas', 'nova']">+ Peça</a>
+        <h3 class="locais__card-titulo">{{ local.endereco || local.descricao || '—' }}</h3>
+        <div class="locais__local">{{ localidade(local) }}</div>
+        <div class="locais__card-info">
+          <div>
+            <span class="aurum-ico" style="--ico: url(/assets/aurum/icon-valores.svg)"></span>
+            Suporte: <strong>{{ local.suporte || '—' }}</strong>
+          </div>
+          <div>
+            <span class="aurum-ico" style="--ico: url(/assets/aurum/icon-locais.svg)"></span>
+            Formato: <strong>{{ local.formatoDimensao || '—' }}</strong>
+          </div>
         </div>
-      </aurum-card>
+        <div class="locais__card-rodape">
+          <div>
+            <div class="locais__card-rotulo">Valor padrão</div>
+            <div class="locais__card-valor">
+              @if (local.valorPadrao !== null) {
+                {{ formatarMoeda(local.valorPadrao) }}
+              } @else {
+                <span class="locais__sem-peca">Sem peça cadastrada</span>
+              }
+            </div>
+          </div>
+          <div class="locais__acoes">
+            <aurum-button variante="suave" tamanho="xs" [routerLink]="['/locais', local.id, 'pecas', 'nova']">+ Peça</aurum-button>
+            <aurum-button variante="suave" tamanho="xs" [routerLink]="['/locais', local.id]">
+              <span class="aurum-ico locais__ico-editar" style="--ico: url(/assets/aurum/icon-editar.svg)"></span>
+              Editar
+            </aurum-button>
+          </div>
+        </div>
+      </article>
     }
   </div>
 }

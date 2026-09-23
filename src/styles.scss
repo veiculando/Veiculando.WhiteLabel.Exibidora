@@ -49,6 +49,18 @@ textarea {
   mask: var(--ico) center / contain no-repeat;
 }
 
+/* Select nativo de barra de filtros (Figma: "Período: Este mês", "Status: Todos"). */
+.aurum-select {
+  padding: 9px 36px 9px 14px;
+  border: 1px solid var(--line-search);
+  border-radius: var(--radius-search);
+  background: var(--paper-bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23544341' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E") right 14px center no-repeat;
+  appearance: none;
+  color: var(--on-surface);
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
 :focus-visible {
   outline: 3px solid color-mix(in srgb, var(--secondary-color) 70%, #ffffff);
   outline-offset: 2px;
@@ -71,20 +83,75 @@ textarea {
   box-shadow: var(--shadow-hover);
 }
 
-/* Tema ag-Grid Aurum — cabecalho caixa-alta 11px, fundo translucido, radius 18px (passo 4) */
+/* Tema ag-Grid Aurum — mesma tabela do Figma (226:6963 / 154:3004): cartão
+   branco raio 16, cabeçalho papel 12px bold caixa-alta, linhas de 56px. */
 .ag-theme-quartz {
   --ag-active-color: var(--primary-color);
+  --ag-checkbox-checked-color: var(--primary-color);
   --ag-font-family: var(--font-ui);
-  --ag-header-background-color: color-mix(in srgb, var(--paper-bg) 60%, transparent);
-  --ag-border-radius: var(--radius-md);
-  --ag-wrapper-border-radius: var(--radius-md);
+  --ag-font-size: 13px;
+  --ag-foreground-color: var(--charcoal);
+  --ag-header-background-color: var(--paper-bg);
+  --ag-header-foreground-color: var(--on-surface);
+  --ag-border-color: var(--line-subtle);
+  --ag-row-border-color: var(--line-subtle);
+  --ag-row-hover-color: #faf9f6;
+  --ag-selected-row-background-color: var(--wine-tint);
+  --ag-border-radius: var(--radius-card);
+  --ag-wrapper-border-radius: var(--radius-card);
+  --ag-row-height: 56px;
+  --ag-header-height: 50px;
+  --ag-cell-horizontal-padding: 20px;
+}
+
+.ag-theme-quartz .ag-root-wrapper {
+  box-shadow: var(--shadow-card);
+}
+
+.ag-theme-quartz .aurum-cel-codigo {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.ag-theme-quartz .aurum-cel-mono {
+  font-family: var(--font-mono);
+  color: var(--on-surface);
+}
+
+.ag-theme-quartz .aurum-cel-forte {
+  font-weight: 600;
+  color: #0a0a0a;
+}
+
+.ag-theme-quartz .aurum-cel-apagado {
+  color: var(--on-surface);
+}
+
+.ag-theme-quartz .aurum-cel-valor {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  font-variation-settings: 'SOFT' 0, 'WONK' 1;
+  color: var(--primary-dark);
+}
+
+.aurum-cel-tag {
+  padding: 3px 10px;
+  border-radius: 6px;
+  background: var(--paper-bg);
+  color: var(--primary-dark);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 18px;
+  white-space: nowrap;
 }
 
 .ag-theme-quartz .ag-header-cell-label .ag-header-cell-text {
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.5px;
   color: var(--on-surface);
 }
 
@@ -145,6 +212,81 @@ textarea {
 .wl-campo textarea:focus {
   outline: none;
   border-color: color-mix(in srgb, var(--primary-color) 45%, transparent);
+}
+
+/* Formulário de cadastro do Figma Aurum (419:21489): campos em grade, rótulo
+   acima (12px), entrada com borda 15% e raio 8, ação no rodapé. */
+.aurum-form fieldset {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px 12px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.aurum-form legend {
+  grid-column: 1 / -1;
+  margin-bottom: 14px;
+  padding: 0;
+  font-family: var(--font-display);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+}
+
+.aurum-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 18px;
+  color: var(--on-surface);
+}
+
+.aurum-form input:not([type='checkbox']):not([type='radio']),
+.aurum-form select,
+.aurum-form textarea {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--line-field);
+  border-radius: var(--radius-field);
+  background: var(--white);
+  color: #0a0a0a;
+  font-family: var(--font-ui);
+  font-size: 0.8125rem;
+  font-weight: 400;
+  line-height: 19.5px;
+}
+
+.aurum-form input:focus,
+.aurum-form select:focus,
+.aurum-form textarea:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--primary-color) 45%, transparent);
+}
+
+.aurum-form label:has(textarea),
+.aurum-form fieldset > div,
+.aurum-form fieldset > p {
+  grid-column: 1 / -1;
+}
+
+.aurum-form__acoes {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line-search);
+}
+
+.aurum-form > aurum-button {
+  display: block;
+  width: fit-content;
+  margin: 20px 0 0 auto;
 }
 
 .wl-campo__erro {

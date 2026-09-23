@@ -94,4 +94,13 @@ describe('AurumViewSelectorComponent', () => {
 
     expect(emitidos).toEqual([]);
   });
+
+  it('modo salvo no storage e emitido para quem hospeda, que decide o que renderizar', async () => {
+    localStorage.setItem('aurum-view-selector:locais', 'card');
+    const emitidos: string[] = [];
+    component.modoChange.subscribe((m) => emitidos.push(m));
+    fixture.detectChanges();
+    await Promise.resolve();
+    expect(emitidos).toEqual(['card']);
+  });
 });

@@ -21,9 +21,11 @@ import {
 } from '../../core/models/wl.models';
 import { LookupsService } from '../../core/services/lookups.service';
 import { AurumButtonComponent } from '../../shared/aurum/aurum-button.component';
-import { AurumFilterFieldComponent } from '../../shared/aurum/aurum-filter-field.component';
 import { AurumPageHeaderComponent } from '../../shared/aurum/aurum-page-header.component';
 import { AurumTextInputComponent } from '../../shared/aurum/aurum-text-input.component';
+import { AurumFilterBarComponent } from '../../shared/aurum/aurum-filter-bar.component';
+import { AurumModalComponent } from '../../shared/aurum/aurum-modal.component';
+import { PermissionService } from '../../core/auth/permission.service';
 import { PaginadorComponent } from '../../shared/paginador.component';
 import { STATUS_EXIBICAO_LABEL, StatusExibicao } from '../locais/models/status-exibicao.enum';
 import {
@@ -41,6 +43,15 @@ import { PecaValoresService } from './services/peca-valores.service';
  * implementado aqui. ag-Grid segue sendo a grade (já era dependência), mas a
  * edição é em lote via modal, não inline.
  */
+/** Suporte como etiqueta (Figma `154:3004`); texto via textContent, nunca HTML. */
+function etiquetaSuporte(params: { value?: string | null }): HTMLElement | string {
+  if (!params.value) return '';
+  const etiqueta = document.createElement('span');
+  etiqueta.className = 'aurum-cel-tag';
+  etiqueta.textContent = params.value;
+  return etiqueta;
+}
+
 @Component({
   selector: 'app-pecas-valores',
   standalone: true,
@@ -50,7 +61,8 @@ import { PecaValoresService } from './services/peca-valores.service';
     AgGridAngular,
     AurumPageHeaderComponent,
     AurumButtonComponent,
-    AurumFilterFieldComponent,
+    AurumFilterBarComponent,
+    AurumModalComponent,
     AurumTextInputComponent,
     PaginadorComponent,
     PecasAlterarPrecoModalComponent,
@@ -58,29 +70,39 @@ import { PecaValoresService } from './services/peca-valores.service';
   templateUrl: './pecas-valores.component.html',
   styles: [
     `
-      .pv-toolbar {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        flex-wrap: wrap;
-        margin-bottom: 16px;
-        justify-content: space-between;
-      }
-      .pv-filtros {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        flex-wrap: wrap;
-      }
-      .pv-filtros select {
-        border: 1px solid var(--border);
-        border-radius: var(--radius-sm);
-        padding: 6px 10px;
-        background: var(--white);
+      .pv-ico {
+        width: 16px;
+        height: 16px;
       }
       .pv-grid-wrapper {
-        height: 520px;
+        height: 560px;
         margin-bottom: 8px;
+      }
+      .pv-sucesso {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        text-align: center;
+      }
+      .pv-sucesso__icone {
+        display: grid;
+        place-items: center;
+        width: 44px;
+        height: 44px;
+        border: 2px solid var(--tone-success);
+        border-radius: 50%;
+        color: var(--tone-success);
+      }
+      .pv-sucesso h2 {
+        margin: 8px 0 0;
+        font-size: 1.25rem;
+        font-weight: 700;
+      }
+      .pv-sucesso p {
+        margin: 0 0 12px;
+        font-size: 0.8125rem;
+        color: var(--on-surface);
       }
     `,
   ],
@@ -89,6 +111,7 @@ import { PecaValoresService } from './services/peca-valores.service';
 export class PecasValoresComponent implements OnInit {
   private readonly service = inject(PecaValoresService);
   private readonly lookups = inject(LookupsService);
+  readonly afiliadaId = inject(PermissionService).getAfiliadaId();
 
   @ViewChild(AgGridAngular) grid?: AgGridAngular;
   private gridApi?: GridApi<PecaValorListItem>;
@@ -129,19 +152,22 @@ export class PecasValoresComponent implements OnInit {
 
   readonly colDefs: ColDef<PecaValorListItem>[] = [
     { headerCheckboxSelection: true, checkboxSelection: true, width: 44, pinned: 'left', sortable: false, resizable: false },
-    { headerName: 'Código', field: 'codigo', sortable: true, flex: 1 },
-    { headerName: 'Código Interno', field: 'codigoInterno', sortable: false, flex: 1 },
-    { headerName: 'Suporte', field: 'suporte', sortable: false, flex: 1 },
-    { headerName: 'Cidade', field: 'cidade', sortable: true, flex: 1 },
-    { headerName: 'Endereço', field: 'endereco', sortable: false, flex: 1.4 },
+    { headerName: 'Código', field: 'codigo', sortable: true, flex: 1.1, cellClass: 'aurum-cel-codigo' },
+    { headerName: 'Código Interno', field: 'codigoInterno', sortable: false, flex: 1, cellClass: 'aurum-cel-mono' },
+    { headerName: 'Suporte', field: 'suporte', sortable: false, flex: 1, cellRenderer: etiquetaSuporte },
+    { headerName: 'Cidade', field: 'cidade', sortable: true, flex: 1, cellClass: 'aurum-cel-forte' },
+    { headerName: 'Endereço', field: 'endereco', sortable: false, flex: 1.4, cellClass: 'aurum-cel-apagado' },
     {
       headerName: 'Valor Padrão',
       field: 'valorPadrao',
       sortable: true,
       flex: 1,
+      type: 'rightAligned',
+      cellClass: 'aurum-cel-valor',
+      // Sem centavos, como o Figma ("R$ 18.500"); o modal mostra o valor exato.
       valueFormatter: (params) =>
         typeof params.value === 'number'
-          ? params.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+          ? params.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
           : '',
     },
   ];
@@ -244,7 +270,7 @@ export class PecasValoresComponent implements OnInit {
         next: (resultado) => {
           this.salvandoModal = false;
           this.modalAberto = false;
-          this.sucesso = `${resultado.quantidadeAfetada} peça(s) alterada(s) com sucesso.`;
+          this.sucesso = `Preços atualizados com sucesso para ${resultado.quantidadeAfetada} ${resultado.quantidadeAfetada === 1 ? 'peça' : 'peças'}!`;
           this.limparSelecaoErecarregar();
         },
         error: (erro: unknown) => {
@@ -261,7 +287,7 @@ export class PecasValoresComponent implements OnInit {
         next: () => {
           this.salvandoModal = false;
           this.modalAberto = false;
-          this.sucesso = `Valor sazonal aplicado a ${pecasIds.length} peça(s).`;
+          this.sucesso = `Valor sazonal aplicado com sucesso a ${pecasIds.length} ${pecasIds.length === 1 ? 'peça' : 'peças'}!`;
           this.limparSelecaoErecarregar();
         },
         error: (erro: unknown) => {

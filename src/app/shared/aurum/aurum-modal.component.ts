@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
+import { booleanAttribute, ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 
 export type AurumModalLargura = 'sm' | 'md' | 'lg';
 export type AurumModalPosicao = 'centro' | 'lateral';
@@ -13,7 +13,8 @@ let proximoId = 0;
  *
  * Mesma mecânica dos modais que já existiam nas telas: renderiza só quando
  * `aberto`, clique no fundo ou Esc emitem `fechar` — quem hospeda decide.
- * Corpo via `<ng-content>`; ações via `[aurumModalRodape]`.
+ * Corpo via `<ng-content>`; ações via `[aurumModalRodape]`. Sem `titulo`, o
+ * cabeçalho some (diálogos de sucesso/progresso montam o próprio conteúdo).
  */
 @Component({
   selector: 'aurum-modal',
@@ -25,22 +26,26 @@ let proximoId = 0;
           [class]="'aurum-modal aurum-modal--' + largura + ' aurum-modal--' + posicao"
           role="dialog"
           aria-modal="true"
-          [attr.aria-labelledby]="idTitulo"
+          [attr.aria-labelledby]="titulo ? idTitulo : null"
           (click)="$event.stopPropagation()"
           (keydown.escape)="fechar.emit()"
         >
-          <button type="button" class="aurum-modal__fechar" aria-label="Fechar" (click)="fechar.emit()">
-            <svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" focusable="false">
-              <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
-            </svg>
-          </button>
-          <header class="aurum-modal__cabecalho">
-            <h2 class="aurum-modal__titulo" [id]="idTitulo">{{ titulo }}</h2>
-            @if (subtitulo) {
-              <p class="aurum-modal__subtitulo">{{ subtitulo }}</p>
-            }
-            <ng-content select="[aurumModalSubtitulo]" />
-          </header>
+          @if (!semFechar) {
+            <button type="button" class="aurum-modal__fechar" aria-label="Fechar" (click)="fechar.emit()">
+              <svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" focusable="false">
+                <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+              </svg>
+            </button>
+          }
+          @if (titulo) {
+            <header class="aurum-modal__cabecalho">
+              <h2 class="aurum-modal__titulo" [id]="idTitulo">{{ titulo }}</h2>
+              @if (subtitulo) {
+                <p class="aurum-modal__subtitulo">{{ subtitulo }}</p>
+              }
+              <ng-content select="[aurumModalSubtitulo]" />
+            </header>
+          }
           <div class="aurum-modal__corpo">
             <ng-content />
           </div>
@@ -143,6 +148,8 @@ export class AurumModalComponent {
   @Input() subtitulo = '';
   @Input() largura: AurumModalLargura = 'md';
   @Input() posicao: AurumModalPosicao = 'centro';
+  /** Diálogos de retorno (sucesso, progresso) não têm "×" no Figma — fecham pela ação. */
+  @Input({ transform: booleanAttribute }) semFechar = false;
 
   @Output() fechar = new EventEmitter<void>();
 
