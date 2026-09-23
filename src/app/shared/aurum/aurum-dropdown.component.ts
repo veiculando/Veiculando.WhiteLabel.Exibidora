@@ -23,12 +23,16 @@ export interface AurumDropdownOpcao {
   styles: [
     `
       .aurum-dropdown {
-        border: 1px solid var(--border);
-        border-radius: var(--radius-sm);
-        background: var(--white);
-        color: var(--charcoal);
-        padding: 6px 10px;
+        min-width: 136px;
+        padding: 9px 32px 9px 12px;
+        border: 1px solid var(--line-search);
+        border-radius: var(--radius-search);
+        background: var(--paper-bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath d='M1 1l3 3 3-3' fill='none' stroke='%23544341' stroke-width='1.2' stroke-linecap='round'/%3E%3C/svg%3E") right 12px center no-repeat;
+        appearance: none;
+        color: var(--on-surface);
         font: inherit;
+        font-size: 0.8125rem;
+        cursor: pointer;
       }
     `,
   ],
