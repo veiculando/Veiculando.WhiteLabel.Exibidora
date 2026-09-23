@@ -5,6 +5,8 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
  * do inventário do Figma. Seletores de atributo sobre `table`/`tr`/`th`/`td`
  * nativos: tabela é semântica sensível a aninhamento, então não existe
  * wrapper de elemento custom aqui — só classes de estilo sobre o DOM nativo.
+ * `class="aurum-table--densa"` no `<table>` dá a versão compacta das telas
+ * operacionais.
  */
 @Component({
   selector: 'table[aurumTable]',
@@ -64,6 +66,11 @@ export class AurumTableRowComponent {}
       :host-context(tbody tr:last-child) {
         border-bottom: none;
       }
+      /* Tabelas operacionais do Figma (Check out, OS, KYC): 13px, menos respiro. */
+      :host-context(.aurum-table--densa) {
+        padding: 14px 12px;
+        font-size: 0.8125rem;
+      }
     `,
   ],
 })
@@ -89,6 +96,10 @@ export class AurumTableCellComponent {}
         background: var(--paper-bg);
         border-bottom: 1px solid var(--line-subtle);
         white-space: nowrap;
+      }
+      :host-context(.aurum-table--densa) {
+        padding: 14px 12px;
+        font-size: 11px;
       }
     `,
   ],

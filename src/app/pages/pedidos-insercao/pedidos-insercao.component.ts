@@ -331,7 +331,7 @@ export class PedidosInsercaoComponent implements OnInit {
     return resumo.porStatus.find((s) => s.status === status)?.quantidade ?? 0;
   }
 
-  tomStatus(status: string): 'neutro' | 'sucesso' | 'aviso' | 'perigo' | 'primario' {
+  tomStatus(status: string): 'neutro' | 'sucesso' | 'aviso' | 'perigo' | 'primario' | 'info' {
     return TOM_STATUS_PEDIDO_INSERCAO[status] ?? 'neutro';
   }
 
