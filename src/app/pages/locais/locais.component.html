@@ -3,10 +3,10 @@
     Pontos de exibição atrelados à Afiliada
     <strong>{{ afiliadaId ? '#' + afiliadaId : '' }}{{ nomeAfiliada ? ' (' + nomeAfiliada + ')' : '' }}</strong>.
   </p>
-  <aurum-button aurumPageHeaderAcoes variante="wine" routerLink="/locais/novo">
-    <span class="aurum-ico locais__ico-mais" style="--ico: url(/assets/aurum/icon-mais.svg)"></span>
+  <a aurumPageHeaderAcoes class="aurum-botao-link" routerLink="/locais/novo">
+    <span class="aurum-ico" style="--ico: url(/assets/aurum/icon-mais.svg)"></span>
     Novo Local
-  </aurum-button>
+  </a>
 </aurum-page-header>
 
 <aurum-filter-bar>

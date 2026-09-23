@@ -17,6 +17,7 @@ import { AurumDropdownComponent, AurumDropdownOpcao } from '../../shared/aurum/a
 import { AurumFilterFieldComponent } from '../../shared/aurum/aurum-filter-field.component';
 import { AurumPageHeaderComponent } from '../../shared/aurum/aurum-page-header.component';
 import { AurumStatusPillComponent } from '../../shared/aurum/aurum-status-pill.component';
+import { AurumFilterBarComponent } from '../../shared/aurum/aurum-filter-bar.component';
 import { AurumTextInputComponent } from '../../shared/aurum/aurum-text-input.component';
 import {
   AurumTableCellComponent,
@@ -57,6 +58,7 @@ const TODOS = '';
     AurumDropdownComponent,
     AurumFilterFieldComponent,
     AurumTextInputComponent,
+    AurumFilterBarComponent,
     AurumStatusPillComponent,
     AurumTableComponent,
     AurumTableRowComponent,
@@ -64,23 +66,24 @@ const TODOS = '';
     AurumTableHeaderCellComponent,
   ],
   template: `
-    <aurum-page-header titulo="Check out" subtitulo="Situação de checking das PIs autorizadas." />
+    <aurum-page-header
+      titulo="Check Out"
+      subtitulo="Consulte os checkings realizados em campo e acompanhe a colagem com base nas fotos recebidas."
+    />
 
-    <div class="co-filtros">
-      <div class="co-filtros__linha">
-        <aurum-filter-field rotulo="Período">
-          <aurum-dropdown [opcoes]="opcoesPeriodo" [valor]="idPeriodo === null ? TODOS : String(idPeriodo)" (valorChange)="mudarPeriodo($event)" />
-        </aurum-filter-field>
-        <aurum-filter-field rotulo="Status">
-          <aurum-dropdown [opcoes]="opcoesStatus" [valor]="status === null ? TODOS : status" (valorChange)="mudarFiltro('status', $event)" />
-        </aurum-filter-field>
-        <aurum-filter-field rotulo="Cidade">
-          <aurum-dropdown [opcoes]="opcoesCidade" [valor]="idCidade === null ? TODOS : String(idCidade)" (valorChange)="mudarFiltro('idCidade', $event)" />
-        </aurum-filter-field>
-        <aurum-text-input placeholder="Buscar por campanha ou anunciante" rotulo="Buscar por campanha ou anunciante" [valor]="busca" (valorChange)="mudarBusca($event)" />
-        <aurum-button variante="ghost" (click)="limparFiltros()">Limpar Filtros</aurum-button>
-      </div>
-    </div>
+    <aurum-filter-bar>
+      <aurum-filter-field rotulo="Período">
+        <aurum-dropdown [opcoes]="opcoesPeriodo" [valor]="idPeriodo === null ? TODOS : String(idPeriodo)" (valorChange)="mudarPeriodo($event)" />
+      </aurum-filter-field>
+      <aurum-filter-field rotulo="Status">
+        <aurum-dropdown [opcoes]="opcoesStatus" [valor]="status === null ? TODOS : status" (valorChange)="mudarFiltro('status', $event)" />
+      </aurum-filter-field>
+      <aurum-filter-field rotulo="Cidade">
+        <aurum-dropdown [opcoes]="opcoesCidade" [valor]="idCidade === null ? TODOS : String(idCidade)" (valorChange)="mudarFiltro('idCidade', $event)" />
+      </aurum-filter-field>
+      <aurum-text-input placeholder="Buscar campanha ou anunciante…" rotulo="Buscar por campanha ou anunciante" [valor]="busca" (valorChange)="mudarBusca($event)" />
+      <aurum-button variante="outline" tamanho="sm" (click)="limparFiltros()">Limpar filtros</aurum-button>
+    </aurum-filter-bar>
 
     @if (carregando) {
       <div class="wl-estado wl-estado--carregando">Carregando o check out…</div>
@@ -89,7 +92,7 @@ const TODOS = '';
     @if (erro) {
       <div class="wl-estado wl-estado--erro">
         {{ erro }}
-        <aurum-button variante="ghost" (click)="carregar()">Tentar novamente</aurum-button>
+        <aurum-button variante="outline" tamanho="sm" (click)="carregar()">Tentar novamente</aurum-button>
       </div>
     }
 
@@ -99,7 +102,7 @@ const TODOS = '';
 
     @if (itens.length > 0) {
       <div class="wl-tabela--rolavel">
-        <table aurumTable>
+        <table aurumTable class="aurum-table--densa">
           <thead>
             <tr aurumTableRow>
               <th aurumTableHeaderCell>Campanha</th>
@@ -118,20 +121,22 @@ const TODOS = '';
           <tbody>
             @for (item of itens; track item.id) {
               <tr aurumTableRow>
-                <td aurumTableCell>{{ item.campanha || '—' }}</td>
+                <td aurumTableCell class="co-campanha">{{ item.campanha || '—' }}</td>
                 <td aurumTableCell>{{ item.anunciante || '—' }}</td>
                 <td aurumTableCell>{{ item.cidades.length > 0 ? item.cidades.join(', ') : '—' }}</td>
-                <td aurumTableCell>{{ item.itensPi }}</td>
-                <td aurumTableCell>{{ item.itensChecados }}</td>
-                <td aurumTableCell>{{ item.itensAprovados }}</td>
-                <td aurumTableCell>{{ item.itensRecebidos }}</td>
+                <td aurumTableCell class="co-numero">{{ item.itensPi }}</td>
+                <td aurumTableCell class="co-numero">{{ item.itensChecados }}</td>
+                <td aurumTableCell class="co-numero">{{ item.itensAprovados }}</td>
+                <td aurumTableCell class="co-numero">{{ item.itensRecebidos }}</td>
                 <td aurumTableCell>—</td>
-                <td aurumTableCell>{{ item.piCodigo || '—' }}</td>
+                <td aurumTableCell class="co-pi">{{ item.piCodigo || '—' }}</td>
                 <td aurumTableCell>
                   <aurum-status-pill [rotulo]="item.status" [tom]="tomStatus(item.status)" />
                 </td>
                 <td aurumTableCell>
-                  <a class="co-link" [routerLink]="['/checkout', item.id]">Ver detalhe</a>
+                  <a class="co-link" [routerLink]="['/checkout', item.id]" [attr.aria-label]="'Ver detalhe de ' + (item.piCodigo || item.campanha || 'PI')" title="Ver detalhe">
+                    <span class="aurum-ico" style="--ico: url(/assets/aurum/icon-olho.svg)"></span>
+                  </a>
                 </td>
               </tr>
             }
@@ -152,21 +157,24 @@ const TODOS = '';
   changeDetection: ChangeDetectionStrategy.Eager,
   styles: [
     `
-      .co-filtros {
-        margin-bottom: 16px;
+      .co-campanha {
+        font-weight: 600;
+        color: var(--primary-dark);
       }
-      .co-filtros__linha {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 12px;
+      .co-pi {
+        white-space: nowrap;
+      }
+      .co-numero {
+        text-align: right;
       }
       .co-link {
+        display: inline-flex;
+        padding: 4px;
         color: var(--primary-color);
-        text-decoration: none;
       }
-      .co-link:hover {
-        text-decoration: underline;
+      .co-link .aurum-ico {
+        width: 16px;
+        height: 16px;
       }
     `,
   ],
@@ -283,7 +291,7 @@ export class CheckoutListagemComponent implements OnInit {
     this.carregar(1);
   }
 
-  tomStatus(status: string): 'neutro' | 'sucesso' | 'aviso' | 'perigo' | 'primario' {
+  tomStatus(status: string): 'neutro' | 'sucesso' | 'aviso' | 'perigo' | 'primario' | 'info' {
     return TOM_STATUS_CHECKING[status] ?? 'neutro';
   }
 }

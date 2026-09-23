@@ -136,7 +136,7 @@ describe('OrdemServicoDetalheComponent', () => {
 
     const eventos = fixture.componentInstance.eventosHistorico(fixture.componentInstance.detalhe!);
     expect(eventos).toEqual([
-      { evento: 'OS gerada com 3 peças selecionadas', timestamp: '2026-08-10T09:20:00', autor: 'Operador X' },
+      { evento: 'OS gerada com 3 peças selecionadas', timestamp: '10/08/2026, 09:20', autor: 'Operador X' },
     ]);
   });
 

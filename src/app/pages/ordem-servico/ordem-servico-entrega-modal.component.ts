@@ -59,8 +59,8 @@ export interface OsEntregaContexto {
           </button>
 
           <div class="oem-acoes">
-            <aurum-button variante="ghost" [desabilitado]="baixando" (click)="fechar.emit()">Cancelar</aurum-button>
-            <aurum-button variante="wine" [desabilitado]="baixando" (click)="baixarPdf()">
+            <aurum-button variante="outline" tamanho="sm" [desabilitado]="baixando" (click)="fechar.emit()">Cancelar</aurum-button>
+            <aurum-button variante="wine" tamanho="sm" [desabilitado]="baixando" (click)="baixarPdf()">
               {{ baixando ? 'Abrindo…' : 'Confirmar entrega' }}
             </aurum-button>
           </div>
@@ -74,67 +74,81 @@ export interface OsEntregaContexto {
       .oem-backdrop {
         position: fixed;
         inset: 0;
-        background: color-mix(in srgb, var(--charcoal) 55%, transparent);
+        z-index: 1000;
         display: flex;
         align-items: center;
         justify-content: center;
-        z-index: 1000;
+        padding: 16px;
+        background: color-mix(in srgb, var(--charcoal) 55%, transparent);
       }
+      /* Figma 187:1364: painel 18px de raio, 36×40 de respiro. */
       .oem-painel {
-        width: 560px;
-        max-width: calc(100vw - 32px);
-        max-height: 512px;
-        background: var(--white);
-        border-radius: var(--radius-md);
-        box-shadow: var(--shadow-hover);
-        padding: 24px;
         display: flex;
         flex-direction: column;
-        gap: 16px;
+        gap: 24px;
+        width: 560px;
+        max-width: 100%;
+        max-height: calc(100vh - 32px);
         overflow-y: auto;
+        padding: 36px 40px;
+        background: var(--white);
+        border-radius: 18px;
+        box-shadow: 0 20px 48px rgba(38, 5, 5, 0.28);
       }
       .oem-titulo {
         margin: 0;
-        font-size: 1.25rem;
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--primary-dark);
       }
       .oem-subtitulo {
-        margin: 0;
-        color: var(--on-surface);
-        font-size: 0.875rem;
+        margin: -18px 0 0;
+        font-size: 0.84375rem;
+        color: rgba(84, 67, 65, 0.75);
       }
       .oem-opcao {
         display: flex;
-        align-items: center;
-        gap: 12px;
-        border: 1px solid var(--border);
-        border-radius: var(--radius-md);
-        background: var(--surface-muted);
-        padding: 16px;
-        cursor: pointer;
-        text-align: left;
-        font: inherit;
+        align-items: flex-start;
+        gap: 16px;
+        padding: 18px 20px;
+        border: 2px solid var(--primary-color);
+        border-radius: 14px;
+        background: color-mix(in srgb, var(--primary-color) 6%, var(--white));
         color: var(--charcoal);
-      }
-      .oem-opcao:not(:disabled):hover {
-        border-color: var(--primary-color);
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
       }
       .oem-opcao:disabled {
         opacity: 0.6;
         cursor: not-allowed;
       }
       .oem-opcao__icone {
-        font-size: 1.5rem;
+        display: grid;
+        place-items: center;
+        flex: none;
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: var(--gold-tint);
+        font-size: 1.125rem;
       }
       .oem-opcao__texto {
         display: flex;
         flex-direction: column;
-        gap: 2px;
+        gap: 4px;
+        font-size: 0.78125rem;
+        color: rgba(84, 67, 65, 0.75);
+      }
+      .oem-opcao__texto strong {
+        font-size: 0.90625rem;
+        font-weight: 600;
+        color: var(--primary-dark);
       }
       .oem-acoes {
         display: flex;
         justify-content: flex-end;
-        gap: 8px;
-        margin-top: auto;
+        gap: 12px;
       }
     `,
   ],

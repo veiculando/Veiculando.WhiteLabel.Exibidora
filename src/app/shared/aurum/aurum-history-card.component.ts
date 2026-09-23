@@ -37,19 +37,21 @@ export interface AurumHistoryEvento {
   styles: [
     `
       .aurum-history-card {
+        padding: 20px 24px;
         background: var(--white);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-md);
-        padding: 16px;
+        border: 1px solid var(--line-subtle);
+        border-radius: 18px;
+        box-shadow: var(--shadow-card);
       }
       .aurum-history-card__titulo {
-        margin: 0 0 12px;
+        margin: 0 0 14px;
         font-size: 1rem;
+        font-weight: 700;
       }
       .aurum-history-card__vazio {
         margin: 0;
         color: var(--on-surface);
-        font-size: 0.875rem;
+        font-size: 0.8125rem;
       }
       .aurum-history-card__lista {
         list-style: none;
@@ -57,21 +59,22 @@ export interface AurumHistoryEvento {
         padding: 0;
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 14px;
       }
       .aurum-history-card__item {
-        border-left: 2px solid var(--divider);
+        border-left: 2px solid color-mix(in srgb, var(--secondary-color) 60%, transparent);
         padding-left: 12px;
       }
       .aurum-history-card__evento {
         margin: 0;
         color: var(--charcoal);
-        font-size: 0.875rem;
+        font-size: 0.8125rem;
+        font-weight: 600;
       }
       .aurum-history-card__meta {
         margin: 2px 0 0;
-        color: var(--on-surface);
-        font-size: 0.75rem;
+        color: color-mix(in srgb, var(--on-surface) 75%, transparent);
+        font-size: 0.6875rem;
       }
     `,
   ],

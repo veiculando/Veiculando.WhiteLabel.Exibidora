@@ -15,7 +15,6 @@ import { DashboardService } from '../../core/services/dashboard.service';
 import { LookupsService } from '../../core/services/lookups.service';
 import { AurumButtonComponent } from '../../shared/aurum/aurum-button.component';
 import { AurumCardComponent } from '../../shared/aurum/aurum-card.component';
-import { AurumPageHeaderComponent } from '../../shared/aurum/aurum-page-header.component';
 import { AurumStatCardComponent } from '../../shared/aurum/aurum-stat-card.component';
 import { AurumStatusPillComponent, AurumStatusPillTom } from '../../shared/aurum/aurum-status-pill.component';
 
@@ -47,7 +46,6 @@ const TOM_STATUS_RESERVA: Record<string, AurumStatusPillTom> = {
     CommonModule,
     FormsModule,
     RouterLink,
-    AurumPageHeaderComponent,
     AurumCardComponent,
     AurumButtonComponent,
     AurumStatusPillComponent,
