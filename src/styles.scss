@@ -37,6 +37,18 @@ textarea {
   font: inherit;
 }
 
+/* Ícone do Figma aplicado como máscara: herda a cor do texto (e do tenant).
+   Uso: <span class="aurum-ico" [style.--ico]="'url(/assets/aurum/icon-x.svg)'"></span> */
+.aurum-ico {
+  display: inline-block;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  background: currentColor;
+  -webkit-mask: var(--ico) center / contain no-repeat;
+  mask: var(--ico) center / contain no-repeat;
+}
+
 :focus-visible {
   outline: 3px solid color-mix(in srgb, var(--secondary-color) 70%, #ffffff);
   outline-offset: 2px;

@@ -1,6 +1,8 @@
+import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { PermissionService } from '../core/auth/permission.service';
+import { BrandingService } from '../core/branding/branding.service';
 import { SidebarComponent } from './sidebar.component';
 
 /**
@@ -14,12 +16,24 @@ import { SidebarComponent } from './sidebar.component';
 describe('SidebarComponent', () => {
   let fixture: ComponentFixture<SidebarComponent>;
 
+  beforeEach(() => {
+    try {
+      localStorage.removeItem('wl-sidebar-colapsado');
+    } catch {
+      // sem storage no ambiente de teste
+    }
+  });
+
   function configurar(permissoes: string[]): void {
     TestBed.configureTestingModule({
       imports: [SidebarComponent],
       providers: [
         provideRouter([]),
-        { provide: PermissionService, useValue: { has: (perm: string) => permissoes.includes(perm) } },
+        {
+          provide: PermissionService,
+          useValue: { has: (perm: string) => permissoes.includes(perm), getAfiliadaId: () => '4821' },
+        },
+        { provide: BrandingService, useValue: { branding: signal({ nomeExibicao: 'Outdoor Premium' }) } },
       ],
     });
     fixture = TestBed.createComponent(SidebarComponent);
@@ -88,7 +102,7 @@ describe('SidebarComponent', () => {
   // apaga-lo sem ela. So o lado "some" passaria com o item nunca renderizando.
   // Separados porque configurar() reconfigura o TestBed, o que nao pode acontecer
   // depois de um fixture ja criado no mesmo teste.
-  const ITENS_DO_PLANO_3 = ['Agências', 'Análise KYC', 'Campanhas', 'Prospecção'];
+  const ITENS_DO_PLANO_3 = ['Agências', 'Análises KYC', 'Campanhas', 'Prospecção'];
 
   it('os itens do plano 3 aparecem quando a permissao existe', () => {
     configurar(['ClienteGerenciar', 'PedidoCriar']);
@@ -149,19 +163,11 @@ describe('SidebarComponent', () => {
     expect((fixture.nativeElement as HTMLElement).querySelector('a[href="/programacao"]')).toBeNull();
   });
 
-  it('Checking aparece com CheckingGerenciar', () => {
+  it('Checking saiu do menu (Figma Aurum), mesmo com CheckingGerenciar; a rota continua no app', () => {
     configurar(['CheckingGerenciar']);
     fixture.detectChanges();
-    expect((fixture.nativeElement as HTMLElement).querySelector('a[href="/checking"]')).not.toBeNull();
-  });
-
-  it('Checking NAO aparece com o nome antigo "Checking"', () => {
-    // A claim antiga foi renomeada pela migration
-    // RenomearCheckingEGrantProgramacaoVisualizar. Aceitar 'Checking' aqui
-    // reabriria a colisao que fazia o authGuard falhar aberto.
-    configurar(['Checking']);
-    fixture.detectChanges();
     expect((fixture.nativeElement as HTMLElement).querySelector('a[href="/checking"]')).toBeNull();
+    expect((fixture.nativeElement as HTMLElement).querySelector('a[href="/checkout"]')).not.toBeNull();
   });
 
   it('nenhum item renderizado aponta para uma rota que nao existe no app', () => {
@@ -181,5 +187,46 @@ describe('SidebarComponent', () => {
     for (const link of links) {
       expect(rotasConhecidas).toContain(link.getAttribute('href'));
     }
+  });
+
+  it('Agências e Análises KYC ficam no grupo Cadastros (Figma 421:28546)', () => {
+    configurar(['ClienteGerenciar']);
+    fixture.detectChanges();
+    expect(textoGrupos()).toEqual(['Cadastros', 'Comercial']);
+    const secao = (fixture.nativeElement as HTMLElement).querySelector('a[href="/kyc"]')?.closest('.nav-section');
+    expect(secao?.querySelector('.section-title')?.textContent?.trim()).toBe('Cadastros');
+  });
+
+  it('mostra nome da exibidora e afiliada no topo', () => {
+    configurar([]);
+    fixture.detectChanges();
+    const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(texto).toContain('Outdoor Premium');
+    expect(texto).toContain('Afiliada #4821');
+  });
+
+  it('clicar no grupo recolhe os itens (acordeao) sem tira-los do DOM', () => {
+    configurar(['PecaGerenciar']);
+    fixture.detectChanges();
+    const titulo = (fixture.nativeElement as HTMLElement).querySelector('.section-title') as HTMLButtonElement;
+    titulo.click();
+    fixture.detectChanges();
+    const itens = (fixture.nativeElement as HTMLElement).querySelector('.nav-section__itens') as HTMLElement;
+    expect(itens.hidden).toBe(true);
+    expect(titulo.getAttribute('aria-expanded')).toBe('false');
+    expect((fixture.nativeElement as HTMLElement).querySelector('a[href="/locais"]')).not.toBeNull();
+  });
+
+  it('colapsado mostra so icones e abre o grupo em flyout ao clicar', () => {
+    configurar(['UsuarioAfiliadaGerenciar']);
+    fixture.componentInstance.colapsado.set(true);
+    fixture.componentInstance.alternarGrupo('Configurações');
+    fixture.detectChanges();
+    const root = fixture.nativeElement as HTMLElement;
+    expect(root.querySelector('.sb')?.classList.contains('sb--colapsado')).toBe(true);
+    expect(root.textContent).not.toContain('Afiliada #4821');
+    const itens = root.querySelector('.nav-section__itens') as HTMLElement;
+    expect(itens.hidden).toBe(false);
+    expect(itens.textContent).toContain('Usuários');
   });
 });
