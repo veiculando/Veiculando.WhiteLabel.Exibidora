@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cousine:wght@400;700&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
   /* Branding por tenant. Somente estes tres valores mudam em runtime. */
@@ -29,7 +29,7 @@
   --paper-bg: #f9f7f2;
   --white: #ffffff;
   --charcoal: #1a1a1b;
-  --on-surface: #5a4341;
+  --on-surface: #544341;
   --divider: #ede7da;
   --border: #d8cbb9;
   --surface-muted: #f4f0e8;
@@ -46,14 +46,45 @@
   /* Typography */
   --font-display: 'Fraunces', serif;
   --font-ui: 'Inter', sans-serif;
+  --font-mono: 'Cousine', ui-monospace, monospace;
 
   /* Shapes & Shadows */
   --radius-sm: 6px;
   --radius-md: 18px;
   --radius-pill: 999px;
+  --radius-field: 8px;
+  --radius-search: 10px;
+  --radius-card: 16px;
+  --radius-modal: 20px;
+
+  /* Linhas, campos e superficies do Figma Aurum (WhiteLabel App - Aurum). */
+  --line-subtle: rgba(0, 0, 0, 0.06);
+  --line-field: rgba(0, 0, 0, 0.15);
+  --line-search: rgba(0, 0, 0, 0.08);
+  --chip-bg: rgba(0, 0, 0, 0.05);
+  --wine-tint: color-mix(in srgb, var(--primary-color) 8%, transparent);
+  --gold-tint: color-mix(in srgb, var(--secondary-color) 22%, transparent);
+
+  /* Tons de status (pills suaves e solidas). */
+  --tone-success: #15803d;
+  --tone-success-bg: rgba(21, 128, 61, 0.12);
+  --tone-info: #1d4ed8;
+  --tone-info-bg: rgba(29, 78, 216, 0.1);
+  --tone-warning: #8a6d13;
+  --tone-warning-bg: rgba(138, 109, 19, 0.18);
+  --tone-neutral: #544341;
+  --tone-neutral-bg: rgba(84, 67, 65, 0.1);
+  --tone-solid-blue: #296bd9;
+  --tone-solid-gray: #807570;
+  --tone-solid-orange: #d98c0d;
+  --tone-solid-green: #22c55e;
+  --tone-solid-purple: #7c3aed;
 
   --shadow-base: 0 8px 32px rgba(74, 14, 14, 0.10);
   --shadow-hover: 0 16px 48px rgba(74, 14, 14, 0.18);
+  --shadow-card: 0 8px 24px rgba(74, 14, 14, 0.04);
+  --shadow-bar: 0 4px 8px rgba(74, 14, 14, 0.03);
+  --shadow-modal: 0 16px 24px rgba(74, 14, 14, 0.18);
 
   /* Layout */
   --container-max-width: 1280px;

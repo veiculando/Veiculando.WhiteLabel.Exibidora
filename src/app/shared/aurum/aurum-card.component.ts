@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 
-/** Painel elevado (sombra + borda) — substitui `.wl-card` (ADR-WL-010). */
+/** Painel elevado (sombra suave + borda sutil) — substitui `.wl-card` (ADR-WL-010). */
 @Component({
   selector: 'aurum-card',
   imports: [],
@@ -12,10 +12,10 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
       :host {
         display: block;
         background: var(--white);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-md);
-        box-shadow: var(--shadow-base);
-        padding: 20px;
+        border: 1px solid var(--line-subtle);
+        border-radius: var(--radius-card);
+        box-shadow: var(--shadow-card);
+        padding: 24px;
       }
     `,
   ],
@@ -33,8 +33,8 @@ export class AurumCardComponent {}
     `
       :host {
         display: block;
-        background: var(--surface-muted);
-        border-radius: var(--radius-md);
+        background: var(--paper-bg);
+        border-radius: var(--radius-search);
         padding: 16px;
       }
     `,

@@ -57,4 +57,13 @@ describe('AurumPageHeaderComponent', () => {
       'Gestão de agências e comissões'
     );
   });
+
+  it('badge por input renderiza a pilula ao lado do titulo', () => {
+    const f = TestBed.createComponent(AurumPageHeaderComponent);
+    f.componentInstance.titulo = 'Locais';
+    f.componentInstance.badge = '8 pontos';
+    f.detectChanges();
+    const badge = (f.nativeElement as HTMLElement).querySelector('.aurum-page-header__badge');
+    expect(badge?.textContent?.trim()).toBe('8 pontos');
+  });
 });

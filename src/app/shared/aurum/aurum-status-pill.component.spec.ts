@@ -32,4 +32,23 @@ describe('AurumStatusPillComponent', () => {
     const pill = (fixture.nativeElement as HTMLElement).querySelector('.aurum-status-pill');
     expect(pill?.classList.contains('aurum-status-pill--neutro')).toBe(true);
   });
+
+  it('compacto aplica o Status Tag de linha (11px) sem trocar o tom', () => {
+    component.rotulo = 'Ativo';
+    component.tom = 'sucesso';
+    component.compacto = true;
+    fixture.detectChanges();
+    const pill = (fixture.nativeElement as HTMLElement).querySelector('.aurum-status-pill')!;
+    expect(pill.classList.contains('aurum-status-pill--compacto')).toBe(true);
+    expect(pill.classList.contains('aurum-status-pill--sucesso')).toBe(true);
+  });
+
+  it('tons solidos da grade de Programacao/OS usam a classe solido-*', () => {
+    component.rotulo = 'Atribuída';
+    component.tom = 'solido-azul';
+    fixture.detectChanges();
+    const pill = (fixture.nativeElement as HTMLElement).querySelector('.aurum-status-pill')!;
+    expect(pill.classList.contains('aurum-status-pill--solido-azul')).toBe(true);
+    expect(pill.textContent?.trim()).toBe('Atribuída');
+  });
 });

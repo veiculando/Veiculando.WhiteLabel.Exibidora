@@ -26,7 +26,8 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
   color: var(--primary-dark);
   font-optical-sizing: auto;
-  letter-spacing: -0.02em;
+  font-variation-settings: 'SOFT' 0, 'WONK' 1;
+  letter-spacing: 0;
 }
 
 button,
@@ -110,21 +111,28 @@ textarea {
 .wl-campo > label {
   font-size: 0.75rem;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
+  line-height: 18px;
   color: var(--on-surface);
 }
 
 .wl-campo input,
 .wl-campo select,
 .wl-campo textarea {
-  padding: 8px 10px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  padding: 9px 12px;
+  border: 1px solid var(--line-field);
+  border-radius: var(--radius-field);
   font-family: var(--font-ui);
-  font-size: 0.9rem;
+  font-size: 0.8125rem;
+  line-height: 19.5px;
   background: var(--white);
-  color: var(--charcoal);
+  color: #0a0a0a;
+}
+
+.wl-campo input:focus,
+.wl-campo select:focus,
+.wl-campo textarea:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--primary-color) 45%, transparent);
 }
 
 .wl-campo__erro {
@@ -135,13 +143,13 @@ textarea {
 }
 
 .wl-btn {
-  padding: 8px 16px;
+  padding: 9px 20px;
   border: 1px solid var(--primary-color);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-pill);
   background: var(--primary-color);
   color: var(--white);
   font-family: var(--font-ui);
-  font-size: 0.85rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
   transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
@@ -162,8 +170,9 @@ textarea {
 }
 
 .wl-btn--secundario {
-  background: transparent;
-  color: var(--primary-color);
+  background: var(--white);
+  border-color: rgba(0, 0, 0, 0.12);
+  color: var(--on-surface);
 }
 
 .wl-btn--secundario:not(:disabled):hover {
@@ -189,24 +198,36 @@ textarea {
 
 .wl-tabela {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
   font-size: 0.875rem;
   background: var(--white);
+  border: 1px solid var(--line-subtle);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
 }
 
 .wl-tabela th,
 .wl-tabela td {
-  padding: 10px 12px;
+  padding: 20px 24px;
   text-align: left;
-  border-bottom: 1px solid var(--divider);
+  border-bottom: 1px solid var(--line-subtle);
+}
+
+.wl-tabela tbody tr:last-child td {
+  border-bottom: none;
 }
 
 .wl-tabela th {
-  font-size: 0.72rem;
+  padding: 16px 24px;
+  font-size: 0.75rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.5px;
   color: var(--on-surface);
-  background: var(--surface-muted);
+  background: var(--paper-bg);
+  white-space: nowrap;
 }
 
 .wl-tabela--rolavel {
@@ -251,20 +272,20 @@ textarea {
 
 .wl-etiqueta {
   display: inline-block;
-  padding: 2px 8px;
+  padding: 3px 10px;
   border-radius: var(--radius-pill);
-  font-size: 0.72rem;
-  font-weight: 600;
-  background: var(--surface-muted);
-  color: var(--on-surface);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  background: var(--tone-neutral-bg);
+  color: var(--tone-neutral);
 }
 
 .wl-etiqueta--pendente {
-  background: var(--warning-bg);
-  color: var(--warning);
+  background: var(--tone-warning-bg);
+  color: var(--tone-warning);
 }
 
 .wl-etiqueta--ativo {
-  background: var(--success-bg);
-  color: var(--success);
+  background: var(--tone-success-bg);
+  color: var(--tone-success);
 }
