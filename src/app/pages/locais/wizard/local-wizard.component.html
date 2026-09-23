@@ -7,33 +7,50 @@
     <div class="wl-estado wl-estado--carregando">Carregando local…</div>
   } @else if (erroCarregarLocal()) {
     <div class="wl-estado wl-estado--erro" role="alert">{{ erroCarregarLocal() }}</div>
-    <aurum-button variante="ghost" (click)="carregarLocal()">Tentar carregar local</aurum-button>
+    <aurum-button variante="outline" tamanho="sm" (click)="carregarLocal()">Tentar carregar local</aurum-button>
   } @else {
-    <aurum-page-header [titulo]="idLocal() ? 'Editar local' : 'Novo local'">
-      @if (statusExibicao() !== null) {
-        <aurum-status-pill aurumPageHeaderBadge [rotulo]="statusLabel[statusExibicao()!]" tom="neutro" />
-      }
-    </aurum-page-header>
-    @if (mensagem()) { <p role="status">{{ mensagem() }}</p> }
-    @if (erroSalvar()) { <p role="alert">{{ erroSalvar() }}</p> }
-    @if (salvando()) { <p role="status">Salvando e conferindo dados…</p> }
-    @if (carregandoDemografia()) { <p role="status">Carregando dados demográficos…</p> }
-    @if (erroCarregarDemografia()) {
-      <p role="alert">{{ erroCarregarDemografia() }}</p>
-      <aurum-button variante="ghost" [desabilitado]="carregandoDemografia() || salvando()" (click)="carregarDemografia()">Tentar carregar demografia</aurum-button>
-    }
+    <header class="local-wizard__cabecalho">
+      <div class="local-wizard__titulo">
+        <h1>{{ idLocal() ? 'Editar Local' : 'Novo Local' }}</h1>
+        @if (statusExibicao() !== null) {
+          <aurum-status-pill [rotulo]="statusLabel[statusExibicao()!]" [tom]="tomStatus()" compacto />
+        }
+      </div>
+      <p>
+        Associado à Afiliada
+        <strong>{{ afiliadaId ? '#' + afiliadaId : '' }}{{ nomeAfiliada ? ' (' + nomeAfiliada + ')' : '' }}</strong>.
+      </p>
+    </header>
 
-    <nav class="local-wizard__abas">
-      <aurum-button [variante]="etapaAtual() === 0 ? 'outline' : 'ghost'" [desabilitado]="!etapasHabilitadas()[0]" (click)="irParaEtapa(0)">
-        1. Dados do Local
-      </aurum-button>
-      <aurum-button [variante]="etapaAtual() === 1 ? 'outline' : 'ghost'" [desabilitado]="!etapasHabilitadas()[1]" (click)="irParaEtapa(1)">
-        2. Dados Demográficos
-      </aurum-button>
-      <aurum-button [variante]="etapaAtual() === 2 ? 'outline' : 'ghost'" [desabilitado]="!etapasHabilitadas()[2]" (click)="irParaEtapa(2)">
-        3. Peças
-      </aurum-button>
+    <nav class="local-wizard__abas" aria-label="Etapas do cadastro">
+      @for (etapa of etapas; track etapa.indice; let ultima = $last) {
+        <button
+          type="button"
+          class="local-wizard__etapa"
+          [class.local-wizard__etapa--atual]="etapaAtual() === etapa.indice"
+          [attr.aria-current]="etapaAtual() === etapa.indice ? 'step' : null"
+          [disabled]="!etapasHabilitadas()[etapa.indice]"
+          (click)="irParaEtapa(etapa.indice)"
+        >
+          <span class="local-wizard__numero">{{ etapa.indice + 1 }}</span>
+          {{ etapa.indice + 1 }}. {{ etapa.rotulo }}
+        </button>
+        @if (!ultima) {
+          <span class="local-wizard__seta" aria-hidden="true">
+            <svg viewBox="0 0 14 14" width="13" height="14"><path d="M5 3l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
+          </span>
+        }
+      }
     </nav>
+
+    @if (mensagem()) { <div class="wl-estado wl-estado--sucesso" role="status">{{ mensagem() }}</div> }
+    @if (erroSalvar()) { <div class="wl-estado wl-estado--erro" role="alert">{{ erroSalvar() }}</div> }
+    @if (salvando()) { <div class="wl-estado wl-estado--carregando" role="status">Salvando e conferindo dados…</div> }
+    @if (carregandoDemografia()) { <div class="wl-estado wl-estado--carregando" role="status">Carregando dados demográficos…</div> }
+    @if (erroCarregarDemografia()) {
+      <div class="wl-estado wl-estado--erro" role="alert">{{ erroCarregarDemografia() }}</div>
+      <aurum-button variante="outline" tamanho="sm" [desabilitado]="carregandoDemografia() || salvando()" (click)="carregarDemografia()">Tentar carregar demografia</aurum-button>
+    }
 
     @switch (etapaAtual()) {
       @case (0) {

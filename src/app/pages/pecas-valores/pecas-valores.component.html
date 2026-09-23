@@ -1,62 +1,52 @@
 <aurum-page-header
   titulo="Valores de Peças e Tabela de Preços"
-  subtitulo="Precificação das peças de mídia cadastradas para a afiliada."
-/>
-
-<div class="pv-toolbar">
-  <div class="pv-filtros">
-    <aurum-text-input
-      placeholder="Buscar por código, código interno, cidade…"
-      rotulo="Buscar por código, código interno, cidade…"
-      [valor]="busca"
-      (valorChange)="busca = $event"
-    />
-
-    <aurum-filter-field rotulo="Cidade">
-      <select [(ngModel)]="idCidade">
-        <option [ngValue]="null">Todas</option>
-        @for (cidade of cidades; track cidade.id) {
-          <option [ngValue]="cidade.id">{{ cidade.nome }} — {{ cidade.sigla }}</option>
-        }
-      </select>
-    </aurum-filter-field>
-
-    <aurum-filter-field rotulo="Suporte">
-      <select [(ngModel)]="idTipoSuporte">
-        <option [ngValue]="null">Todos</option>
-        @for (suporte of suportes; track suporte.id) {
-          <option [ngValue]="suporte.id">{{ suporte.nome }}</option>
-        }
-      </select>
-    </aurum-filter-field>
-
-    <aurum-filter-field rotulo="Status">
-      <select [(ngModel)]="status">
-        <option [ngValue]="null">Todos</option>
-        <option [ngValue]="StatusExibicao.Ativo">{{ statusLabel[StatusExibicao.Ativo] }}</option>
-        <option [ngValue]="StatusExibicao.Inativo">{{ statusLabel[StatusExibicao.Inativo] }}</option>
-        <option [ngValue]="StatusExibicao.AprovacaoPendente">{{ statusLabel[StatusExibicao.AprovacaoPendente] }}</option>
-      </select>
-    </aurum-filter-field>
-
-    <aurum-button variante="ghost" [desabilitado]="carregando" (click)="aplicarFiltro()">
-      {{ carregando ? 'Consultando…' : 'Filtrar' }}
-    </aurum-button>
-  </div>
-
-  <aurum-button [desabilitado]="selecionadosCount === 0" (click)="abrirModal()">
+  [badge]="total + ' peça' + (total === 1 ? '' : 's')"
+  [subtitulo]="'Precificação das peças de mídia cadastradas para a Afiliada' + (afiliadaId ? ' #' + afiliadaId : '') + '.'"
+>
+  <aurum-button aurumPageHeaderAcoes variante="wine" [desabilitado]="selecionadosCount === 0" (click)="abrirModal()">
+    <span class="aurum-ico pv-ico" style="--ico: url(/assets/aurum/icon-cifrao.svg)"></span>
     Alterar Preço ({{ selecionadosCount }} selecionada{{ selecionadosCount === 1 ? '' : 's' }})
   </aurum-button>
-</div>
+</aurum-page-header>
 
-@if (sucesso) {
-  <p role="status">{{ sucesso }}</p>
-}
+<aurum-filter-bar>
+  <aurum-text-input
+    placeholder="Buscar por código da peça, código interno, cidade ou endereço…"
+    rotulo="Buscar por código da peça, código interno, cidade ou endereço…"
+    [valor]="busca"
+    (valorChange)="busca = $event"
+  />
+
+  <select class="aurum-select" aria-label="Cidade" [(ngModel)]="idCidade">
+    <option [ngValue]="null">Cidade: Todas</option>
+    @for (cidade of cidades; track cidade.id) {
+      <option [ngValue]="cidade.id">{{ cidade.nome }} — {{ cidade.sigla }}</option>
+    }
+  </select>
+
+  <select class="aurum-select" aria-label="Suporte" [(ngModel)]="idTipoSuporte">
+    <option [ngValue]="null">Suporte: Todos</option>
+    @for (suporte of suportes; track suporte.id) {
+      <option [ngValue]="suporte.id">{{ suporte.nome }}</option>
+    }
+  </select>
+
+  <select class="aurum-select" aria-label="Status" [(ngModel)]="status">
+    <option [ngValue]="null">Status: Todos</option>
+    <option [ngValue]="StatusExibicao.Ativo">{{ statusLabel[StatusExibicao.Ativo] }}</option>
+    <option [ngValue]="StatusExibicao.Inativo">{{ statusLabel[StatusExibicao.Inativo] }}</option>
+    <option [ngValue]="StatusExibicao.AprovacaoPendente">{{ statusLabel[StatusExibicao.AprovacaoPendente] }}</option>
+  </select>
+
+  <aurum-button variante="outline" tamanho="sm" [desabilitado]="carregando" (click)="aplicarFiltro()">
+    {{ carregando ? 'Consultando…' : 'Filtrar' }}
+  </aurum-button>
+</aurum-filter-bar>
 
 @if (erro) {
   <div class="wl-estado wl-estado--erro" role="alert">
     {{ erro }}
-    <aurum-button variante="ghost" (click)="carregar()">Tentar novamente</aurum-button>
+    <aurum-button variante="outline" tamanho="sm" (click)="carregar()">Tentar novamente</aurum-button>
   </div>
 } @else if (carregando && itens.length === 0) {
   <div class="wl-estado wl-estado--carregando">Carregando peças…</div>
@@ -98,3 +88,14 @@
     (fechar)="fecharModal()"
   />
 }
+
+<aurum-modal [aberto]="!!sucesso" largura="sm" semFechar (fechar)="sucesso = ''">
+  <div class="pv-sucesso" role="status" aria-live="polite">
+    <span class="pv-sucesso__icone" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="24" height="24"><path d="M6 12.5l4 4 8-9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
+    </span>
+    <h2>Atualização Concluída!</h2>
+    <p>{{ sucesso }}</p>
+    <aurum-button variante="wine" tamanho="sm" (click)="sucesso = ''">OK, Entendido</aurum-button>
+  </div>
+</aurum-modal>

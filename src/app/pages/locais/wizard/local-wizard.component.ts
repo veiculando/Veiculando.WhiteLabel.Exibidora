@@ -13,8 +13,9 @@ import { LocalDadosPayload, LocalDetalhe } from '../models/local.model';
 import { LocalPublicoPayload } from '../models/local-publico.model';
 import { STATUS_EXIBICAO_LABEL, StatusExibicao } from '../models/status-exibicao.enum';
 import { AurumButtonComponent } from '../../../shared/aurum/aurum-button.component';
-import { AurumPageHeaderComponent } from '../../../shared/aurum/aurum-page-header.component';
-import { AurumStatusPillComponent } from '../../../shared/aurum/aurum-status-pill.component';
+import { AurumStatusPillComponent, AurumStatusPillTom } from '../../../shared/aurum/aurum-status-pill.component';
+import { PermissionService } from '../../../core/auth/permission.service';
+import { BrandingService } from '../../../core/branding/branding.service';
 
 type Etapa = 0 | 1 | 2;
 
@@ -26,6 +27,10 @@ type Etapa = 0 | 1 | 2;
  * Id real (ADR-WL-004: o local nasce AprovacaoPendente ao salvar a
  * etapa 1; não há como anexar peça/demografia antes disso). Cada etapa
  * usa seu próprio serviço/payload para nunca sobrescrever a outra.
+ *
+ * Visual do Figma `419:21489` / `419:24510` (cartão com stepper numerado).
+ * Os rótulos das etapas seguem o PRD §5.2, não o frame — o fluxo real é
+ * Dados → Demografia → Peças, sem etapa de revisão.
  */
 @Component({
   selector: 'app-local-wizard',
@@ -35,17 +40,112 @@ type Etapa = 0 | 1 | 2;
     LocalDadosStepComponent,
     LocalDemografiaStepComponent,
     LocalPecasStepComponent,
-    AurumPageHeaderComponent,
     AurumButtonComponent,
     AurumStatusPillComponent,
   ],
   templateUrl: './local-wizard.component.html',
+  styles: [
+    `
+      .local-wizard {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 28px;
+        background: var(--white);
+        border-radius: var(--radius-modal);
+        filter: drop-shadow(0 16px 24px rgba(74, 14, 14, 0.18));
+      }
+      .local-wizard__cabecalho p {
+        margin: 4px 0 0;
+        font-size: 0.78125rem;
+        color: var(--on-surface);
+      }
+      .local-wizard__titulo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .local-wizard__titulo h1 {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 700;
+        line-height: 30px;
+      }
+      .local-wizard__abas {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 16px 0 20px;
+        padding: 10px 16px;
+        border-radius: 12px;
+        background: var(--paper-bg);
+      }
+      .local-wizard__etapa {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px;
+        border: none;
+        background: transparent;
+        color: var(--on-surface);
+        font-size: 0.75rem;
+        font-weight: 700;
+        line-height: 18px;
+        cursor: pointer;
+      }
+      .local-wizard__etapa:disabled {
+        cursor: not-allowed;
+        opacity: 0.6;
+      }
+      .local-wizard__numero {
+        display: grid;
+        place-items: center;
+        width: 21px;
+        height: 22px;
+        border-radius: 11px;
+        background: rgba(0, 0, 0, 0.1);
+        color: var(--paper-bg);
+        font-size: 0.6875rem;
+      }
+      .local-wizard__etapa--atual {
+        color: var(--primary-color);
+      }
+      .local-wizard__etapa--atual .local-wizard__numero {
+        background: var(--primary-color);
+      }
+      .local-wizard__seta {
+        display: inline-flex;
+        color: var(--on-surface);
+      }
+      .local-wizard .wl-estado {
+        margin-bottom: 12px;
+      }
+    `,
+  ],
 })
 export class LocalWizardComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly location = inject(Location);
   private readonly localService = inject(LocalService);
   private readonly publicoService = inject(LocalPublicoService);
+
+  readonly etapas: { indice: Etapa; rotulo: string }[] = [
+    { indice: 0, rotulo: 'Dados do Local' },
+    { indice: 1, rotulo: 'Dados Demográficos' },
+    { indice: 2, rotulo: 'Peças' },
+  ];
+  readonly afiliadaId = inject(PermissionService).getAfiliadaId();
+  private readonly branding = inject(BrandingService);
+
+  get nomeAfiliada(): string | null {
+    return this.branding.branding()?.nomeExibicao ?? null;
+  }
+
+  tomStatus(): AurumStatusPillTom {
+    const status = this.statusExibicao();
+    return status === StatusExibicao.Ativo ? 'sucesso' : status === StatusExibicao.AprovacaoPendente ? 'aviso' : 'neutro';
+  }
 
   readonly etapaAtual = signal<Etapa>(0);
   readonly idLocal = signal<number | null>(null);

@@ -61,8 +61,12 @@ export type AurumButtonTamanho = 'md' | 'sm' | 'xs';
         padding: 6px 12px;
         font-size: 0.75rem;
       }
+      /* Figma: ação indisponível fica cinza (ex.: "Alterar Preço (0 selecionadas)"). */
       .aurum-button:disabled {
-        opacity: 0.5;
+        background: rgba(0, 0, 0, 0.06);
+        border-color: transparent;
+        color: color-mix(in srgb, var(--on-surface) 60%, transparent);
+        box-shadow: none;
         cursor: not-allowed;
       }
       .aurum-button--wine {
