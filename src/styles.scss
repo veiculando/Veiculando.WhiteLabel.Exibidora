@@ -61,6 +61,34 @@ textarea {
   cursor: pointer;
 }
 
+/* Link de navegação com cara de aurum-button wine (ex.: "Novo Local"): mantém
+   href, abrir em nova aba e a semântica de link. */
+.aurum-botao-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: var(--radius-pill);
+  background: var(--primary-color);
+  box-shadow: 0 8px 16px rgba(74, 14, 14, 0.1);
+  color: var(--white);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.aurum-botao-link:hover {
+  background: var(--primary-dark);
+}
+
+.aurum-botao-link .aurum-ico {
+  width: 16px;
+  height: 16px;
+}
+
 :focus-visible {
   outline: 3px solid color-mix(in srgb, var(--secondary-color) 70%, #ffffff);
   outline-offset: 2px;

@@ -69,10 +69,11 @@ const PAGE_SIZE_MAXIMO = 100;
   ],
   template: `
     <aurum-page-header
-      titulo="Gerar Ordem de Serviço"
+      titulo="Nova Ordem de Serviço"
       subtitulo="Selecione as peças para gerar a rota e a autorização de colagem do período."
     />
 
+    <section class="og-painel">
     <div class="og-filtros">
       <aurum-filter-field rotulo="Período" posicaoRotulo="acima">
         <aurum-dropdown [opcoes]="opcoesPeriodicidade" [valor]="String(periodicidade)" (valorChange)="mudarPeriodicidade($event)" />
@@ -86,7 +87,7 @@ const PAGE_SIZE_MAXIMO = 100;
       <aurum-filter-field rotulo="Status" posicaoRotulo="acima">
         <aurum-dropdown [opcoes]="opcoesStatus" [valor]="status === null ? TODOS : String(status)" (valorChange)="mudarFiltro('status', $event)" />
       </aurum-filter-field>
-      <aurum-button variante="outline" [desabilitado]="!idPeriodo" (click)="buscarPecas()">Buscar peças</aurum-button>
+      <aurum-button variante="outline" tamanho="sm" [desabilitado]="!idPeriodo" (click)="buscarPecas()">Buscar peças</aurum-button>
     </div>
 
     <div class="og-opcoes">
@@ -95,6 +96,7 @@ const PAGE_SIZE_MAXIMO = 100;
       <label class="og-opcao"><aurum-checkbox [marcado]="opcoes.ordemInicial" (marcadoChange)="opcoes.ordemInicial = $event" rotulo="Ordem inicial" /> Ordem inicial</label>
       <label class="og-opcao"><aurum-checkbox [marcado]="opcoes.ordemFinal" (marcadoChange)="opcoes.ordemFinal = $event" rotulo="Ordem final" /> Ordem final</label>
     </div>
+    </section>
 
     @if (erro) {
       <div class="wl-estado wl-estado--erro">{{ erro }}</div>
@@ -121,7 +123,7 @@ const PAGE_SIZE_MAXIMO = 100;
 
     @if (pecas.length > 0) {
       <div class="wl-tabela--rolavel">
-        <table aurumTable>
+        <table aurumTable class="aurum-table--densa">
           <thead>
             <tr aurumTableRow>
               <th aurumTableHeaderCell>
@@ -145,7 +147,7 @@ const PAGE_SIZE_MAXIMO = 100;
                 <td aurumTableCell>
                   <aurum-checkbox [rotulo]="'Selecionar ' + peca.pecaCodigo" [marcado]="selecionadas.has(peca.pecaId)" (marcadoChange)="alternarSelecao(peca.pecaId, $event)" />
                 </td>
-                <td aurumTableCell>{{ peca.pecaCodigo }}</td>
+                <td aurumTableCell class="og-codigo">{{ peca.pecaCodigo }}</td>
                 <td aurumTableCell>—</td>
                 <td aurumTableCell>—</td>
                 <td aurumTableCell>{{ peca.endereco || '—' }}</td>
@@ -162,9 +164,8 @@ const PAGE_SIZE_MAXIMO = 100;
       </div>
 
       <div class="og-rodape">
-        <span>{{ selecionadas.size }} {{ selecionadas.size === 1 ? 'peça selecionada' : 'peças selecionadas' }}</span>
         <aurum-button [desabilitado]="selecionadas.size === 0 || gerando" (click)="gerarOs()">
-          {{ gerando ? 'Gerando…' : 'Gerar Ordem de Serviço' }}
+          {{ gerando ? 'Gerando…' : 'Gerar Ordem de Serviço (' + selecionadas.size + (selecionadas.size === 1 ? ' selecionado)' : ' selecionados)') }}
         </aurum-button>
       </div>
     }
@@ -179,30 +180,45 @@ const PAGE_SIZE_MAXIMO = 100;
   changeDetection: ChangeDetectionStrategy.Eager,
   styles: [
     `
+      .og-painel {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        margin-bottom: 24px;
+        padding: 20px;
+        background: var(--white);
+        border: 1px solid var(--line-subtle);
+        border-radius: 18px;
+        filter: drop-shadow(0 8px 16px rgba(74, 14, 14, 0.08));
+      }
       .og-filtros {
         display: flex;
         flex-wrap: wrap;
         align-items: flex-end;
-        gap: 16px;
-        margin-bottom: 16px;
+        gap: 12px;
       }
       .og-opcoes {
         display: flex;
         flex-wrap: wrap;
-        gap: 20px;
-        margin-bottom: 16px;
+        gap: 28px;
       }
       .og-opcao {
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        font-size: 0.875rem;
+        font-size: 0.8125rem;
+        color: var(--on-surface);
+        cursor: pointer;
+      }
+      .og-codigo {
+        font-weight: 700;
+        color: var(--primary-dark);
+        white-space: nowrap;
       }
       .og-rodape {
         display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 16px 0;
+        justify-content: flex-end;
+        padding: 20px 0;
       }
     `,
   ],
