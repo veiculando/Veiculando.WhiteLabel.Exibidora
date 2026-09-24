@@ -1,24 +1,18 @@
-<!--
-  Subtítulo PRÓPRIO (mesma correção de VEI-RD-80): o Figma repete aqui a copy de
-  Anunciantes — "Gestão das marcas anunciantes e associação às agências" —, que é
-  herança do arquivo de design, não intenção. Esta tela abre uma sessão de venda
-  assistida; não gere marcas. Sinalizado ao design para a revisão v2.3.
--->
 <aurum-page-header
-  eyebrow="Comercial"
   titulo="Prospecção"
-  subtitulo="Abra o aplicativo do anunciante em seu nome para montar um pedido junto com o cliente"
+  subtitulo="Feche pedidos em nome dos clientes abrindo o App WL em uma nova aba, autenticado por um acesso temporário."
 />
 
 <div class="prospeccao__grade">
   <section class="prospeccao__destaque">
-    <aurum-eyebrow texto="Sessão de Prospecção" />
+    <span class="prospeccao__eyebrow">Sessão de Prospecção</span>
     <h2>Abrir App WL em nova aba</h2>
     <p>
-      Abra o aplicativo já autenticado para montar o pedido junto com o cliente. A
-      sessão fica registrada em seu nome.
+      Ao clicar, você entra automaticamente no App WL — sem precisar de login — e passa a ver
+      tudo como se fosse o cliente. Esse acesso é temporário e expira sozinho depois de um tempo.
     </p>
     <aurum-button variante="gold" [desabilitado]="abrindo" (click)="iniciar()">
+      <span class="aurum-ico prospeccao__ico" style="--ico: url(/assets/aurum/icon-externo.svg)"></span>
       Iniciar Prospecção
     </aurum-button>
     @if (erro) {
@@ -26,14 +20,19 @@
     }
   </section>
 
-  <aurum-card>
+  <aurum-card class="prospeccao__como">
     <h2>Como funciona</h2>
     <!-- Copy literal do Figma. Nenhuma das palavras FonteAgenciaId, BFF ou TTL
          aparece na interface — o comportamento técnico continua o mesmo. -->
     @for (item of comoFunciona; track item.titulo) {
       <div class="prospeccao__item">
-        <strong>{{ item.titulo }}</strong>
-        <span>{{ item.texto }}</span>
+        <span class="prospeccao__item-icone" aria-hidden="true">
+          <span class="aurum-ico" [style.--ico]="'url(/assets/aurum/icon-' + item.icone + '.svg)'"></span>
+        </span>
+        <span>
+          <strong>{{ item.titulo }}</strong>
+          <span>{{ item.texto }}</span>
+        </span>
       </div>
     }
   </aurum-card>

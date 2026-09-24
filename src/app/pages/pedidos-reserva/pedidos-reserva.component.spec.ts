@@ -1,3 +1,4 @@
+import { PermissionService } from '../../core/auth/permission.service';
 import { TestBed } from '@angular/core/testing';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
@@ -54,7 +55,12 @@ describe('PedidosReservaComponent', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [PedidosReservaService, provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        PedidosReservaService,
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: PermissionService, useValue: { getAfiliadaId: () => '4821' } },
+      ],
     });
     httpMock = TestBed.inject(HttpTestingController);
   });
