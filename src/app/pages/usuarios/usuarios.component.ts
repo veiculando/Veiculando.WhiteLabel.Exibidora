@@ -54,7 +54,11 @@ import {
       AurumTableHeaderCellComponent,
     ],
     template: `
-    <aurum-page-header titulo="Operadores da exibidora" subtitulo="Contas de acesso ao painel e suas permissões." />
+    <aurum-page-header titulo="Usuários" subtitulo="Operadores da exibidora e suas permissões de acesso ao painel.">
+      @if (!criando) {
+        <aurum-button aurumPageHeaderAcoes (click)="abrirCriacao()">+ Novo operador</aurum-button>
+      }
+    </aurum-page-header>
 
       @if (erro) {
         <div class="wl-estado wl-estado--erro" role="alert">{{ erro }}</div>
@@ -75,11 +79,6 @@ import {
             (change)="alternarExcluidos()" aria-describedby="nota-exclusao" />
           Mostrar excluídos
         </label>
-        @if (!criando) {
-          <aurum-button (click)="abrirCriacao()">
-            Novo operador
-          </aurum-button>
-        }
       </div>
     
       <p id="nota-exclusao" class="edicao__nota">
@@ -159,10 +158,10 @@ import {
     
         @if (usuarios.length > 0) {
           <div class="wl-tabela--rolavel">
-            <table aurumTable>
+            <table aurumTable class="aurum-table--densa">
               <thead>
                 <tr aurumTableRow>
-                  <th aurumTableHeaderCell>Nome</th>
+                  <th aurumTableHeaderCell>Operador</th>
                   <th aurumTableHeaderCell>E-mail</th>
                   <th aurumTableHeaderCell>Cargo</th>
                   <th aurumTableHeaderCell>Acesso</th>
@@ -174,8 +173,13 @@ import {
               <tbody>
                 @for (usuario of usuarios; track usuario) {
                   <tr aurumTableRow>
-                    <td aurumTableCell>{{ usuario.nome }}</td>
-                    <td aurumTableCell>{{ usuario.email }}</td>
+                    <td aurumTableCell>
+                      <span class="operador">
+                        <span class="operador__avatar" aria-hidden="true">{{ iniciais(usuario.nome) }}</span>
+                        <strong>{{ usuario.nome }}</strong>
+                      </span>
+                    </td>
+                    <td aurumTableCell class="apagado">{{ usuario.email }}</td>
                     <td aurumTableCell>{{ usuario.cargo || '—' }}</td>
                     <td aurumTableCell>
                       <aurum-status-pill
@@ -193,7 +197,7 @@ import {
                     </td>
                     <td aurumTableCell>
                       @for (p of usuario.permissoes; track p) {
-                        <aurum-status-pill [rotulo]="rotulo(p)" tom="neutro" />
+                        <span class="permissao-chip">{{ rotulo(p) }}</span>
                       }
                       @if (usuario.permissoes.length === 0) {
                         <span class="sem-permissao">
@@ -206,15 +210,15 @@ import {
                         <span class="sem-permissao">Somente consulta</span>
                       } @else {
                       @if (usuario.statusConvite === 'Pendente') {
-                        <aurum-button variante="ghost"
+                        <aurum-button variante="suave" tamanho="xs"
                           [desabilitado]="reenviando !== null" (click)="reenviarConvite(usuario)">
                           {{ reenviando === usuario.id ? 'Enviando…' : 'Reenviar convite' }}
                         </aurum-button>
                       }
-                      <aurum-button variante="ghost" (click)="abrirEdicao(usuario)">
+                      <aurum-button variante="suave" tamanho="xs" (click)="abrirEdicao(usuario)">
                         {{ editando === usuario.id ? 'Fechar' : 'Editar' }}
                       </aurum-button>
-                      <aurum-button variante="perigo" (click)="excluir(usuario)">
+                      <aurum-button variante="perigo" tamanho="xs" (click)="excluir(usuario)">
                         Excluir
                       </aurum-button>
                       }
@@ -283,6 +287,12 @@ import {
     changeDetection: ChangeDetectionStrategy.Eager,
     styles: [
         `
+      .operador { display: inline-flex; align-items: center; gap: 10px; white-space: nowrap; }
+      .operador strong { color: var(--charcoal); }
+      .operador__avatar { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--wine-grad); color: var(--white); font-size: 0.625rem; font-weight: 700; }
+      .apagado { color: var(--on-surface); }
+      .permissao-chip { display: inline-flex; margin: 2px 6px 2px 0; padding: 3px 8px; border-radius: 6px; background: var(--gold-tint); color: #8a6500; font-size: 0.6875rem; font-weight: 600; white-space: nowrap; }
+      .permissao-chip::before { content: '⛉'; margin-right: 4px; font-size: 0.625rem; }
       .cartao__titulo {
         margin: 0 0 16px;
         font-size: 1.1rem;
@@ -423,6 +433,11 @@ export class UsuariosComponent implements OnInit {
   }
 
   // ------------------------------------------------------------ criação
+
+  iniciais(nome: string): string {
+    const partes = nome.trim().split(/\s+/).filter(Boolean);
+    return ((partes[0]?.[0] ?? '') + (partes.length > 1 ? partes[partes.length - 1][0] : '')).toUpperCase();
+  }
 
   abrirCriacao(): void {
     this.criando = true;
