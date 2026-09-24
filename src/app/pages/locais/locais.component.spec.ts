@@ -76,6 +76,23 @@ describe('LocaisComponent', () => {
     expect(text).toContain('Inativar');
   });
 
+  it('renderiza todas as linhas quando o BFF omite as colunas consolidadas da peça', async () => {
+    await setup();
+    // Shape real do preview: sem endereco/suporte/formatoDimensao/valorPadrao/periodicidade.
+    const semConsolidado = itens.map(({ endereco, suporte, formatoDimensao, valorPadrao, periodicidade, ...resto }) => resto);
+    localServiceSpy.listLocais.mockReturnValue(of(semConsolidado as unknown as LocalListItem[]));
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const el = fixture.nativeElement as HTMLElement;
+    const text = el.textContent ?? '';
+    expect(el.querySelectorAll('tbody tr').length).toBe(2);
+    expect(text).toContain('LOC-2');
+    expect(text).toContain('Terminal Rodoviário');
+    expect(text).toContain('2 pontos');
+  });
+
   it('busca filtra em memória por código/descrição/cidade (GET real não pagina nem filtra por querystring)', async () => {
     await setup();
     localServiceSpy.listLocais.mockReturnValue(of(itens));

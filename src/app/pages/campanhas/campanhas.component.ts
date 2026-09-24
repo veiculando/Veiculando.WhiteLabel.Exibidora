@@ -143,7 +143,7 @@ export class CampanhasComponent implements OnInit {
   }
 
   valor(campanha: CampanhaListItem): string {
-    return campanha.ValorTotal.toLocaleString('pt-BR', {
+    return (campanha.ValorTotal ?? 0).toLocaleString('pt-BR', {
       style: 'currency',
       currency: 'BRL',
       minimumFractionDigits: 0,

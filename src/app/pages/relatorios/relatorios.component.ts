@@ -185,6 +185,6 @@ export class RelatoriosComponent implements OnInit {
 
   formatarMoeda(valor: number | null): string {
     if (valor === null) return '—';
-    return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    return (valor ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   }
 }
