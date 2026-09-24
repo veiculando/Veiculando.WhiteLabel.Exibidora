@@ -1,3 +1,4 @@
+import { PermissionService } from '../../core/auth/permission.service';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
@@ -30,7 +31,7 @@ describe('AgenciasComponent — VEI-RD-79', () => {
     localStorage.clear();
     await TestBed.configureTestingModule({
       imports: [AgenciasComponent],
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [provideHttpClient(), provideHttpClientTesting(), { provide: PermissionService, useValue: { getAfiliadaId: () => '4821' } }],
     }).compileComponents();
   });
 

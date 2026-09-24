@@ -5,6 +5,8 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
  * do inventário do Figma. Seletores de atributo sobre `table`/`tr`/`th`/`td`
  * nativos: tabela é semântica sensível a aninhamento, então não existe
  * wrapper de elemento custom aqui — só classes de estilo sobre o DOM nativo.
+ * `class="aurum-table--densa"` no `<table>` dá a versão compacta das telas
+ * operacionais.
  */
 @Component({
   selector: 'table[aurumTable]',
@@ -16,8 +18,14 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
     `
       :host {
         width: 100%;
-        border-collapse: collapse;
+        border-collapse: separate;
+        border-spacing: 0;
+        overflow: hidden;
         font-size: 0.875rem;
+        background: var(--white);
+        border: 1px solid var(--line-subtle);
+        border-radius: var(--radius-card);
+        box-shadow: var(--shadow-card);
       }
     `,
   ],
@@ -32,11 +40,8 @@ export class AurumTableComponent {}
   changeDetection: ChangeDetectionStrategy.Eager,
   styles: [
     `
-      :host {
-        border-bottom: 1px solid var(--divider);
-      }
       tbody :host:hover {
-        background: var(--surface-muted);
+        background: #faf9f6;
       }
     `,
   ],
@@ -52,16 +57,26 @@ export class AurumTableRowComponent {}
   styles: [
     `
       :host {
-        padding: 12px 16px;
+        padding: 20px 24px;
         text-align: left;
+        vertical-align: middle;
         color: var(--charcoal);
+        border-bottom: 1px solid var(--line-subtle);
+      }
+      :host-context(tbody tr:last-child) {
+        border-bottom: none;
+      }
+      /* Tabelas operacionais do Figma (Check out, OS, KYC): 13px, menos respiro. */
+      :host-context(.aurum-table--densa) {
+        padding: 14px 12px;
+        font-size: 0.8125rem;
       }
     `,
   ],
 })
 export class AurumTableCellComponent {}
 
-/** Cabeçalho caixa-alta 11px, letter-spacing .1em — conforme o design system. */
+/** Cabeçalho do Figma Aurum: 12px bold caixa-alta, tracking .5px, fundo papel. */
 @Component({
   selector: 'th[aurumTableHeaderCell]',
   imports: [],
@@ -71,13 +86,20 @@ export class AurumTableCellComponent {}
   styles: [
     `
       :host {
-        padding: 10px 16px;
+        padding: 16px 24px;
         text-align: left;
-        font-size: 11px;
-        font-weight: 600;
+        font-size: 12px;
+        font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.1em;
+        letter-spacing: 0.5px;
         color: var(--on-surface);
+        background: var(--paper-bg);
+        border-bottom: 1px solid var(--line-subtle);
+        white-space: nowrap;
+      }
+      :host-context(.aurum-table--densa) {
+        padding: 14px 12px;
+        font-size: 11px;
       }
     `,
   ],

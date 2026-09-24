@@ -6,6 +6,7 @@ import { LocaisComponent } from './locais.component';
 import { LocalService } from './services/local.service';
 import { StatusExibicao } from './models/status-exibicao.enum';
 import { LocalListItem } from './models/local.model';
+import { PermissionService } from '../../core/auth/permission.service';
 import type { Mocked } from 'vitest';
 
 describe('LocaisComponent', () => {
@@ -53,7 +54,11 @@ describe('LocaisComponent', () => {
     } as unknown as Mocked<LocalService>;
     await TestBed.configureTestingModule({
       imports: [LocaisComponent],
-      providers: [{ provide: LocalService, useValue: localServiceSpy }, provideRouter([])],
+      providers: [
+        { provide: LocalService, useValue: localServiceSpy },
+        { provide: PermissionService, useValue: { getAfiliadaId: () => '4821' } },
+        provideRouter([]),
+      ],
     }).compileComponents();
     fixture = TestBed.createComponent(LocaisComponent);
   }

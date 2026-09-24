@@ -8,7 +8,7 @@ import { AurumButtonComponent } from '../../shared/aurum/aurum-button.component'
 import { AurumCardComponent } from '../../shared/aurum/aurum-card.component';
 import { AurumHistoryCardComponent, AurumHistoryEvento } from '../../shared/aurum/aurum-history-card.component';
 import { AurumPageHeaderComponent } from '../../shared/aurum/aurum-page-header.component';
-import { AurumStatusPillComponent } from '../../shared/aurum/aurum-status-pill.component';
+import { AurumStatusPillComponent, AurumStatusPillTom } from '../../shared/aurum/aurum-status-pill.component';
 import {
   AurumTableCellComponent,
   AurumTableComponent,
@@ -51,21 +51,23 @@ import {
     AurumTableHeaderCellComponent,
   ],
   template: `
+    <a class="od-voltar" routerLink="/ordens-servico">← Voltar para Ordem de Serviço</a>
+
     <aurum-page-header [titulo]="detalhe?.numeroFormatado || 'Ordem de Serviço'">
       @if (detalhe; as os) {
-        <aurum-status-pill aurumPageHeaderBadge [rotulo]="rotuloStatus(os.status)" tom="neutro" />
+        <aurum-status-pill aurumPageHeaderBadge [rotulo]="rotuloStatus(os.status)" [tom]="tomStatus(os.status)" />
       }
-      <a aurumPageHeaderAcoes class="od-voltar" routerLink="/ordens-servico">← Voltar para Ordem de Serviço</a>
+      @if (detalhe; as os) {
+        <p aurumPageHeaderSubtitulo class="od-subtitulo">
+          {{ os.periodo || '—' }} · {{ os.cidades.join(', ') || '—' }} · gerada em {{ os.dataCadastro | date: 'dd/MM/yyyy HH:mm' }}
+        </p>
+      }
       @if (detalhe) {
-        <aurum-button aurumPageHeaderAcoes variante="outline" [desabilitado]="baixando" (click)="baixarPlanilha()">
-          {{ baixando ? 'Abrindo…' : 'Baixar Planilha (PDF)' }}
+        <aurum-button aurumPageHeaderAcoes variante="outline" tamanho="sm" [desabilitado]="baixando" (click)="baixarPlanilha()">
+          {{ baixando ? 'Abrindo…' : 'Baixar planilha (PDF)' }}
         </aurum-button>
       }
     </aurum-page-header>
-
-    @if (detalhe; as os) {
-      <p class="od-subtitulo">{{ os.periodo || '—' }} — {{ os.cidades.join(', ') || '—' }} · gerada em {{ os.dataCadastro | date: 'dd/MM/yyyy HH:mm' }}</p>
-    }
 
     @if (carregando) {
       <div class="wl-estado wl-estado--carregando">Carregando a ordem de serviço…</div>
@@ -74,7 +76,7 @@ import {
     @if (erro) {
       <div class="wl-estado wl-estado--erro">
         {{ erro }}
-        <aurum-button variante="ghost" (click)="carregar()">Tentar novamente</aurum-button>
+        <aurum-button variante="outline" tamanho="sm" (click)="carregar()">Tentar novamente</aurum-button>
       </div>
     }
 
@@ -86,7 +88,7 @@ import {
       <aurum-card class="od-info">
         <div class="od-info__item">
           <span class="od-info__rotulo">Status</span>
-          <aurum-status-pill [rotulo]="rotuloStatus(os.status)" tom="neutro" />
+          <span class="od-info__valor">{{ rotuloStatus(os.status) }}</span>
         </div>
         <div class="od-info__item">
           <span class="od-info__rotulo">Peças na OS</span>
@@ -98,12 +100,13 @@ import {
         </div>
       </aurum-card>
 
+      <section class="od-bloco">
       <h2 class="od-secao-titulo">Peças incluídas nesta OS</h2>
       @if (os.pecas.length === 0) {
         <div class="wl-estado wl-estado--vazio">Nenhuma peça nesta OS.</div>
       } @else {
         <div class="wl-tabela--rolavel">
-          <table aurumTable>
+          <table aurumTable class="aurum-table--densa od-tabela">
             <thead>
               <tr aurumTableRow>
                 <th aurumTableHeaderCell>Código</th>
@@ -117,18 +120,20 @@ import {
             <tbody>
               @for (peca of os.pecas; track peca.codigo) {
                 <tr aurumTableRow>
-                  <td aurumTableCell>{{ peca.codigo }}</td>
+                  <td aurumTableCell class="od-codigo">{{ peca.codigo }}</td>
                   <td aurumTableCell>{{ peca.localCodigo || '—' }}</td>
                   <td aurumTableCell>{{ peca.localDescricao || '—' }}</td>
                   <td aurumTableCell>{{ peca.cidade || '—' }}</td>
                   <td aurumTableCell>{{ peca.dataColagem || '—' }}</td>
-                  <td aurumTableCell>{{ peca.statusColagem }}</td>
+                  <td aurumTableCell><aurum-status-pill [rotulo]="peca.statusColagem" [tom]="peca.statusColagem === 'Concluída' || peca.statusColagem === 'Concluida' ? 'solido-verde' : 'solido-laranja'" /></td>
                 </tr>
               }
             </tbody>
           </table>
         </div>
       }
+
+      </section>
 
       <aurum-history-card titulo="Histórico da OS" [eventos]="eventosHistorico(os)" />
     }
@@ -137,47 +142,63 @@ import {
   styles: [
     `
       .od-voltar {
+        display: inline-block;
+        margin-bottom: 16px;
         color: var(--primary-color);
+        font-size: 0.8125rem;
+        font-weight: 600;
         text-decoration: none;
-        font-size: 0.875rem;
-      }
-      .od-voltar:hover {
-        text-decoration: underline;
       }
       .od-subtitulo {
-        margin: -12px 0 16px;
+        margin: 0;
+        font-size: 0.8125rem;
         color: var(--on-surface);
-        font-size: 0.875rem;
       }
       .od-info {
         display: flex;
         flex-wrap: wrap;
-        gap: 32px;
+        gap: 48px;
         margin-bottom: 20px;
+        border-radius: 18px;
       }
       .od-info__item {
         display: flex;
         flex-direction: column;
-        gap: 4px;
+        gap: 6px;
       }
       .od-info__rotulo {
-        font-size: 0.75rem;
+        font-size: 0.6875rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
         text-transform: uppercase;
-        letter-spacing: 0.06em;
-        color: var(--on-surface);
+        color: color-mix(in srgb, var(--on-surface) 75%, transparent);
       }
       .od-info__valor {
-        font-size: 1.125rem;
-        font-weight: 600;
-        color: var(--charcoal);
+        font-size: 0.875rem;
+        color: var(--primary-dark);
+      }
+      .od-bloco {
+        margin-bottom: 20px;
+        padding: 20px;
+        background: var(--white);
+        border: 1px solid var(--line-subtle);
+        border-radius: 18px;
+        box-shadow: var(--shadow-card);
       }
       .od-secao-titulo {
-        font-size: 1rem;
-        margin: 24px 0 12px;
+        margin: 0 0 12px;
+        font-family: var(--font-ui);
+        font-size: 0.9375rem;
+        font-weight: 700;
+        color: var(--primary-dark);
       }
-      aurum-history-card {
-        display: block;
-        margin-top: 20px;
+      .od-tabela {
+        border: 0;
+        box-shadow: none;
+      }
+      .od-codigo {
+        font-weight: 700;
+        color: var(--primary-dark);
       }
     `,
   ],
@@ -220,13 +241,22 @@ export class OrdemServicoDetalheComponent implements OnInit {
     });
   }
 
+  tomStatus(status: string): AurumStatusPillTom {
+    return ({ Aberta: 'solido-cinza', Atribuida: 'solido-azul', EmExecucao: 'solido-laranja', Concluida: 'solido-verde' } as Record<string, AurumStatusPillTom>)[status] ?? 'neutro';
+  }
+
   rotuloStatus(status: string): string {
     return STATUS_OS_ROTULOS[status] || status;
   }
 
   /** `aurum-history-card` espera `{evento, timestamp, autor}`; o BFF devolve `{evento, dataHora, usuario}`. */
   eventosHistorico(os: OsDetalhe): AurumHistoryEvento[] {
-    return os.historico.map((h) => ({ evento: h.evento, timestamp: h.dataHora, autor: h.usuario || '—' }));
+    return os.historico.map((h) => ({
+      evento: h.evento,
+      // Mesmo formato das outras telas que usam o cartão de histórico.
+      timestamp: new Date(h.dataHora).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }),
+      autor: h.usuario || '—',
+    }));
   }
 
   baixarPlanilha(): void {

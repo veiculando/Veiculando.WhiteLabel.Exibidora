@@ -6,11 +6,15 @@ import {
   PedidoReservaItemDecisao,
   PedidoReservaListItem,
 } from '../../core/models/wl.models';
+import { TOM_STATUS_PEDIDO_RESERVA } from '../../core/models/wl.models';
 import { PedidosReservaService } from '../../core/services/pedidos.service';
 import { PaginadorComponent } from '../../shared/paginador.component';
 import { AurumButtonComponent } from '../../shared/aurum/aurum-button.component';
 import { AurumPageHeaderComponent } from '../../shared/aurum/aurum-page-header.component';
-import { AurumStatusPillComponent } from '../../shared/aurum/aurum-status-pill.component';
+import { AurumStatusPillComponent, AurumStatusPillTom } from '../../shared/aurum/aurum-status-pill.component';
+import { AurumModalComponent } from '../../shared/aurum/aurum-modal.component';
+import { AurumCodeComponent } from '../../shared/aurum/aurum-code.component';
+import { PermissionService } from '../../core/auth/permission.service';
 import {
   AurumTableCellComponent,
   AurumTableComponent,
@@ -42,6 +46,8 @@ import {
       AurumPageHeaderComponent,
       AurumButtonComponent,
       AurumStatusPillComponent,
+      AurumModalComponent,
+      AurumCodeComponent,
       AurumTableComponent,
       AurumTableRowComponent,
       AurumTableCellComponent,
@@ -49,8 +55,9 @@ import {
     ],
     template: `
     <aurum-page-header
-      titulo="Pedidos de reserva"
-      subtitulo="Solicitações de reserva de inventário desta exibidora."
+      titulo="Solicitações de Reserva"
+      [badge]="afiliadaId ? 'Afiliada #' + afiliadaId : ''"
+      subtitulo="Gestão de pedidos de reserva recebidos dos canais da WhiteLabel."
     />
 
       @if (erro) {
@@ -59,27 +66,27 @@ import {
       @if (aviso) {
         <div class="wl-estado wl-estado--sucesso">{{ aviso }}</div>
       }
-    
+
       @if (carregando) {
         <div class="wl-estado wl-estado--carregando">Carregando pedidos…</div>
       }
-    
+
       @if (!carregando && !erro && pedidos.length === 0) {
         <div class="wl-estado wl-estado--vazio">
           Nenhum pedido de reserva recebido.
         </div>
       }
-    
+
       @if (pedidos.length > 0) {
         <div class="wl-tabela--rolavel">
-          <table aurumTable>
+          <table aurumTable class="aurum-table--densa">
             <thead>
               <tr aurumTableRow>
-                <th aurumTableHeaderCell>Pedido</th>
-                <th aurumTableHeaderCell>Agência</th>
+                <th aurumTableHeaderCell>Reserva</th>
                 <th aurumTableHeaderCell>Anunciante</th>
-                <th aurumTableHeaderCell>Recebido em</th>
-                <th aurumTableHeaderCell>Itens</th>
+                <th aurumTableHeaderCell>Agência</th>
+                <th aurumTableHeaderCell>Peças</th>
+                <th aurumTableHeaderCell>Data</th>
                 <th aurumTableHeaderCell>Status</th>
                 <th aurumTableHeaderCell>Ações</th>
               </tr>
@@ -87,99 +94,25 @@ import {
             <tbody>
               @for (pedido of pedidos; track pedido) {
                 <tr aurumTableRow>
-                  <td aurumTableCell>{{ pedido.codigo }}</td>
-                  <td aurumTableCell>{{ pedido.agencia || '—' }}</td>
-                  <td aurumTableCell>{{ pedido.cliente || '—' }}</td>
-                  <td aurumTableCell>{{ pedido.dataCadastro | date: 'dd/MM/yyyy' }}</td>
-                  <td aurumTableCell>{{ pedido.itensCount }}</td>
-                  <td aurumTableCell><aurum-status-pill [rotulo]="pedido.status" tom="neutro" /></td>
+                  <td aurumTableCell class="pr-codigo">{{ pedido.codigo }}</td>
+                  <td aurumTableCell class="pr-anunciante">{{ pedido.cliente || '—' }}</td>
+                  <td aurumTableCell class="pr-apagado">{{ pedido.agencia || 'Venda Direta (Sem Agência)' }}</td>
+                  <td aurumTableCell class="pr-forte">{{ pedido.itensCount }}</td>
+                  <td aurumTableCell class="pr-apagado">{{ pedido.dataCadastro | date: 'dd/MM/yyyy HH:mm' }}</td>
+                  <td aurumTableCell><aurum-status-pill [rotulo]="pedido.status" [tom]="tomStatus(pedido.status)" compacto /></td>
                   <td aurumTableCell class="acoes">
-                    <aurum-button variante="ghost" (click)="alternarDetalhe(pedido)">
-                      {{ expandido === pedido.codigo ? 'Ocultar' : 'Detalhe' }}
+                    <aurum-button variante="wine" tamanho="xs" (click)="alternarDetalhe(pedido)">
+                      <span class="aurum-ico" style="--ico: url(/assets/aurum/icon-olho.svg)"></span>
+                      Detalhes
                     </aurum-button>
-                    <aurum-button
-                      variante="ghost"
-                      [desabilitado]="respondendo === pedido.id"
-                      (click)="responderTudo(pedido, true)"
-                      >
+                    <aurum-button variante="suave" tamanho="xs" [desabilitado]="respondendo === pedido.id" (click)="responderTudo(pedido, true)">
                       Aceitar tudo
                     </aurum-button>
-                    <aurum-button
-                      variante="perigo"
-                      [desabilitado]="respondendo === pedido.id"
-                      (click)="responderTudo(pedido, false)"
-                      >
+                    <aurum-button variante="perigo" tamanho="xs" [desabilitado]="respondendo === pedido.id" (click)="responderTudo(pedido, false)">
                       Recusar tudo
                     </aurum-button>
                   </td>
                 </tr>
-                @if (expandido === pedido.codigo) {
-                  <tr aurumTableRow>
-                    <td aurumTableCell colspan="7" class="detalhe">
-                      @if (carregandoDetalhe) {
-                        <div class="wl-estado wl-estado--carregando">
-                          Carregando itens…
-                        </div>
-                      }
-                      @if (detalhe; as d) {
-                        <p class="detalhe__valor">
-                          Valor total bruto:
-                          <strong>{{ d.valorTotalBruto | currency: 'BRL' : 'symbol' : '1.2-2' }}</strong>
-                        </p>
-                        @if (d.itens.length === 0) {
-                          <div class="wl-estado wl-estado--vazio">
-                            Nenhum item neste pedido.
-                          </div>
-                        }
-                        @if (d.itens.length > 0) {
-                          <table aurumTable>
-                            <thead>
-                              <tr aurumTableRow>
-                                <th aurumTableHeaderCell>Local</th>
-                                <th aurumTableHeaderCell>Peça</th>
-                                <th aurumTableHeaderCell>Status</th>
-                                <th aurumTableHeaderCell>Decisão</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              @for (item of d.itens; track item) {
-                                <tr aurumTableRow>
-                                  <td aurumTableCell>{{ item.localCodigo || '—' }}</td>
-                                  <td aurumTableCell>{{ item.pecaCodigo || '—' }}</td>
-                                  <td aurumTableCell>{{ item.status }}</td>
-                                  <td aurumTableCell>
-                                    <label class="decisao">
-                                      <input
-                                        type="checkbox"
-                                        [checked]="aceitaItem(item.id)"
-                                        [disabled]="respondendo === pedido.id"
-                                        (change)="alternarItem(item.id)"
-                                      />
-                                      {{ aceitaItem(item.id) ? 'Aceitar' : 'Recusar' }}
-                                    </label>
-                                  </td>
-                                </tr>
-                              }
-                            </tbody>
-                          </table>
-
-                          <div class="detalhe__acoes">
-                            <span class="detalhe__resumo">
-                              {{ resumoDecisoes.aceitos }} aceito(s),
-                              {{ resumoDecisoes.rejeitados }} recusado(s)
-                            </span>
-                            <aurum-button
-                              [desabilitado]="respondendo === pedido.id"
-                              (click)="enviarResposta(pedido)"
-                            >
-                              {{ respondendo === pedido.id ? 'Enviando…' : 'Enviar resposta' }}
-                            </aurum-button>
-                          </div>
-                        }
-                      }
-                    </td>
-                  </tr>
-                }
               }
             </tbody>
           </table>
@@ -194,40 +127,167 @@ import {
           (pagina)="carregar($event)"
         />
       }
+
+      @if (pedidoExpandido(); as pedido) {
+        <aurum-modal
+          [aberto]="true"
+          largura="lg"
+          [titulo]="'Detalhes da Reserva' + (pedido.cliente ? ' — ' + pedido.cliente : '')"
+          (fechar)="alternarDetalhe(pedido)"
+        >
+          <p aurumModalSubtitulo class="pr-modal__codigo">
+            <aurum-code>{{ pedido.codigo }}</aurum-code>
+            Solicitado em {{ pedido.dataCadastro | date: 'dd/MM/yyyy HH:mm' }}
+          </p>
+
+          @if (carregandoDetalhe) {
+            <div class="wl-estado wl-estado--carregando">Carregando itens…</div>
+          }
+          @if (detalhe; as d) {
+            <div class="pr-resumo">
+              <div><span>Anunciante</span><strong>{{ d.cliente || '—' }}</strong></div>
+              <div><span>Agência</span><strong>{{ d.agencia || 'Venda Direta' }}</strong></div>
+              <div><span>Status</span><strong>{{ d.status }}</strong></div>
+              <div>
+                <span>Valor total bruto</span>
+                <strong class="pr-resumo__valor">{{ d.valorTotalBruto | currency: 'BRL' : 'symbol' : '1.2-2' }}</strong>
+              </div>
+            </div>
+
+            <h3 class="pr-modal__secao">Itens da Reserva (Controle de Status por Peça)</h3>
+            @if (d.itens.length === 0) {
+              <div class="wl-estado wl-estado--vazio">Nenhum item neste pedido.</div>
+            }
+            @for (item of d.itens; track item) {
+              <div class="pr-item">
+                <div class="pr-item__texto">
+                  <aurum-code>{{ item.pecaCodigo || '—' }}</aurum-code>
+                  <span>Local {{ item.localCodigo || '—' }}</span>
+                </div>
+                <aurum-status-pill [rotulo]="item.status" [tom]="tomStatus(item.status)" compacto />
+                <label class="decisao">
+                  <input
+                    type="checkbox"
+                    [checked]="aceitaItem(item.id)"
+                    [disabled]="respondendo === pedido.id"
+                    (change)="alternarItem(item.id)"
+                  />
+                  {{ aceitaItem(item.id) ? 'Aceitar' : 'Recusar' }}
+                </label>
+              </div>
+            }
+          }
+
+          @if (detalhe && detalhe.itens.length > 0) {
+            <span aurumModalRodape class="pr-modal__resumo">
+              {{ resumoDecisoes.aceitos }} aceito(s), {{ resumoDecisoes.rejeitados }} recusado(s)
+            </span>
+          }
+          <aurum-button aurumModalRodape variante="outline" tamanho="sm" (click)="alternarDetalhe(pedido)">Fechar detalhes</aurum-button>
+          @if (detalhe && detalhe.itens.length > 0) {
+            <aurum-button aurumModalRodape tamanho="sm" [desabilitado]="respondendo === pedido.id" (click)="enviarResposta(pedido)">
+              {{ respondendo === pedido.id ? 'Enviando…' : 'Enviar resposta' }}
+            </aurum-button>
+          }
+        </aurum-modal>
+      }
     `,
     changeDetection: ChangeDetectionStrategy.Eager,
     styles: [
         `
       .acoes {
         display: flex;
-        gap: 12px;
+        gap: 8px;
         white-space: nowrap;
       }
-      .detalhe {
-        background: var(--surface-muted);
+      .pr-codigo {
+        font-family: var(--font-mono);
+        font-weight: 700;
+        color: var(--primary-color);
+        white-space: nowrap;
       }
-      .detalhe__valor {
-        margin: 0 0 12px;
-        font-size: 0.875rem;
+      .pr-anunciante {
+        font-weight: 700;
+        color: var(--primary-dark);
       }
-      .detalhe__acoes {
+      .pr-apagado {
+        color: var(--on-surface);
+      }
+      .pr-forte {
+        font-weight: 700;
+      }
+      .pr-modal__codigo {
         display: flex;
         align-items: center;
-        justify-content: flex-end;
-        gap: 12px;
-        margin-top: 12px;
+        gap: 10px;
+        margin: 4px 0 0;
+        font-size: 0.75rem;
+        color: var(--on-surface);
       }
-      .detalhe__resumo {
-        font-size: 0.875rem;
+      .pr-resumo {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+        padding: 14px;
+        border-radius: 12px;
+        background: var(--paper-bg);
+      }
+      .pr-resumo span {
+        display: block;
+        font-size: 0.6875rem;
+        text-transform: uppercase;
+        color: var(--on-surface);
+      }
+      .pr-resumo strong {
+        font-size: 0.8125rem;
+        color: var(--primary-dark);
+      }
+      .pr-resumo__valor {
+        font-family: var(--font-display);
+        font-size: 1rem !important;
+      }
+      .pr-modal__secao {
+        margin: 20px 0 10px;
+        font-size: 0.9375rem;
+        font-weight: 700;
+      }
+      .pr-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 8px;
+        padding: 12px 14px;
+        border: 1px solid var(--line-search);
+        border-radius: 12px;
+        background: var(--paper-bg);
+      }
+      .pr-item__texto {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 0.78125rem;
+        color: var(--on-surface);
       }
       .decisao {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        cursor: pointer;
+        font-size: 0.78125rem;
+        font-weight: 600;
+        color: var(--charcoal);
+      }
+      .decisao input {
+        accent-color: var(--primary-color);
+      }
+      .pr-modal__resumo {
+        margin-right: auto;
+        align-self: center;
+        font-size: 0.78125rem;
+        color: var(--on-surface);
       }
     `,
-    ]
+    ],
 })
 export class PedidosReservaComponent implements OnInit {
   private service = inject(PedidosReservaService);
@@ -235,6 +295,7 @@ export class PedidosReservaComponent implements OnInit {
   pedidos: PedidoReservaListItem[] = [];
   detalhe: PedidoReservaDetalhe | null = null;
   expandido: string | null = null;
+  readonly afiliadaId = inject(PermissionService).getAfiliadaId();
 
   carregando = false;
   carregandoDetalhe = false;
@@ -273,6 +334,15 @@ export class PedidosReservaComponent implements OnInit {
         this.erro = mensagemDeErro(erro, 'Não foi possível carregar os pedidos de reserva.');
       },
     });
+  }
+
+  tomStatus(status: string): AurumStatusPillTom {
+    return TOM_STATUS_PEDIDO_RESERVA[status] ?? 'neutro';
+  }
+
+  /** O detalhe abre no modal do Figma (`416:17329`) em vez de expandir a linha. */
+  pedidoExpandido(): PedidoReservaListItem | null {
+    return this.expandido ? (this.pedidos.find((p) => p.codigo === this.expandido) ?? null) : null;
   }
 
   alternarDetalhe(pedido: PedidoReservaListItem): void {

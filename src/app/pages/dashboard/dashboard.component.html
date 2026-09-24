@@ -1,65 +1,22 @@
-<aurum-page-header
-  titulo="Dashboard operacional"
-  subtitulo="Visão geral do inventário e da operação da exibidora."
-/>
-
-@if (carregando) {
-  <div class="wl-estado wl-estado--carregando">Carregando indicadores…</div>
-}
-
-@if (erro) {
-  <div class="wl-estado wl-estado--erro">
-    {{ erro }}
-    <aurum-button variante="ghost" (click)="carregar()">Tentar novamente</aurum-button>
-  </div>
-}
-
-@if (kpis; as k) {
-  <!-- Alerta de aprovação pendente: locais criados pela Exibidora entram
-  como StatusExibicao = AprovacaoPendente e são liberados no Admin. -->
-  @if (aprovacaoPendente(k) > 0) {
-    <div class="alerta">
-      <strong>{{ aprovacaoPendente(k) }}</strong>
-      {{ aprovacaoPendente(k) === 1 ? 'local aguarda aprovação' : 'locais aguardam aprovação' }}.
-      A liberação é feita pela equipe Veiculando no painel Admin.
-      <a routerLink="/locais">Ver locais</a>
-    </div>
-  }
-  <div class="kpis">
-    <aurum-card class="kpi">
-      <span class="kpi__rotulo">Locais ativos</span>
-      <span class="kpi__valor">{{ k.locaisAtivos }}</span>
-    </aurum-card>
-    <aurum-card class="kpi">
-      <span class="kpi__rotulo">Peças em exibição</span>
-      <span class="kpi__valor">{{ k.pecasEmExibicao }}</span>
-    </aurum-card>
-    <aurum-card class="kpi">
-      <span class="kpi__rotulo">Pedidos pendentes</span>
-      <span class="kpi__valor">{{ k.pedidosPendentes }}</span>
-    </aurum-card>
-  </div>
-}
-
-<aurum-page-header titulo="Painel financeiro" subtitulo="Indicadores e demandas do período comercial selecionado." />
-
-<div class="periodo-header">
-  <div class="periodo-header__info">
-    @if (financeiro; as f) {
-      <span>
-        <strong>Período Comercial{{ f.periodo.vigente ? ' Vigente' : '' }}</strong>
-        @if (f.periodo.vigente) {
-          <aurum-status-pill rotulo="VIGENTE AGORA" tom="sucesso" />
-        }
-      </span>
-      <span class="kpi__detalhe">
-        Intervalo de veiculação: {{ f.periodo.dataInicio | date: 'dd/MM/yyyy' }} a {{ f.periodo.dataFim | date: 'dd/MM/yyyy' }}
-      </span>
+<section class="periodo">
+  <div class="periodo__titulo">
+    <span class="aurum-ico periodo__icone" style="--ico: url(/assets/aurum/icon-calendario.svg)"></span>
+    <h1>Período Comercial{{ financeiro?.periodo?.vigente ? ' Vigente' : '' }}</h1>
+    @if (financeiro?.periodo?.vigente) {
+      <span class="periodo__vigente">VIGENTE AGORA</span>
     }
   </div>
-
-  <label>
-    Selecionar Período:
+  @if (financeiro; as f) {
+    <p class="periodo__intervalo">
+      Intervalo de veiculação:
+      <strong>{{ f.periodo.dataInicio | date: 'dd/MM/yyyy' }} a {{ f.periodo.dataFim | date: 'dd/MM/yyyy' }}</strong>
+    </p>
+  }
+  <label class="periodo__seletor">
+    <span class="periodo__rotulo">
+      <span class="aurum-ico" style="--ico: url(/assets/aurum/icon-filtro.svg)"></span>
+      Selecionar Período:
+    </span>
     <select [(ngModel)]="idPeriodoSelecionado" (ngModelChange)="aoTrocarPeriodo()">
       @for (periodo of periodos; track periodo.id) {
         <option [ngValue]="periodo.id">
@@ -68,7 +25,7 @@
       }
     </select>
   </label>
-</div>
+</section>
 
 @if (carregandoFinanceiro) {
   <div class="wl-estado wl-estado--carregando">Carregando painel financeiro…</div>
@@ -80,77 +37,127 @@
 
 @if (financeiro; as f) {
   <div class="kpis">
-    <aurum-card class="kpi">
-      <span class="kpi__rotulo">Faturamento Previsto</span>
-      @if (f.faturamentoPrevisto.disponivel) {
-        <span class="kpi__valor">{{ formatarMoeda(f.faturamentoPrevisto.valor) }}</span>
-        @if (f.faturamentoPrevisto.variacaoPercentualVsCicloAnterior !== null) {
-          <span class="kpi__detalhe">{{ f.faturamentoPrevisto.variacaoPercentualVsCicloAnterior }}% vs ciclo anterior</span>
-        }
-      } @else {
-        <span class="kpi__valor kpi__valor--indisponivel">Indisponível</span>
-        <span class="kpi__detalhe">Fórmula e fonte de receita ainda não definidas.</span>
+    <aurum-stat-card
+      rotulo="Faturamento Previsto"
+      icone="tendencia"
+      tom="vinho"
+      [valor]="f.faturamentoPrevisto.disponivel ? formatarMoedaInteira(f.faturamentoPrevisto.valor) : null"
+    >
+      @if (!f.faturamentoPrevisto.disponivel) {
+        <span aurumStatValor class="kpi__indisponivel">Indisponível</span>
       }
-    </aurum-card>
+      @if (!f.faturamentoPrevisto.disponivel) {
+        <span>Fórmula e fonte de receita ainda não definidas.</span>
+      } @else if (f.faturamentoPrevisto.variacaoPercentualVsCicloAnterior !== null) {
+        <span class="kpi__linha">
+          <span class="kpi__variacao" [class.kpi__variacao--queda]="f.faturamentoPrevisto.variacaoPercentualVsCicloAnterior < 0">
+            <span class="aurum-ico" style="--ico: url(/assets/aurum/icon-seta-alta.svg)"></span>
+            {{ f.faturamentoPrevisto.variacaoPercentualVsCicloAnterior > 0 ? '+' : '' }}{{ f.faturamentoPrevisto.variacaoPercentualVsCicloAnterior }}%
+          </span>
+          <span class="kpi__apagado">vs ciclo anterior</span>
+        </span>
+      }
+    </aurum-stat-card>
 
-    <aurum-card class="kpi">
-      <span class="kpi__rotulo">Taxa de Ocupação OOH</span>
-      <span class="kpi__valor">{{ f.taxaOcupacaoOOH.percentual }}%</span>
-      <span class="kpi__detalhe">{{ f.taxaOcupacaoOOH.pecasOcupadas }} de {{ f.taxaOcupacaoOOH.pecasAtivas }} peças ativas</span>
-    </aurum-card>
+    <aurum-stat-card rotulo="Taxa de Ocupação OOH" icone="camadas" tom="ouro" [valor]="f.taxaOcupacaoOOH.percentual + '%'">
+      <span
+        class="kpi__barra"
+        role="img"
+        [attr.aria-label]="f.taxaOcupacaoOOH.pecasOcupadas + ' de ' + f.taxaOcupacaoOOH.pecasAtivas + ' peças ativas'"
+      >
+        <span class="kpi__barra-cheia" [style.width.%]="f.taxaOcupacaoOOH.percentual"></span>
+      </span>
+    </aurum-stat-card>
 
-    <aurum-card class="kpi">
-      <span class="kpi__rotulo">Campanhas Ativas</span>
-      <span class="kpi__valor">{{ f.campanhasAtivas }}</span>
-      <span class="kpi__detalhe">Programadas para {{ f.periodo.nome }}</span>
-    </aurum-card>
+    <aurum-stat-card rotulo="Campanhas Ativas" icone="megafone" tom="vinho" [valor]="f.campanhasAtivas">
+      Programadas para <strong>{{ f.periodo.nome }}</strong>
+    </aurum-stat-card>
 
-    <aurum-card class="kpi">
-      <span class="kpi__rotulo">Demandas Pendentes</span>
-      <span class="kpi__valor">{{ f.demandasPendentes.reservas }} reservas</span>
-      <span class="kpi__detalhe">{{ f.demandasPendentes.pedidosInsercao }} PIs · Aguardando aprovação ou assinatura</span>
-    </aurum-card>
+    <aurum-stat-card rotulo="Demandas Pendentes" icone="relogio" tom="ambar">
+      <span aurumStatValor class="kpi__composto">
+        {{ f.demandasPendentes.reservas }} <small>reservas</small>
+        {{ f.demandasPendentes.pedidosInsercao }} <small>PIs</small>
+      </span>
+      Aguardando aprovação ou assinatura
+    </aurum-stat-card>
   </div>
 
   <div class="listas">
-    <div>
-      <div class="lista-cabecalho">
-        <strong>Solicitações de Reserva ({{ f.periodo.nome }})</strong>
+    <aurum-card class="lista">
+      <div class="lista__cabecalho">
+        <h2>Solicitações de Reserva ({{ f.periodo.nome }})</h2>
         <a routerLink="/pedidos-reserva">Ver todas →</a>
       </div>
       @if (reservas.length === 0) {
         <div class="wl-estado wl-estado--vazio">Nenhuma solicitação de reserva neste período.</div>
       } @else {
         @for (reserva of reservas; track reserva.id) {
-          <div class="lista-item">
-            <span>
-              {{ reserva.agencia || reserva.cliente }} · {{ reserva.campanha }} • {{ reserva.itensCount }} peça(s) ·
-              {{ formatarMoeda(reserva.valorTotalBruto) }}
+          <div class="lista__item">
+            <span class="lista__texto">
+              <strong>{{ reserva.cliente || reserva.agencia || reserva.codigo }}</strong>
+              <span>{{ reserva.campanha || reserva.codigo }} • {{ reserva.itensCount }} {{ reserva.itensCount === 1 ? 'peça' : 'peças' }}</span>
             </span>
-            <aurum-status-pill [rotulo]="reserva.status" tom="neutro" />
+            <span class="lista__valor">
+              <strong>{{ formatarMoedaInteira(reserva.valorTotalBruto) }}</strong>
+              <aurum-status-pill [rotulo]="reserva.status" [tom]="tomReserva(reserva.status)" compacto />
+            </span>
           </div>
         }
       }
-    </div>
+    </aurum-card>
 
-    <div>
-      <div class="lista-cabecalho">
-        <strong>Pedidos de Inserção ({{ f.periodo.nome }})</strong>
+    <aurum-card class="lista">
+      <div class="lista__cabecalho">
+        <h2>Pedidos de Inserção ({{ f.periodo.nome }})</h2>
         <a routerLink="/pedidos-insercao">Ver PIs →</a>
       </div>
       @if (pedidosInsercao.length === 0) {
         <div class="wl-estado wl-estado--vazio">Nenhum pedido de inserção neste período.</div>
       } @else {
         @for (pi of pedidosInsercao; track pi.id) {
-          <div class="lista-item">
-            <span>
-              {{ pi.codigo }} — {{ pi.anunciante }} · {{ pi.cidade }} · {{ pi.numeroDePecas }} peça(s) ·
-              {{ formatarMoeda(pi.valorLiquidoVeiculacao) }}
+          <div class="lista__item">
+            <span class="lista__texto">
+              <strong>{{ pi.codigo }} — {{ pi.anunciante }}</strong>
+              <span>{{ pi.cidade || '—' }} • {{ pi.numeroDePecas }} {{ pi.numeroDePecas === 1 ? 'peça' : 'peças' }}</span>
             </span>
-            <aurum-status-pill [rotulo]="pi.status" tom="neutro" />
+            <span class="lista__valor">
+              <strong>{{ formatarMoedaInteira(pi.valorLiquidoVeiculacao) }}</strong>
+              <aurum-status-pill [rotulo]="pi.status" [tom]="tomPedidoInsercao(pi.status)" compacto />
+            </span>
           </div>
         }
       }
+    </aurum-card>
+  </div>
+}
+
+<!-- Visão operacional pré-existente: o Figma não a desenha, mas o PRD §5.1
+exige locais ativos, peças em exibição e aprovação pendente. Fica abaixo,
+com o mesmo cartão de indicador. -->
+@if (carregando) {
+  <div class="wl-estado wl-estado--carregando">Carregando indicadores…</div>
+}
+
+@if (erro) {
+  <div class="wl-estado wl-estado--erro">
+    {{ erro }}
+    <aurum-button variante="outline" tamanho="sm" (click)="carregar()">Tentar novamente</aurum-button>
+  </div>
+}
+
+@if (kpis; as k) {
+  <h2 class="secao">Visão operacional</h2>
+  @if (aprovacaoPendente(k) > 0) {
+    <div class="alerta">
+      <strong>{{ aprovacaoPendente(k) }}</strong>
+      {{ aprovacaoPendente(k) === 1 ? 'local aguarda aprovação' : 'locais aguardam aprovação' }}.
+      A liberação é feita pela equipe Veiculando no painel Admin.
+      <a routerLink="/locais">Ver locais</a>
     </div>
+  }
+  <div class="kpis kpis--operacional">
+    <aurum-stat-card rotulo="Locais ativos" icone="locais" tom="vinho" [valor]="k.locaisAtivos" />
+    <aurum-stat-card rotulo="Peças em exibição" icone="camadas" tom="ouro" [valor]="k.pecasEmExibicao" />
+    <aurum-stat-card rotulo="Pedidos pendentes" icone="relogio" tom="ambar" [valor]="k.pedidosPendentes" />
   </div>
 }

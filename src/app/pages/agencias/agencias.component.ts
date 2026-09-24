@@ -3,8 +3,9 @@ import { FormsModule } from '@angular/forms';
 import { AgenciasService } from '../../core/services/comercial.service';
 import { AgenciaForm, AgenciaListItem, AgenciaPorCnpj } from '../../core/models/comercial.models';
 import { AurumButtonComponent } from '../../shared/aurum/aurum-button.component';
-import { AurumCardComponent } from '../../shared/aurum/aurum-card.component';
-import { AurumFilterFieldComponent } from '../../shared/aurum/aurum-filter-field.component';
+import { AurumFilterBarComponent } from '../../shared/aurum/aurum-filter-bar.component';
+import { AurumModalComponent } from '../../shared/aurum/aurum-modal.component';
+import { PermissionService } from '../../core/auth/permission.service';
 import { AurumPageHeaderComponent } from '../../shared/aurum/aurum-page-header.component';
 import { AurumStatusPillComponent } from '../../shared/aurum/aurum-status-pill.component';
 import {
@@ -35,8 +36,8 @@ type Aba = 'Todos' | 'Ativo' | 'Inativo';
     FormsModule,
     AurumPageHeaderComponent,
     AurumButtonComponent,
-    AurumCardComponent,
-    AurumFilterFieldComponent,
+    AurumFilterBarComponent,
+    AurumModalComponent,
     AurumTextInputComponent,
     AurumStatusPillComponent,
     AurumViewSelectorComponent,
@@ -49,20 +50,28 @@ type Aba = 'Todos' | 'Ativo' | 'Inativo';
   changeDetection: ChangeDetectionStrategy.Eager,
   styles: [
     `
-      .agencias__barra { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 16px; }
-      .agencias__busca { flex: 1 1 320px; }
-      .agencias__abas { display: flex; gap: 4px; }
-      .agencias__aba { background: none; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 7px 14px; cursor: pointer; font: inherit; color: var(--on-surface); }
-      .agencias__aba[aria-selected='true'] { background: color-mix(in srgb, var(--primary-color) 12%, transparent); border-color: var(--primary-color); font-weight: 600; }
-      .agencias__contato { display: flex; flex-direction: column; gap: 2px; font-size: 0.82rem; }
+      .agencias__ico { width: 16px; height: 16px; }
+      .agencias__abas { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+      .agencias__prefixo { font-size: 0.8125rem; font-weight: 600; color: var(--on-surface); }
+      .agencias__aba { border: none; border-radius: var(--radius-pill); padding: 8px 16px; background: var(--chip-bg); color: var(--on-surface); font: inherit; font-size: 0.8125rem; font-weight: 600; cursor: pointer; }
+      .agencias__aba[aria-selected='true'] { background: var(--primary-color); color: var(--paper-bg); }
       .agencias__empresa { display: flex; flex-direction: column; gap: 2px; }
-      .agencias__razao { font-size: 0.8rem; color: var(--on-surface); }
-      .agencias__acoes { display: flex; gap: 6px; }
-      .agencias__cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
-      .agencias__vazio { padding: 32px; text-align: center; color: var(--on-surface); }
-      .agencias__form { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
-      .agencias__form-acoes { display: flex; gap: 8px; margin-top: 16px; }
-      .agencias__aviso { margin: 12px 0; padding: 12px; border-radius: var(--radius-sm); background: color-mix(in srgb, var(--secondary-color) 14%, transparent); }
+      .agencias__empresa strong { font-family: var(--font-display); font-size: 0.9375rem; color: var(--primary-dark); }
+      .agencias__razao { margin: 2px 0 0; font-size: 0.75rem; color: var(--on-surface); }
+      .agencias__contato { display: flex; flex-direction: column; gap: 2px; font-size: 0.78125rem; color: var(--on-surface); }
+      .agencias__campanhas { font-size: 0.75rem; color: var(--on-surface); white-space: nowrap; }
+      .agencias__campanhas strong { color: var(--charcoal); }
+      .agencias__acoes { display: inline-flex; gap: 8px; }
+      .agencias__cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+      .agencias__card { display: flex; flex-direction: column; padding: 20px; background: var(--white); border: 1px solid var(--line-subtle); border-radius: var(--radius-card); box-shadow: var(--shadow-card); }
+      .agencias__card-topo { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+      .agencias__card-topo h3 { margin: 0; font-size: 1.0625rem; font-weight: 700; }
+      .agencias__info { display: flex; flex-direction: column; gap: 6px; margin: 14px 0; padding: 12px; border-radius: var(--radius-search); background: var(--paper-bg); font-size: 0.75rem; color: var(--on-surface); }
+      .agencias__info > span { display: flex; align-items: center; gap: 6px; }
+      .agencias__info .aurum-ico { width: 13px; height: 13px; color: var(--primary-color); }
+      .agencias__info strong { color: var(--primary-dark); }
+      .agencias__card-rodape { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; padding-top: 12px; border-top: 1px solid var(--line-search); }
+      .agencias__modal-sub { margin: 4px 0 0; font-size: 0.78125rem; color: var(--on-surface); }
     `,
   ],
 })
@@ -143,6 +152,16 @@ export class AgenciasComponent implements OnInit {
         this.erro = resposta?.error?.message ?? 'Não foi possível alterar o vínculo.';
       },
     });
+  }
+
+  readonly afiliadaId = inject(PermissionService).getAfiliadaId();
+  private buscaTimer?: ReturnType<typeof setTimeout>;
+
+  /** Busca ao digitar, com espera curta — o Figma não tem botão "Aplicar". */
+  buscar(termo: string): void {
+    this.busca = termo;
+    clearTimeout(this.buscaTimer);
+    this.buscaTimer = setTimeout(() => this.carregar(), 300);
   }
 
   abrirConsultaCnpj(): void {

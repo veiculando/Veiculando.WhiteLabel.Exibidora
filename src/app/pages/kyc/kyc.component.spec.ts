@@ -1,3 +1,4 @@
+import { PermissionService } from '../../core/auth/permission.service';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
@@ -47,7 +48,7 @@ describe('KycComponent — VEI-RD-80', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [KycComponent],
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]), { provide: PermissionService, useValue: { getAfiliadaId: () => '4821' } }],
     }).compileComponents();
   });
 
@@ -128,11 +129,11 @@ describe('KycComponent — VEI-RD-80', () => {
   });
 
   it('o subtítulo é próprio da tela, não a copy herdada de Anunciantes', () => {
-    // O Figma repete aqui "Gestão das marcas anunciantes e associação às agências",
-    // que é a copy de Anunciantes e de Prospecção. Esta tela tria onboarding.
+    // Um frame antigo repetia aqui "Gestão das marcas anunciantes e associação às
+    // agências" (copy de Anunciantes). O nó atual (416:15663) tem copy própria.
     const { texto } = montar();
     expect(texto()).not.toContain('Gestão das marcas anunciantes');
-    expect(texto()).toContain('Triagem dos pedidos de onboarding');
+    expect(texto()).toContain('Fila consolidada de verificação KYC');
   });
 
   it('assumir chama o endpoint e recarrega fila e resumo', () => {

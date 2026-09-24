@@ -1,3 +1,4 @@
+import { PermissionService } from '../../../core/auth/permission.service';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -56,6 +57,7 @@ describe('LocalWizardComponent', () => {
       providers: [
         { provide: LocalService, useValue: localServiceSpy },
         { provide: LocalPublicoService, useValue: publicoServiceSpy },
+        { provide: PermissionService, useValue: { getAfiliadaId: () => '4821' } },
         provideRouter([]),
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap(params) } } },
       ],

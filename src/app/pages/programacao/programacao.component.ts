@@ -75,9 +75,12 @@ const TODOS = '';
     AurumTableHeaderCellComponent,
   ],
   template: `
-    <aurum-page-header titulo="Grade de programação" subtitulo="Status de cada peça por período." />
+    <aurum-page-header
+      titulo="Programação"
+      subtitulo="Grade matriz de peças por período — visualize e valide o status de programação de cada suporte antes de gerar Ordens de Serviço."
+    />
 
-    <div class="pg-filtros">
+    <section class="pg-filtros">
       <div class="pg-filtros__linha">
         <aurum-filter-field rotulo="Periodicidade" posicaoRotulo="acima">
           <aurum-dropdown [opcoes]="opcoesPeriodicidade" [valor]="String(periodicidade)" (valorChange)="mudarPeriodicidade($event)" />
@@ -101,16 +104,21 @@ const TODOS = '';
       </div>
 
       <div class="pg-filtros__linha">
-        <aurum-text-input placeholder="Buscar por anunciante" rotulo="Buscar por anunciante" [valor]="anunciante" (valorChange)="mudarAnunciante($event)" />
-        <aurum-button variante="ghost" (click)="limparFiltros()">Limpar Filtros</aurum-button>
+        <aurum-filter-field rotulo="Anunciante" posicaoRotulo="acima">
+          <aurum-text-input placeholder="Buscar anunciante…" rotulo="Buscar anunciante" [valor]="anunciante" (valorChange)="mudarAnunciante($event)" />
+        </aurum-filter-field>
+        <aurum-button variante="outline" tamanho="sm" (click)="limparFiltros()">Limpar Filtros</aurum-button>
       </div>
-    </div>
 
-    @if (erroValidacao) {
-      <div class="wl-estado wl-estado--erro" role="alert">{{ erroValidacao }}</div>
-    }
+      @if (erroValidacao) {
+        <p class="pg-filtros__dica pg-filtros__dica--erro" role="alert">{{ erroValidacao }}</p>
+      } @else {
+        <p class="pg-filtros__dica">Período inicial deve ser anterior ou igual ao período final</p>
+      }
+    </section>
 
     <div class="pg-legenda" role="note" aria-label="Legenda de status">
+      <span class="pg-legenda__titulo">Legenda:</span>
       @for (item of legenda; track item.chave) {
         <aurum-legend-item [rotulo]="item.rotulo" />
       }
@@ -123,18 +131,21 @@ const TODOS = '';
     @if (erro) {
       <div class="wl-estado wl-estado--erro">
         {{ erro }}
-        <aurum-button variante="ghost" (click)="carregar()">Tentar novamente</aurum-button>
+        <aurum-button variante="outline" tamanho="sm" (click)="carregar()">Tentar novamente</aurum-button>
       </div>
     }
 
     @if (!carregando && !erro && linhas.length === 0) {
-      <div class="wl-estado wl-estado--vazio pg-vazio">
-        🔍 Nenhuma peça encontrada para os filtros selecionados
-      </div>
+      <section class="pg-vazio">
+        <span class="pg-vazio__icone" aria-hidden="true">🔍</span>
+        <h2>Nenhuma peça encontrada para os filtros selecionados</h2>
+        <p>Tente ajustar o período, a cidade ou o status para visualizar peças na grade de programação.</p>
+        <aurum-button variante="outline" tamanho="sm" (click)="limparFiltros()">Limpar Filtros</aurum-button>
+      </section>
     }
 
     @if (linhas.length > 0) {
-      <div class="wl-tabela--rolavel">
+      <div class="pg-grade">
         <table aurumTable>
           <thead>
             <tr aurumTableRow>
@@ -142,9 +153,14 @@ const TODOS = '';
               <th aurumTableHeaderCell>Código</th>
               <th aurumTableHeaderCell>Cód. Interno</th>
               <th aurumTableHeaderCell>Endereço</th>
-              <th aurumTableHeaderCell>Bairro</th>
+              <th aurumTableHeaderCell class="pg-ultima-fixa">Bairro</th>
               @for (periodo of colunas; track periodo.id) {
-                <th aurumTableHeaderCell>{{ periodo.nome }}</th>
+                <th aurumTableHeaderCell class="pg-periodo" [class.pg-periodo--atual]="periodoAtual(periodo.id)">
+                  {{ periodo.nome }}
+                  @if (periodoAtual(periodo.id)) {
+                    <span class="pg-periodo__atual">Atual</span>
+                  }
+                </th>
               }
             </tr>
           </thead>
@@ -159,16 +175,16 @@ const TODOS = '';
                     @if (linha.fotoUrl) {
                       <img [src]="linha.fotoUrl" [alt]="'Foto da peça ' + linha.pecaCodigo" />
                     } @else {
-                      <span class="pg-foto__placeholder" aria-hidden="true">—</span>
+                      <span class="pg-foto__placeholder" aria-hidden="true">🖼</span>
                     }
                   </span>
                 </td>
-                <td aurumTableCell>{{ linha.pecaCodigo }}</td>
-                <td aurumTableCell>{{ linha.pecaCodigoInterno || '—' }}</td>
-                <td aurumTableCell>{{ linha.endereco || '—' }}</td>
-                <td aurumTableCell>{{ linha.bairro || '—' }}</td>
+                <td aurumTableCell class="pg-codigo">{{ linha.pecaCodigo }}</td>
+                <td aurumTableCell class="pg-apagado">{{ linha.pecaCodigoInterno || '—' }}</td>
+                <td aurumTableCell class="pg-endereco">{{ linha.endereco || '—' }}</td>
+                <td aurumTableCell class="pg-ultima-fixa">{{ linha.bairro || '—' }}</td>
                 @for (periodo of colunas; track periodo.id) {
-                  <td aurumTableCell>
+                  <td aurumTableCell class="pg-periodo" [class.pg-periodo--atual]="periodoAtual(periodo.id)">
                     @if (linha.statusPorPeriodo.get(periodo.id); as statusCru) {
                       <aurum-period-cell [status]="rotuloStatus(statusCru)" [atual]="periodoAtual(periodo.id)" />
                     } @else {
@@ -198,44 +214,136 @@ const TODOS = '';
       .pg-filtros {
         display: flex;
         flex-direction: column;
-        gap: 12px;
-        margin-bottom: 16px;
+        gap: 16px;
+        margin-bottom: 24px;
+        padding: 20px 20px 16px;
+        background: var(--white);
+        border: 1px solid var(--line-subtle);
+        border-radius: 18px;
+        filter: drop-shadow(0 8px 16px rgba(74, 14, 14, 0.08));
       }
       .pg-filtros__linha {
         display: flex;
         flex-wrap: wrap;
         align-items: flex-end;
-        gap: 16px;
+        gap: 12px;
+      }
+      .pg-filtros__dica {
+        margin: 0;
+        font-size: 0.6875rem;
+        color: color-mix(in srgb, var(--on-surface) 75%, transparent);
+      }
+      .pg-filtros__dica--erro {
+        color: var(--danger);
       }
       .pg-legenda {
         display: flex;
         flex-wrap: wrap;
+        align-items: center;
         gap: 16px;
-        margin-bottom: 16px;
+        margin-bottom: 20px;
+      }
+      .pg-legenda__titulo {
+        font-size: 0.6875rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        color: var(--on-surface);
       }
       .pg-vazio {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        padding: 44px 16px;
         text-align: center;
-        padding: 40px 16px;
-        font-size: 1rem;
+        background: var(--white);
+        border: 1px solid var(--line-subtle);
+        border-radius: 18px;
+        filter: drop-shadow(0 8px 16px rgba(74, 14, 14, 0.08));
+      }
+      .pg-vazio__icone {
+        display: grid;
+        place-items: center;
+        width: 64px;
+        height: 64px;
+        margin-bottom: 8px;
+        border-radius: 50%;
+        background: color-mix(in srgb, var(--secondary-color) 20%, transparent);
+        font-size: 1.5rem;
+      }
+      .pg-vazio h2 {
+        margin: 0;
+        font-family: var(--font-ui);
+        font-size: 0.9375rem;
+        font-weight: 700;
+        color: var(--primary-dark);
+      }
+      .pg-vazio p {
+        max-width: 360px;
+        margin: 0 0 12px;
+        font-size: 0.78125rem;
+        color: var(--on-surface);
+      }
+      .pg-grade {
+        overflow-x: auto;
+        border-radius: var(--radius-card);
+      }
+      .pg-grade [aurumTableHeaderCell],
+      .pg-grade [aurumTableCell] {
+        padding: 14px 10px;
+        font-size: 0.78125rem;
+      }
+      .pg-codigo {
+        white-space: nowrap;
+        font-weight: 700;
+        color: var(--charcoal);
+      }
+      .pg-apagado {
+        color: color-mix(in srgb, var(--on-surface) 70%, transparent);
+      }
+      .pg-endereco {
+        min-width: 150px;
+      }
+      .pg-ultima-fixa {
+        border-right: 2px solid color-mix(in srgb, var(--primary-color) 15%, transparent);
+      }
+      .pg-periodo {
+        text-align: center;
+        white-space: nowrap;
+      }
+      .pg-periodo--atual {
+        background: color-mix(in srgb, var(--secondary-color) 16%, var(--white));
+      }
+      th.pg-periodo--atual {
+        border-top: 3px solid var(--primary-color);
+        color: var(--primary-color);
+      }
+      .pg-periodo__atual {
+        display: block;
+        font-size: 0.5625rem;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
       }
       .pg-foto {
         display: inline-flex;
       }
       .pg-foto img {
-        width: 40px;
-        height: 40px;
+        width: 24px;
+        height: 24px;
         object-fit: cover;
-        border-radius: var(--radius-sm);
+        border-radius: 6px;
       }
       .pg-foto__placeholder {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 40px;
-        height: 40px;
-        border-radius: var(--radius-sm);
-        background: var(--surface-muted);
-        color: var(--on-surface);
+        width: 24px;
+        height: 24px;
+        border: 1px solid var(--line-search);
+        border-radius: 6px;
+        background: var(--paper-bg);
+        font-size: 0.75rem;
       }
       .vazio {
         color: color-mix(in srgb, var(--on-surface) 50%, transparent);

@@ -3,17 +3,21 @@
 } @else if (!detalhe) {
   <p class="kyc-detalhe__vazio" role="alert">{{ erro || 'Análise não encontrada.' }}</p>
 } @else {
-  <aurum-page-header
-    eyebrow="Análise KYC"
-    [titulo]="'Análise #' + detalhe.Id + ' — ' + rotuloTipo(detalhe.Tipo)"
-    subtitulo="Revisão do pedido de onboarding e decisão registrada em histórico"
-  >
-    <aurum-status-pill
-      aurumPageHeaderBadge
-      [rotulo]="rotuloEstado(detalhe.Estado)"
-      [tom]="tomEstado(detalhe.Estado)"
-    />
-  </aurum-page-header>
+  <a class="kyc-detalhe__voltar" routerLink="/kyc">← Voltar para a fila de análises</a>
+
+  <section class="kyc-detalhe__cabecalho">
+    <span class="kyc-detalhe__selo" aria-hidden="true">
+      <span class="aurum-ico" style="--ico: url(/assets/aurum/icon-escudo.svg)"></span>
+    </span>
+    <div>
+      <div class="kyc-detalhe__titulo">
+        <h1>Análise #{{ detalhe.Id }}</h1>
+        <aurum-status-pill [rotulo]="rotuloTipo(detalhe.Tipo)" [tom]="rotuloTipo(detalhe.Tipo) === 'Agência' ? 'info' : 'ouro'" compacto />
+        <aurum-status-pill [rotulo]="rotuloEstado(detalhe.Estado)" [tom]="tomEstado(detalhe.Estado)" compacto />
+      </div>
+      <p>Revisão do pedido de onboarding e decisão registrada em histórico.</p>
+    </div>
+  </section>
 
   @if (erro) {
     <p role="alert" class="kyc-detalhe__erro">{{ erro }}</p>
@@ -33,7 +37,7 @@
     }
   </div>
 
-  <aurum-card>
+  <aurum-card class="kyc-detalhe__conteudo">
     @switch (aba) {
       @case ('empresa') {
         <h2>Dados da empresa</h2>
@@ -131,56 +135,75 @@
     }
   </aurum-card>
 
-  <div class="kyc-detalhe__acoes">
-    <aurum-button variante="outline" (click)="abrirDecisao('ajustes')">Solicitar ajustes</aurum-button>
-    <aurum-button variante="wine" (click)="abrirDecisao('aprovar')">Aprovar</aurum-button>
-    <aurum-button variante="perigo" (click)="abrirDecisao('rejeitar')">Rejeitar</aurum-button>
+  <div class="kyc-detalhe__barra">
+    <span class="kyc-detalhe__barra-texto">Análise #{{ detalhe.Id }} · {{ rotuloEstado(detalhe.Estado) }}</span>
+    <aurum-button variante="gold" tamanho="sm" (click)="abrirDecisao('ajustes')">Solicitar ajustes</aurum-button>
+    <aurum-button variante="perigo" tamanho="sm" (click)="abrirDecisao('rejeitar')">Rejeitar</aurum-button>
+    <aurum-button variante="wine" tamanho="sm" (click)="abrirDecisao('aprovar')">Aprovar</aurum-button>
     <!-- Suspender só aparece para organização aprovada; reativar, só para suspensa.
          Controle que não se aplica some do DOM (invariante #8), não vem desabilitado. -->
     @if (podeSuspender()) {
-      <aurum-button variante="outline" (click)="abrirDecisao('suspender')">Suspender</aurum-button>
+      <aurum-button variante="outline" tamanho="sm" (click)="abrirDecisao('suspender')">Suspender</aurum-button>
     }
     @if (podeReativar()) {
-      <aurum-button variante="outline" (click)="abrirDecisao('reativar')">Reativar</aurum-button>
+      <aurum-button variante="outline" tamanho="sm" (click)="abrirDecisao('reativar')">Reativar</aurum-button>
     }
   </div>
 
-  @if (decisaoAberta) {
-    <aurum-card>
-      <div class="kyc-detalhe__decisao">
-        <h2>Registrar decisão: {{ decisaoAberta }}</h2>
+  <aurum-modal
+    [aberto]="!!decisaoAberta"
+    largura="md"
+    [titulo]="tituloDecisao()"
+    [subtitulo]="subtituloDecisao()"
+    (fechar)="decisaoAberta = null"
+  >
+    <div class="kyc-detalhe__decisao aurum-form">
+      @if (decisaoAberta === 'aprovar') {
+        <div class="kyc-detalhe__aviso kyc-detalhe__aviso--sucesso">
+          <strong>Ao aprovar:</strong>
+          <span>A organização será ativada, o solicitante se tornará Owner e o acesso será liberado no App.</span>
+        </div>
+      }
+      @if (decisaoAberta === 'rejeitar') {
+        <div class="kyc-detalhe__aviso kyc-detalhe__aviso--perigo">
+          <strong>Ao reprovar:</strong>
+          <span>O cadastro não é ativado e o solicitante é notificado com a justificativa.</span>
+        </div>
+      }
 
-        @if (decisaoAberta === 'ajustes') {
-          <!-- /ajustes exige dizer O QUE ajustar. Sem isto o solicitante volta ao
-               início sem saber o que corrigir. O servidor recusa igual. -->
-          <p>Selecione os campos ou documentos pendentes:</p>
-          <div class="kyc-detalhe__pendencias">
-            @for (campo of camposPendentesPossiveis; track campo) {
+      @if (decisaoAberta === 'ajustes') {
+        <!-- /ajustes exige dizer O QUE ajustar. Sem isto o solicitante volta ao
+             início sem saber o que corrigir. O servidor recusa igual. -->
+        <p class="kyc-detalhe__dica">Selecione os campos ou documentos pendentes:</p>
+        <div class="kyc-detalhe__pendencias">
+          @for (campo of camposPendentesPossiveis; track campo) {
+            <label class="kyc-detalhe__pendencia">
               <aurum-checkbox
                 [rotulo]="campo"
                 [marcado]="!!pendencias[campo]"
                 (marcadoChange)="alternarPendencia(campo, $event)"
               />
-            }
-          </div>
-        }
-
-        @if (decisaoAberta !== 'reativar') {
-          <aurum-text-input
-            [valor]="justificativa"
-            (valorChange)="justificativa = $event"
-            rotulo="Justificativa"
-            placeholder="A justificativa fica registrada no histórico"
-          />
-        }
-
-        <div class="kyc-detalhe__acoes">
-          <aurum-button variante="wine" [desabilitado]="!podeEnviar()" (click)="enviarDecisao()">
-            Enviar decisão
-          </aurum-button>
-          <aurum-button variante="ghost" (click)="decisaoAberta = null">Cancelar</aurum-button>
+              {{ campo }}
+            </label>
+          }
         </div>
-      </div>
-    </aurum-card>
-  }
+      }
+
+      @if (decisaoAberta !== 'reativar') {
+        <label>
+          Justificativa *
+          <textarea
+            [value]="justificativa"
+            (input)="justificativa = $any($event.target).value"
+            placeholder="A justificativa fica registrada no histórico"
+          ></textarea>
+        </label>
+      }
+    </div>
+
+    <aurum-button aurumModalRodape variante="ghost" tamanho="sm" (click)="decisaoAberta = null">Cancelar</aurum-button>
+    <aurum-button aurumModalRodape [variante]="decisaoAberta === 'ajustes' ? 'gold' : 'wine'" tamanho="sm" [desabilitado]="!podeEnviar()" (click)="enviarDecisao()">
+      {{ rotuloConfirmar() }}
+    </aurum-button>
+  </aurum-modal>
 }

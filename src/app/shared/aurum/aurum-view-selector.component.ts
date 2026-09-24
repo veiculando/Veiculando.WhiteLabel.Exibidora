@@ -35,9 +35,9 @@ export type AurumViewSelectorModo = 'lista' | 'card';
         (click)="selecionar('lista')"
       >
         <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">
-          <rect x="1" y="2" width="14" height="2" fill="currentColor" />
-          <rect x="1" y="7" width="14" height="2" fill="currentColor" />
-          <rect x="1" y="12" width="14" height="2" fill="currentColor" />
+          <rect x="2" y="3" width="12" height="2" rx="1" fill="currentColor" />
+          <rect x="2" y="7" width="12" height="2" rx="1" fill="currentColor" />
+          <rect x="2" y="11" width="12" height="2" rx="1" fill="currentColor" />
         </svg>
       </button>
       <button
@@ -50,10 +50,10 @@ export type AurumViewSelectorModo = 'lista' | 'card';
         (click)="selecionar('card')"
       >
         <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">
-          <rect x="1" y="1" width="6" height="6" fill="currentColor" />
-          <rect x="9" y="1" width="6" height="6" fill="currentColor" />
-          <rect x="1" y="9" width="6" height="6" fill="currentColor" />
-          <rect x="9" y="9" width="6" height="6" fill="currentColor" />
+          <rect x="2.5" y="2.5" width="5" height="5" rx="1" fill="currentColor" />
+          <rect x="8.5" y="2.5" width="5" height="5" rx="1" fill="currentColor" />
+          <rect x="2.5" y="8.5" width="5" height="5" rx="1" fill="currentColor" />
+          <rect x="8.5" y="8.5" width="5" height="5" rx="1" fill="currentColor" />
         </svg>
       </button>
     </div>
@@ -63,9 +63,6 @@ export type AurumViewSelectorModo = 'lista' | 'card';
     `
       .aurum-view-selector {
         display: inline-flex;
-        border-radius: var(--radius-pill);
-        background: var(--surface-muted);
-        padding: 4px;
         gap: 4px;
       }
       .aurum-view-selector__btn {
@@ -75,15 +72,14 @@ export type AurumViewSelectorModo = 'lista' | 'card';
         width: 32px;
         height: 32px;
         border: none;
-        border-radius: var(--radius-pill);
-        background: transparent;
+        border-radius: 6px;
+        background: var(--chip-bg);
         color: var(--on-surface);
         cursor: pointer;
       }
       .aurum-view-selector__btn--ativo {
-        background: var(--white);
-        color: var(--primary-color);
-        box-shadow: var(--shadow-base);
+        background: var(--primary-color);
+        color: var(--white);
       }
     `,
   ],
@@ -96,7 +92,13 @@ export class AurumViewSelectorComponent implements OnInit {
 
   ngOnInit(): void {
     const persistido = this.lerPersistido();
-    if (persistido) this.modo = persistido;
+    if (persistido && persistido !== this.modo) {
+      this.modo = persistido;
+      // Quem hospeda decide o que renderizar pelo modo: sem avisar, a tela
+      // abria em lista com o botão de cartão marcado. Emitido após o ciclo
+      // atual para não alterar o pai durante a verificação dele.
+      queueMicrotask(() => this.modoChange.emit(persistido));
+    }
   }
 
   selecionar(modo: AurumViewSelectorModo): void {

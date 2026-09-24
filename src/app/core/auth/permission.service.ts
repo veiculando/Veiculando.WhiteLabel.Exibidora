@@ -65,6 +65,12 @@ export class PermissionService {
     return false;
   }
 
+  /** Afiliada da instância, da claim `AfiliadaId` emitida pelo `AuthController` — só exibição. */
+  getAfiliadaId(): string | null {
+    const valor = this.getDecodedToken()?.['AfiliadaId'];
+    return valor === undefined || valor === null || valor === '' ? null : String(valor);
+  }
+
   /**
    * Retorna o nome do operador autenticado contido nas claims do JWT.
    */

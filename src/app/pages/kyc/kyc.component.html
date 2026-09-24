@@ -1,24 +1,14 @@
-<!--
-  Subtítulo PRÓPRIO desta tela (VEI-RD-80 task d).
-
-  O Figma traz aqui "Gestão das marcas anunciantes e associação às agências" — a
-  MESMA copy de Anunciantes (154:4162) e de Prospecção (154:5565). É copy herdada
-  no arquivo de design, não intenção: esta tela não gere marcas anunciantes, ela
-  tria pedidos de onboarding. Divergência sinalizada ao design para a revisão v2.3.
--->
 <aurum-page-header
-  eyebrow="Comercial"
   titulo="Análise KYC"
-  subtitulo="Triagem dos pedidos de onboarding de agências e anunciantes desta exibidora"
->
-  <aurum-status-pill aurumPageHeaderBadge [rotulo]="total + ' na fila'" tom="neutro" />
-</aurum-page-header>
+  [subtitulo]="'Fila consolidada de verificação KYC de Agências e Anunciantes cadastrados publicamente na Afiliada' + (afiliadaId ? ' #' + afiliadaId : '') + '. Assuma, analise e decida sobre cada organização.'"
+/>
 
 @if (erro) {
-  <p role="alert" class="kyc__vazio">{{ erro }}</p>
+  <p role="alert" class="wl-estado wl-estado--erro">{{ erro }}</p>
 }
 
-<!-- Cinco chips. Rascunho e Suspenso não são itens de triagem. -->
+<!-- Cinco contadores do Figma (416:15663), que também filtram a fila.
+     Rascunho e Suspenso não são itens de triagem. -->
 <div class="kyc__chips">
   @for (chip of chips; track chip.chave) {
     <button
@@ -27,88 +17,90 @@
       [attr.aria-pressed]="estadoSelecionado === chip.chave"
       (click)="selecionarChip(chip.chave)"
     >
-      {{ chip.rotulo }} ({{ contagem(chip.chave) }})
+      <span class="kyc__chip-topo">
+        <span class="aurum-ico kyc__chip-icone" [attr.data-chave]="chip.chave" [style.--ico]="'url(/assets/aurum/icon-kyc-' + iconeChip(chip.chave) + '.svg)'"></span>
+        <span class="kyc__chip-numero" aria-hidden="true">{{ contagem(chip.chave) }}</span>
+      </span>
+      <span class="kyc__chip-rotulo">{{ chip.rotulo }} <span class="aurum-sr">({{ contagem(chip.chave) }})</span></span>
     </button>
   }
 </div>
 
-<div class="kyc__filtros">
-  <div class="kyc__busca">
-    <aurum-filter-field rotulo="Buscar" posicaoRotulo="acima">
-      <aurum-text-input
-        [valor]="busca"
-        (valorChange)="busca = $event"
-        placeholder="Buscar por CNPJ, razão social ou responsável…"
-        rotulo="Buscar análises"
-      />
-    </aurum-filter-field>
-  </div>
-
-  <aurum-filter-field rotulo="Tipo" posicaoRotulo="acima">
-    <aurum-dropdown [opcoes]="opcoesTipo" [valor]="tipo" (valorChange)="tipo = $event" />
-  </aurum-filter-field>
-
-  <aurum-filter-field rotulo="Operador" posicaoRotulo="acima">
-    <aurum-text-input [valor]="analistaId" (valorChange)="analistaId = $event" placeholder="Todos" rotulo="Filtrar por operador" />
-  </aurum-filter-field>
-
-  <aurum-filter-field rotulo="Data de envio" posicaoRotulo="acima">
-    <input type="date" [value]="dataEnvio" (change)="dataEnvio = $any($event.target).value" aria-label="Data de envio" />
-  </aurum-filter-field>
-
-  <aurum-button variante="outline" (click)="carregar()">Aplicar</aurum-button>
-</div>
+<aurum-filter-bar>
+  <aurum-text-input
+    [valor]="busca"
+    (valorChange)="busca = $event"
+    placeholder="Buscar por CNPJ, razão social ou responsável…"
+    rotulo="Buscar análises"
+  />
+  <aurum-dropdown [opcoes]="opcoesTipo" [valor]="tipo" (valorChange)="tipo = $event" aria-label="Tipo" />
+  <aurum-text-input class="kyc__operador" [valor]="analistaId" (valorChange)="analistaId = $event" placeholder="Operador: Todos" rotulo="Filtrar por operador" />
+  <input class="aurum-select kyc__data" type="date" [value]="dataEnvio" (change)="dataEnvio = $any($event.target).value" aria-label="Data de envio" />
+  <aurum-button variante="outline" tamanho="sm" (click)="carregar()">Aplicar</aurum-button>
+</aurum-filter-bar>
 
 @if (carregando) {
-  <p class="kyc__vazio">Carregando análises…</p>
+  <p class="wl-estado wl-estado--carregando">Carregando análises…</p>
 } @else if (analises.length === 0) {
-  <p class="kyc__vazio">Nenhuma análise para este filtro.</p>
+  <p class="wl-estado wl-estado--vazio">Nenhuma análise para este filtro.</p>
 } @else {
-  <table aurumTable>
-    <thead>
-      <tr aurumTableRow>
-        <th aurumTableHeaderCell scope="col">Tipo</th>
-        <th aurumTableHeaderCell scope="col">Nome / Razão social</th>
-        <th aurumTableHeaderCell scope="col">CNPJ</th>
-        <th aurumTableHeaderCell scope="col">Responsável legal</th>
-        <th aurumTableHeaderCell scope="col">Envio</th>
-        <th aurumTableHeaderCell scope="col">Status</th>
-        <th aurumTableHeaderCell scope="col">Analista</th>
-        <th aurumTableHeaderCell scope="col">Ações</th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (item of analises; track item.Id) {
+  <div class="wl-tabela--rolavel">
+    <table aurumTable class="aurum-table--densa">
+      <thead>
         <tr aurumTableRow>
-          <td aurumTableCell>{{ rotuloTipo(item.Tipo) }}</td>
-          <td aurumTableCell>
-            @if (item.Nome) {
-              <span class="kyc__empresa">
-                <strong>{{ item.Nome }}</strong>
-                <span class="kyc__razao">{{ item.RazaoSocial }}</span>
-              </span>
-            } @else {
-              <!-- Lacuna de modelo herdada de VEI-RD-78: OrganizacaoOnboarding não
-                   guarda dados da empresa e IdOrganizacao só existe após a aprovação.
-                   O texto diz o que houve, em vez de fingir um travessão de "vazio". -->
-              <span class="kyc__pendente">Dados da empresa disponíveis após a aprovação</span>
-            }
-          </td>
-          <td aurumTableCell>{{ item.Cnpj ?? '—' }}</td>
-          <td aurumTableCell>{{ item.Responsavel?.Nome ?? '—' }}</td>
-          <td aurumTableCell>{{ envio(item) }}</td>
-          <td aurumTableCell>
-            <aurum-status-pill [rotulo]="rotuloEstado(item.Estado)" [tom]="tomEstado(item.Estado)" />
-          </td>
-          <td aurumTableCell>{{ analista(item) }}</td>
-          <td aurumTableCell>
-            <a [routerLink]="['/kyc', item.Id]">Abrir</a>
-            @if (!item.AnalistaId) {
-              <aurum-button variante="ghost" (click)="assumir(item)">Assumir</aurum-button>
-            }
-          </td>
+          <th aurumTableHeaderCell scope="col">Tipo</th>
+          <th aurumTableHeaderCell scope="col">Nome / Razão social</th>
+          <th aurumTableHeaderCell scope="col">CNPJ</th>
+          <th aurumTableHeaderCell scope="col">Responsável legal</th>
+          <th aurumTableHeaderCell scope="col">Envio</th>
+          <th aurumTableHeaderCell scope="col">Status</th>
+          <th aurumTableHeaderCell scope="col">Analista</th>
+          <th aurumTableHeaderCell scope="col">Ações</th>
         </tr>
-      }
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        @for (item of analises; track item.Id) {
+          <tr aurumTableRow>
+            <td aurumTableCell>
+              <aurum-status-pill [rotulo]="rotuloTipo(item.Tipo)" [tom]="rotuloTipo(item.Tipo) === 'Agência' ? 'info' : 'ouro'" compacto />
+            </td>
+            <td aurumTableCell>
+              @if (item.Nome) {
+                <span class="kyc__empresa">
+                  <strong>{{ item.Nome }}</strong>
+                  <span class="kyc__razao">{{ item.RazaoSocial }}</span>
+                </span>
+              } @else {
+                <!-- Lacuna de modelo herdada de VEI-RD-78: OrganizacaoOnboarding não
+                     guarda dados da empresa e IdOrganizacao só existe após a aprovação.
+                     O texto diz o que houve, em vez de fingir um travessão de "vazio". -->
+                <span class="kyc__pendente">Dados da empresa disponíveis após a aprovação</span>
+              }
+            </td>
+            <td aurumTableCell>{{ item.Cnpj ?? '—' }}</td>
+            <td aurumTableCell>{{ item.Responsavel?.Nome ?? '—' }}</td>
+            <td aurumTableCell class="kyc__envio">{{ envio(item) }}</td>
+            <td aurumTableCell>
+              <aurum-status-pill [rotulo]="rotuloEstado(item.Estado)" [tom]="tomEstado(item.Estado)" />
+            </td>
+            <td aurumTableCell>{{ analista(item) }}</td>
+            <td aurumTableCell>
+              <span class="kyc__acoes">
+                <a class="kyc__acao" [routerLink]="['/kyc', item.Id]" title="Abrir análise">
+                  <span class="aurum-ico" style="--ico: url(/assets/aurum/icon-olho.svg)"></span>
+                  <span class="aurum-sr">Abrir</span>
+                </a>
+                @if (!item.AnalistaId) {
+                  <button type="button" class="kyc__acao kyc__acao--ouro" title="Assumir análise" (click)="assumir(item)">
+                    <span class="aurum-ico" style="--ico: url(/assets/aurum/icon-assumir.svg)"></span>
+                    <span class="aurum-sr">Assumir</span>
+                  </button>
+                }
+              </span>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
 }

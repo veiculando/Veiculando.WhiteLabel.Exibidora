@@ -10,7 +10,8 @@ import { AurumButtonComponent } from '../../shared/aurum/aurum-button.component'
 import { AurumDropdownComponent, AurumDropdownOpcao } from '../../shared/aurum/aurum-dropdown.component';
 import { AurumFilterFieldComponent } from '../../shared/aurum/aurum-filter-field.component';
 import { AurumPageHeaderComponent } from '../../shared/aurum/aurum-page-header.component';
-import { AurumStatusPillComponent } from '../../shared/aurum/aurum-status-pill.component';
+import { AurumStatusPillComponent, AurumStatusPillTom } from '../../shared/aurum/aurum-status-pill.component';
+import { AurumFilterBarComponent } from '../../shared/aurum/aurum-filter-bar.component';
 import {
   AurumTableCellComponent,
   AurumTableComponent,
@@ -20,6 +21,14 @@ import {
 import { OrdemServicoEntregaModalComponent, OsEntregaContexto } from './ordem-servico-entrega-modal.component';
 
 const TODOS = '';
+
+/** Status da OS em pílula sólida, como no Figma `198:2`. */
+const TOM_STATUS_OS: Record<string, AurumStatusPillTom> = {
+  Aberta: 'solido-cinza',
+  Atribuida: 'solido-azul',
+  EmExecucao: 'solido-laranja',
+  Concluida: 'solido-verde',
+};
 
 /**
  * Ordem de Serviço — listagem (VEI-RD-88a, Figma `198:2`).
@@ -44,6 +53,7 @@ const TODOS = '';
     AurumDropdownComponent,
     AurumFilterFieldComponent,
     AurumStatusPillComponent,
+    AurumFilterBarComponent,
     AurumTableComponent,
     AurumTableRowComponent,
     AurumTableCellComponent,
@@ -51,11 +61,11 @@ const TODOS = '';
     OrdemServicoEntregaModalComponent,
   ],
   template: `
-    <aurum-page-header titulo="Ordem de Serviço" subtitulo="Rotas e autorizações de colagem geradas por período.">
-      <a aurumPageHeaderAcoes class="os-link-primario" routerLink="/ordens-servico/nova">+ Nova Ordem de Serviço</a>
+    <aurum-page-header titulo="Ordem de Serviço" subtitulo="Gerencie as ordens de serviço geradas e acompanhe o status de execução.">
+      <a aurumPageHeaderAcoes class="aurum-botao-link" routerLink="/ordens-servico/nova">+ Nova Ordem de Serviço</a>
     </aurum-page-header>
 
-    <div class="os-filtros">
+    <aurum-filter-bar>
       <aurum-filter-field rotulo="Período">
         <aurum-dropdown [opcoes]="opcoesPeriodo" [valor]="filtroPeriodo === null ? TODOS : String(filtroPeriodo)" (valorChange)="mudarPeriodo($event)" />
       </aurum-filter-field>
@@ -65,8 +75,8 @@ const TODOS = '';
       <aurum-filter-field rotulo="Responsável">
         <aurum-dropdown [opcoes]="opcoesResponsavel" valor="" (valorChange)="carregar(1)" />
       </aurum-filter-field>
-      <aurum-button variante="ghost" (click)="limparFiltros()">Limpar Filtros</aurum-button>
-    </div>
+      <aurum-button variante="outline" tamanho="sm" (click)="limparFiltros()">Limpar filtros</aurum-button>
+    </aurum-filter-bar>
 
     @if (carregando) {
       <div class="wl-estado wl-estado--carregando">Carregando ordens de serviço…</div>
@@ -75,7 +85,7 @@ const TODOS = '';
     @if (erro) {
       <div class="wl-estado wl-estado--erro">
         {{ erro }}
-        <aurum-button variante="ghost" (click)="carregar()">Tentar novamente</aurum-button>
+        <aurum-button variante="outline" tamanho="sm" (click)="carregar()">Tentar novamente</aurum-button>
       </div>
     }
 
@@ -85,7 +95,7 @@ const TODOS = '';
 
     @if (ordens.length > 0) {
       <div class="wl-tabela--rolavel">
-        <table aurumTable>
+        <table aurumTable class="aurum-table--densa">
           <thead>
             <tr aurumTableRow>
               <th aurumTableHeaderCell>OS Nº</th>
@@ -101,22 +111,25 @@ const TODOS = '';
           <tbody>
             @for (os of ordens; track os.id) {
               <tr aurumTableRow>
-                <td aurumTableCell>{{ os.numeroFormatado }}</td>
+                <td aurumTableCell class="os-numero">{{ os.numeroFormatado }}</td>
                 <td aurumTableCell>{{ os.periodo || '—' }}</td>
                 <td aurumTableCell>{{ os.cidades.length > 0 ? os.cidades.join(', ') : '—' }}</td>
                 <td aurumTableCell>
-                  @if (os.responsavel) {
-                    {{ os.responsavel }}
-                  } @else {
-                    <span class="vazio">Não atribuída</span>
-                  }
+                  <span class="os-responsavel">
+                    <span class="os-avatar" aria-hidden="true">{{ os.responsavel ? iniciais(os.responsavel) : '—' }}</span>
+                    @if (os.responsavel) {
+                      {{ os.responsavel }}
+                    } @else {
+                      <span class="vazio">Não atribuída</span>
+                    }
+                  </span>
                 </td>
                 <td aurumTableCell>{{ os.pecasCount }}</td>
-                <td aurumTableCell><aurum-status-pill [rotulo]="rotuloStatus(os.status)" tom="neutro" /></td>
-                <td aurumTableCell>{{ os.dataCadastro | date: 'dd/MM/yyyy HH:mm' }}</td>
+                <td aurumTableCell><aurum-status-pill [rotulo]="rotuloStatus(os.status)" [tom]="tomStatus(os.status)" /></td>
+                <td aurumTableCell class="vazio">{{ os.dataCadastro | date: 'dd/MM/yyyy' }}</td>
                 <td aurumTableCell class="os-acoes">
-                  <a class="os-link" [routerLink]="['/ordens-servico', os.id]">Ver detalhe</a>
-                  <aurum-button variante="ghost" (click)="abrirEntrega(os)">Entregar</aurum-button>
+                  <a class="os-link" [routerLink]="['/ordens-servico', os.id]">Ver Detalhes</a>
+                  <aurum-button variante="suave" tamanho="xs" (click)="abrirEntrega(os)">Entregar</aurum-button>
                 </td>
               </tr>
             }
@@ -144,47 +157,41 @@ const TODOS = '';
   changeDetection: ChangeDetectionStrategy.Eager,
   styles: [
     `
-      .os-link-primario {
+      .os-numero {
+        font-weight: 700;
+        color: var(--primary-dark);
+        white-space: nowrap;
+      }
+      .os-responsavel {
         display: inline-flex;
         align-items: center;
-        justify-content: center;
-        border-radius: var(--radius-pill);
-        padding: 10px 20px;
-        font-size: 0.8125rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
+        gap: 8px;
+        white-space: nowrap;
+      }
+      .os-avatar {
+        display: grid;
+        place-items: center;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
         background: var(--primary-color);
         color: var(--white);
-        text-decoration: none;
-        box-shadow: var(--shadow-base);
-      }
-      .os-link-primario:hover {
-        background: var(--primary-dark);
-        box-shadow: var(--shadow-hover);
-      }
-      .os-filtros {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: flex-end;
-        gap: 12px;
-        margin-bottom: 16px;
+        font-size: 0.5625rem;
+        font-weight: 600;
       }
       .os-acoes {
-        display: flex;
-        align-items: center;
-        gap: 12px;
         white-space: nowrap;
+      }
+      .os-acoes aurum-button {
+        margin-left: 12px;
       }
       .os-link {
         color: var(--primary-color);
+        font-weight: 600;
         text-decoration: none;
       }
-      .os-link:hover {
-        text-decoration: underline;
-      }
       .vazio {
-        color: color-mix(in srgb, var(--on-surface) 50%, transparent);
+        color: color-mix(in srgb, var(--on-surface) 75%, transparent);
       }
     `,
   ],
@@ -281,6 +288,15 @@ export class OrdemServicoListagemComponent implements OnInit {
     this.filtroPeriodo = null;
     this.status = null;
     this.carregar(1);
+  }
+
+  tomStatus(status: string): AurumStatusPillTom {
+    return TOM_STATUS_OS[status] ?? 'neutro';
+  }
+
+  iniciais(nome: string): string {
+    const partes = nome.trim().split(/\s+/);
+    return ((partes[0]?.[0] ?? '') + (partes.length > 1 ? partes[partes.length - 1][0] : '')).toUpperCase();
   }
 
   rotuloStatus(status: string): string {

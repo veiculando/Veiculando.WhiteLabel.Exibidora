@@ -5,7 +5,8 @@ import { KycService } from '../../core/services/comercial.service';
 import { EstadoOnboarding, KycFilaItem, KycResumo, TipoOrganizacao } from '../../core/models/comercial.models';
 import { AurumButtonComponent } from '../../shared/aurum/aurum-button.component';
 import { AurumDropdownComponent } from '../../shared/aurum/aurum-dropdown.component';
-import { AurumFilterFieldComponent } from '../../shared/aurum/aurum-filter-field.component';
+import { AurumFilterBarComponent } from '../../shared/aurum/aurum-filter-bar.component';
+import { PermissionService } from '../../core/auth/permission.service';
 import { AurumPageHeaderComponent } from '../../shared/aurum/aurum-page-header.component';
 import { AurumStatusPillComponent, AurumStatusPillTom } from '../../shared/aurum/aurum-status-pill.component';
 import {
@@ -37,7 +38,7 @@ interface Chip {
     AurumPageHeaderComponent,
     AurumButtonComponent,
     AurumDropdownComponent,
-    AurumFilterFieldComponent,
+    AurumFilterBarComponent,
     AurumTextInputComponent,
     AurumStatusPillComponent,
     AurumTableComponent,
@@ -49,16 +50,28 @@ interface Chip {
   changeDetection: ChangeDetectionStrategy.Eager,
   styles: [
     `
-      .kyc__chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
-      .kyc__chip { background: none; border: 1px solid var(--border-color); border-radius: 999px; padding: 6px 14px; cursor: pointer; font: inherit; color: var(--on-surface); }
-      .kyc__chip[aria-pressed='true'] { background: color-mix(in srgb, var(--primary-color) 12%, transparent); border-color: var(--primary-color); font-weight: 600; }
-      .kyc__filtros { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 16px; }
-      .kyc__busca { flex: 1 1 320px; }
+      .kyc__chips { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 16px; margin-bottom: 20px; }
+      .kyc__chip { display: flex; flex-direction: column; gap: 10px; padding: 18px 20px; border: 2px solid transparent; border-radius: 18px; background: var(--white); box-shadow: 0 8px 16px rgba(74, 14, 14, 0.08); font: inherit; text-align: left; cursor: pointer; }
+      .kyc__chip[aria-pressed='true'] { border-color: var(--primary-color); }
+      .kyc__chip-topo { display: flex; align-items: center; justify-content: space-between; }
+      .kyc__chip-icone { width: 18px; height: 18px; color: var(--tone-warning); }
+      .kyc__chip-icone[data-chave='EmAnalise'] { color: var(--tone-info); }
+      .kyc__chip-icone[data-chave='AjustesSolicitados'] { color: var(--primary-color); }
+      .kyc__chip-icone[data-chave='Aprovado'] { color: var(--tone-success); }
+      .kyc__chip-icone[data-chave='Rejeitado'] { color: var(--on-surface); }
+      .kyc__chip-numero { font-family: var(--font-display); font-weight: 700; font-size: 1.625rem; line-height: 1; color: var(--primary-dark); }
+      .kyc__chip-rotulo { font-size: 0.78125rem; color: var(--on-surface); }
+      .kyc__operador { flex: 0 1 180px !important; }
+      .kyc__data { color: var(--on-surface); }
       .kyc__empresa { display: flex; flex-direction: column; gap: 2px; }
-      .kyc__razao { font-size: 0.8rem; color: var(--on-surface); }
-      .kyc__vazio { padding: 32px; text-align: center; color: var(--on-surface); }
-      .kyc__pendente { font-style: italic; color: var(--on-surface); }
-      input[type='date'] { padding: 8px 10px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font: inherit; background: var(--surface); color: var(--on-surface); }
+      .kyc__empresa strong { color: var(--primary-dark); }
+      .kyc__razao { font-size: 0.75rem; color: var(--on-surface); }
+      .kyc__pendente { font-style: italic; font-size: 0.75rem; color: var(--on-surface); }
+      .kyc__envio { white-space: nowrap; }
+      .kyc__acoes { display: inline-flex; gap: 6px; }
+      .kyc__acao { display: inline-grid; place-items: center; width: 28px; height: 28px; border: none; border-radius: 8px; background: var(--wine-tint); color: var(--primary-color); cursor: pointer; }
+      .kyc__acao--ouro { background: var(--gold-tint); color: #8a6500; }
+      .kyc__acao .aurum-ico { width: 14px; height: 14px; }
     `,
   ],
 })
@@ -152,6 +165,12 @@ export class KycComponent implements OnInit {
     return chip?.rotulo ?? EstadoOnboarding[estado];
   }
 
+  iconeChip(chave: string): string {
+    return ({ PendenteVerificacao: 'pendente', EmAnalise: 'analise', AjustesSolicitados: 'ajustes', Aprovado: 'aprovado', Rejeitado: 'rejeitado' } as Record<string, string>)[chave] ?? 'pendente';
+  }
+
+  readonly afiliadaId = inject(PermissionService).getAfiliadaId();
+
   tomEstado(estado: EstadoOnboarding): AurumStatusPillTom {
     switch (estado) {
       case EstadoOnboarding.Aprovado:
@@ -159,9 +178,11 @@ export class KycComponent implements OnInit {
       case EstadoOnboarding.Rejeitado:
         return 'perigo';
       case EstadoOnboarding.AjustesSolicitados:
-        return 'aviso';
+        return 'perigo';
       case EstadoOnboarding.EmAnalise:
-        return 'primario';
+        return 'info';
+      case EstadoOnboarding.PendenteVerificacao:
+        return 'aviso';
       default:
         return 'neutro';
     }

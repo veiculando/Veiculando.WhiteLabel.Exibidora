@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { AlteracaoValorTipo, PecaValorListItem, PeriodoLookup } from '../../core/models/wl.models';
 import { LookupsService } from '../../core/services/lookups.service';
 import { AurumButtonComponent } from '../../shared/aurum/aurum-button.component';
+import { AurumModalComponent } from '../../shared/aurum/aurum-modal.component';
 
 type ModoValor = 'valorExato' | 'incrementar' | 'reduzir' | 'percIncrementar' | 'percReduzir';
 
@@ -39,34 +40,25 @@ export interface AlterarPrecoConfirmacao {
 @Component({
   selector: 'app-pecas-alterar-preco-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, AurumButtonComponent],
+  imports: [CommonModule, FormsModule, AurumButtonComponent, AurumModalComponent],
   template: `
-    <div class="ppm-overlay" (click)="aoClicarNoOverlay($event)">
-      <div class="ppm-painel" role="dialog" aria-modal="true" aria-labelledby="ppm-titulo">
-        <h2 id="ppm-titulo" class="ppm-titulo">Alterar Preço</h2>
-        <p class="ppm-subtitulo">{{ itens.length }} peça(s) selecionada(s).</p>
-
-        <div class="ppm-campo">
-          <span class="ppm-rotulo">Período</span>
-          <select [(ngModel)]="escopo" (ngModelChange)="aoTrocarEscopo()">
-            <option value="todos">Todos (valor padrão)</option>
-            @for (periodo of periodos; track periodo.id) {
-              <option [ngValue]="periodo.id.toString()">{{ periodo.nome }}</option>
-            }
-          </select>
-        </div>
+    <aurum-modal [aberto]="true" titulo="Alterar Preço de Peças" posicao="lateral" (fechar)="!salvando && fechar.emit()">
+      <div class="ppm-corpo">
+        <p class="ppm-resumo">
+          Resumo da seleção: <strong>{{ itens.length }} peça(s) selecionada(s)</strong>.
+        </p>
 
         @if (escopo === 'todos') {
-          <div class="ppm-campo">
-            <span class="ppm-rotulo">Modo</span>
+          <label class="wl-campo">
+            <span class="ppm-rotulo">Tipo de Alteração de Valor</span>
             <select [(ngModel)]="modo">
-              <option value="valorExato">Valor exato</option>
-              <option value="incrementar">Acrescentar R$</option>
-              <option value="reduzir">Reduzir R$</option>
-              <option value="percIncrementar">Acrescentar %</option>
-              <option value="percReduzir">Reduzir %</option>
+              <option value="valorExato">Definir valor exato em Reais (R$)</option>
+              <option value="incrementar">Acrescentar valor em Reais (R$)</option>
+              <option value="reduzir">Reduzir valor em Reais (R$)</option>
+              <option value="percIncrementar">Acrescentar percentual (%)</option>
+              <option value="percReduzir">Reduzir percentual (%)</option>
             </select>
-          </div>
+          </label>
         } @else {
           <p class="ppm-aviso">
             Para um período específico, o valor sazonal é sempre exato — substitui o valor vigente
@@ -74,123 +66,129 @@ export interface AlterarPrecoConfirmacao {
           </p>
         }
 
-        <div class="ppm-campo">
+        <label class="wl-campo">
           <span class="ppm-rotulo">{{ rotuloValor() }}</span>
           <input
+            class="ppm-valor"
             type="number"
             min="0"
             step="0.01"
             [(ngModel)]="valorDigitado"
             [attr.aria-label]="rotuloValor()"
           />
-        </div>
+        </label>
+
+        <label class="wl-campo">
+          <span class="ppm-rotulo">Configurar Valor Por Período Comercial</span>
+          <select [(ngModel)]="escopo" (ngModelChange)="aoTrocarEscopo()">
+            <option value="todos">Valor Padrão Permanente (Todos os Períodos)</option>
+            @for (periodo of periodos; track periodo.id) {
+              <option [ngValue]="periodo.id.toString()">{{ periodo.nome }}</option>
+            }
+          </select>
+        </label>
 
         @if (previaDisponivel()) {
           <div class="ppm-previa">
-            <strong>Prévia de impacto</strong>
-            <p>{{ itens.length }} peça(s) afetada(s).</p>
-            <p>Total atual: {{ formatarMoeda(totalAtual()) }}</p>
-            <p>Total novo (estimado): {{ formatarMoeda(totalNovo()) }}</p>
+            <span class="ppm-previa__titulo">Prévia do impacto financeiro</span>
+            <div class="ppm-previa__linha">
+              <span>Soma Total Atual:</span>
+              <strong>{{ formatarMoeda(totalAtual()) }}</strong>
+            </div>
+            <div class="ppm-previa__linha ppm-previa__linha--nova">
+              <span>Soma Total Após Ajuste:</span>
+              <strong>{{ formatarMoeda(totalNovo()) }}</strong>
+            </div>
+            @if (variacaoMedia() !== null) {
+              <p class="ppm-previa__rodape">Variação média aproximada: <strong>{{ variacaoMedia() }}%</strong></p>
+            }
           </div>
         } @else if (escopo !== 'todos') {
           <div class="ppm-previa">
-            <strong>Prévia de impacto</strong>
-            <p>{{ itens.length }} peça(s) receberão o valor sazonal informado neste período.</p>
+            <span class="ppm-previa__titulo">Prévia do impacto financeiro</span>
+            <p class="ppm-previa__rodape">{{ itens.length }} peça(s) receberão o valor sazonal informado neste período.</p>
           </div>
         }
 
         @if (erro) {
-          <p class="ppm-erro" role="alert">{{ erro }}</p>
+          <p class="wl-estado wl-estado--erro" role="alert">{{ erro }}</p>
         }
-
-        <div class="ppm-acoes">
-          <aurum-button variante="ghost" [desabilitado]="salvando" (click)="fechar.emit()">Cancelar</aurum-button>
-          <aurum-button [desabilitado]="!podeConfirmar() || salvando" (click)="aoConfirmar()">
-            {{ salvando ? 'Salvando…' : 'Confirmar' }}
-          </aurum-button>
-        </div>
       </div>
-    </div>
+
+      <aurum-button aurumModalRodape class="ppm-acao" variante="ghost" [desabilitado]="salvando" (click)="fechar.emit()">Cancelar</aurum-button>
+      <aurum-button aurumModalRodape class="ppm-acao" variante="gold" [desabilitado]="!podeConfirmar() || salvando" (click)="aoConfirmar()">
+        {{ salvando ? 'Salvando…' : 'Confirmar Alteração' }}
+      </aurum-button>
+    </aurum-modal>
   `,
   changeDetection: ChangeDetectionStrategy.Eager,
   styles: [
     `
-      .ppm-overlay {
-        position: fixed;
-        inset: 0;
-        background: color-mix(in srgb, var(--charcoal) 55%, transparent);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 1000;
-        padding: 16px;
-      }
-      .ppm-painel {
-        background: var(--white);
-        border-radius: var(--radius-md);
-        box-shadow: var(--shadow-hover);
-        padding: 24px;
-        width: 100%;
-        max-width: 420px;
-        max-height: calc(100vh - 32px);
-        overflow-y: auto;
-      }
-      .ppm-titulo {
-        margin: 0 0 4px;
-        font-size: 1.25rem;
-      }
-      .ppm-subtitulo {
-        margin: 0 0 16px;
-        color: var(--on-surface);
-        font-size: 0.875rem;
-      }
-      .ppm-campo {
+      .ppm-corpo {
         display: flex;
         flex-direction: column;
-        gap: 4px;
-        margin-bottom: 14px;
+        gap: 18px;
       }
-      .ppm-rotulo {
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        color: var(--on-surface);
-      }
-      .ppm-campo select,
-      .ppm-campo input {
-        border: 1px solid var(--border);
-        border-radius: var(--radius-sm);
-        padding: 8px 10px;
-        font: inherit;
-      }
-      .ppm-aviso {
+      .ppm-resumo {
+        margin: 0;
+        padding: 12px;
+        border-radius: var(--radius-search);
+        background: var(--paper-bg);
         font-size: 0.8125rem;
         color: var(--on-surface);
-        background: var(--surface-muted);
-        border-radius: var(--radius-sm);
-        padding: 10px 12px;
-        margin: 0 0 14px;
+      }
+      .ppm-rotulo {
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: var(--charcoal);
+      }
+      .ppm-valor {
+        font-size: 1rem !important;
+        font-weight: 700;
+      }
+      .ppm-aviso {
+        margin: 0;
+        font-size: 0.8125rem;
+        color: var(--on-surface);
       }
       .ppm-previa {
-        background: var(--surface-muted);
-        border-radius: var(--radius-sm);
-        padding: 12px 14px;
-        margin-bottom: 14px;
-        font-size: 0.875rem;
-      }
-      .ppm-previa p {
-        margin: 4px 0 0;
-      }
-      .ppm-erro {
-        color: var(--danger);
-        font-size: 0.875rem;
-        margin: 0 0 12px;
-      }
-      .ppm-acoes {
         display: flex;
-        justify-content: flex-end;
+        flex-direction: column;
         gap: 8px;
+        padding: 14px;
+        border: 1px solid var(--danger-border);
+        border-radius: 12px;
+        background: var(--danger-bg);
+        font-size: 0.8125rem;
+        color: var(--on-surface);
+      }
+      .ppm-previa__titulo {
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.4px;
+        text-transform: uppercase;
+        color: var(--primary-color);
+      }
+      .ppm-previa__linha {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .ppm-previa__linha strong {
+        color: var(--charcoal);
+      }
+      .ppm-previa__linha--nova strong {
+        font-size: 0.9375rem;
+        color: var(--primary-dark);
+      }
+      .ppm-previa__rodape {
+        margin: 0;
+        padding-top: 8px;
+        border-top: 1px solid var(--danger-border);
+        font-size: 0.71875rem;
+      }
+      .ppm-acao {
+        flex: 1;
       }
     `,
   ],
@@ -220,9 +218,6 @@ export class PecasAlterarPrecoModalComponent implements OnInit {
     if (this.escopo !== 'todos') this.modo = 'valorExato';
   }
 
-  aoClicarNoOverlay(event: MouseEvent): void {
-    if (event.target === event.currentTarget) this.fechar.emit();
-  }
 
   rotuloValor(): string {
     switch (this.modo) {
@@ -299,6 +294,13 @@ export class PecasAlterarPrecoModalComponent implements OnInit {
       default:
         return { tipoValor: AlteracaoValorTipo.ValorExato, valor: valorDigitado };
     }
+  }
+
+  /** Variação percentual entre as somas (Figma: "Variação média aproximada"). */
+  variacaoMedia(): string | null {
+    const atual = this.totalAtual();
+    if (!atual) return null;
+    return (((this.totalNovo() - atual) / atual) * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
   }
 
   formatarMoeda(valor: number): string {

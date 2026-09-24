@@ -15,9 +15,9 @@ import {
   AurumHistoryCardComponent,
   AurumHistoryEvento,
 } from '../../../shared/aurum/aurum-history-card.component';
-import { AurumPageHeaderComponent } from '../../../shared/aurum/aurum-page-header.component';
 import { AurumStatusPillComponent, AurumStatusPillTom } from '../../../shared/aurum/aurum-status-pill.component';
-import { AurumTextInputComponent } from '../../../shared/aurum/aurum-text-input.component';
+import { AurumModalComponent } from '../../../shared/aurum/aurum-modal.component';
+import { RouterLink } from '@angular/router';
 
 type AbaKyc =
   | 'empresa'
@@ -44,31 +44,49 @@ type Decisao = 'aprovar' | 'ajustes' | 'rejeitar' | 'suspender' | 'reativar';
   selector: 'app-kyc-detalhe',
   imports: [
     FormsModule,
-    AurumPageHeaderComponent,
     AurumButtonComponent,
     AurumCardComponent,
     AurumCheckboxComponent,
     AurumHistoryCardComponent,
     AurumStatusPillComponent,
-    AurumTextInputComponent,
+    AurumModalComponent,
+    RouterLink,
   ],
   templateUrl: './kyc-detalhe.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styles: [
     `
-      .kyc-detalhe__abas { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); }
-      .kyc-detalhe__aba { background: none; border: none; border-bottom: 2px solid transparent; padding: 10px 14px; cursor: pointer; font: inherit; color: var(--on-surface); }
-      .kyc-detalhe__aba[aria-selected='true'] { border-bottom-color: var(--primary-color); font-weight: 600; }
-      .kyc-detalhe__campos { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
-      .kyc-detalhe__campo { display: flex; flex-direction: column; gap: 2px; }
-      .kyc-detalhe__rotulo { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--on-surface); }
-      .kyc-detalhe__lacuna { padding: 16px; border-radius: var(--radius-sm); background: color-mix(in srgb, var(--secondary-color) 14%, transparent); }
-      .kyc-detalhe__doc { display: flex; align-items: center; gap: 12px; padding: 8px 0; }
-      .kyc-detalhe__acoes { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 20px; }
-      .kyc-detalhe__decisao { margin-top: 16px; }
-      .kyc-detalhe__pendencias { display: flex; flex-direction: column; gap: 4px; margin: 12px 0; }
-      .kyc-detalhe__erro { color: var(--erro, #b00020); }
-      .kyc-detalhe__vazio { padding: 24px; color: var(--on-surface); }
+      .kyc-detalhe__voltar { display: inline-block; margin-bottom: 16px; color: var(--primary-color); font-size: 0.8125rem; font-weight: 600; text-decoration: none; }
+      .kyc-detalhe__cabecalho { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; padding: 20px 24px; background: var(--white); border: 1px solid var(--line-subtle); border-radius: 18px; box-shadow: var(--shadow-card); }
+      .kyc-detalhe__selo { display: grid; place-items: center; flex: none; width: 52px; height: 52px; border-radius: 14px; background: var(--wine-grad); color: var(--gold-light); box-shadow: 0 6px 12px rgba(138, 0, 9, 0.25); }
+      .kyc-detalhe__selo .aurum-ico { width: 24px; height: 24px; }
+      .kyc-detalhe__titulo { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+      .kyc-detalhe__titulo h1 { margin: 0; font-size: 1.5rem; font-weight: 700; }
+      .kyc-detalhe__cabecalho p { margin: 4px 0 0; font-size: 0.8125rem; color: var(--on-surface); }
+      .kyc-detalhe__abas { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+      .kyc-detalhe__aba { padding: 8px 16px; border: 1px solid var(--line-search); border-radius: var(--radius-pill); background: var(--white); color: var(--charcoal); font: inherit; font-size: 0.78125rem; font-weight: 600; cursor: pointer; }
+      .kyc-detalhe__aba[aria-selected='true'] { border-color: var(--primary-color); background: var(--primary-color); color: var(--white); }
+      .kyc-detalhe__conteudo { border-radius: 18px; }
+      .kyc-detalhe__conteudo h2 { margin: 0 0 16px; font-size: 1.0625rem; font-weight: 700; }
+      .kyc-detalhe__campos { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+      .kyc-detalhe__campo { display: flex; flex-direction: column; gap: 4px; font-size: 0.8125rem; color: var(--charcoal); }
+      .kyc-detalhe__rotulo { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--on-surface); }
+      .kyc-detalhe__lacuna { margin: 0; padding: 12px 16px; border: 1px solid var(--warning-border); border-radius: 10px; background: var(--warning-bg); font-size: 0.8125rem; color: var(--warning); }
+      .kyc-detalhe__doc { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line-search); font-size: 0.8125rem; }
+      .kyc-detalhe__doc:last-child { border-bottom: none; }
+      .kyc-detalhe__barra { position: sticky; bottom: 0; z-index: 15; margin: 20px -40px -40px; display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding: 14px 40px; background: var(--white); box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08); }
+      @media (max-width: 900px) { .kyc-detalhe__barra { margin: 20px -16px -16px; padding: 12px 16px; flex-wrap: wrap; } }
+      .kyc-detalhe__barra-texto { margin-right: auto; font-size: 0.78125rem; color: var(--on-surface); }
+      .kyc-detalhe__decisao { display: flex; flex-direction: column; gap: 14px; }
+      .kyc-detalhe__aviso { display: flex; flex-direction: column; gap: 6px; padding: 14px 16px; border-radius: 12px; font-size: 0.8125rem; }
+      .kyc-detalhe__aviso--sucesso { border: 1px solid var(--success-border); background: var(--success-bg); color: var(--success); }
+      .kyc-detalhe__aviso--perigo { border: 1px solid var(--danger-border); background: var(--danger-bg); color: var(--danger); }
+      .kyc-detalhe__aviso span { color: var(--charcoal); }
+      .kyc-detalhe__dica { margin: 0; font-size: 0.8125rem; color: var(--on-surface); }
+      .kyc-detalhe__pendencias { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      .kyc-detalhe__pendencia { flex-direction: row !important; align-items: center; gap: 8px !important; font-weight: 500 !important; color: var(--charcoal) !important; }
+      .kyc-detalhe__erro { color: var(--danger); }
+      .kyc-detalhe__vazio { margin: 0; padding: 8px 0; color: var(--on-surface); font-size: 0.8125rem; }
     `,
   ],
 })
@@ -220,6 +238,19 @@ export class KycDetalheComponent implements OnInit {
    * Habilita o envio. Reativar é o único caso sem justificativa obrigatória — é o
    * desfazer de uma suspensão já justificada, não uma decisão nova sobre o mérito.
    */
+  /** Títulos dos modais do Figma: Aprovar (419:23295), Ajustes (419:22112), Reprovar (419:22721). */
+  tituloDecisao(): string {
+    return ({ aprovar: 'Aprovar cadastro KYC', ajustes: 'Solicitar ajustes', rejeitar: 'Reprovar cadastro KYC', suspender: 'Suspender organização', reativar: 'Reativar organização' } as Record<string, string>)[this.decisaoAberta ?? ''] ?? '';
+  }
+
+  subtituloDecisao(): string {
+    return ({ aprovar: 'Confirme a aprovação desta organização.', ajustes: 'Indique o que o solicitante precisa corrigir.', rejeitar: 'Informe o motivo da reprovação.', suspender: 'O acesso da organização fica bloqueado até a reativação.', reativar: 'A organização volta a ter acesso ao App.' } as Record<string, string>)[this.decisaoAberta ?? ''] ?? '';
+  }
+
+  rotuloConfirmar(): string {
+    return ({ aprovar: 'Confirmar aprovação', ajustes: 'Solicitar ajustes', rejeitar: 'Confirmar reprovação', suspender: 'Confirmar suspensão', reativar: 'Confirmar reativação' } as Record<string, string>)[this.decisaoAberta ?? ''] ?? 'Enviar decisão';
+  }
+
   podeEnviar(): boolean {
     if (!this.decisaoAberta) return false;
     if (this.decisaoAberta === 'reativar') return true;

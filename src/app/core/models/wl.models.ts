@@ -461,6 +461,17 @@ export interface PedidoReservaListItem {
   itensCount: number;
 }
 
+/** Status oficiais da reserva (PRD §5.8) nos tons do Figma: pendente âmbar, aprovada verde. */
+export const TOM_STATUS_PEDIDO_RESERVA: Record<string, 'neutro' | 'sucesso' | 'aviso' | 'perigo' | 'primario' | 'info'> = {
+  Solicitado: 'aviso',
+  Revisado: 'info',
+  Confirmado: 'sucesso',
+  'Itens Indisponíveis': 'perigo',
+  Cancelado: 'perigo',
+  Reservado: 'sucesso',
+  Indisponível: 'perigo',
+};
+
 export interface PedidoReservaItemDetalhe {
   id: number;
   pecaCodigo: string | null;
@@ -523,7 +534,7 @@ export type StatusPedidoInsercao = (typeof STATUS_PEDIDO_INSERCAO)[number];
  * cima do status da PI). O rótulo é sempre o nome cru do enum (já em
  * português, sem acento faltando) — não existe mapeamento de texto aqui.
  */
-export const TOM_STATUS_PEDIDO_INSERCAO: Record<string, 'neutro' | 'sucesso' | 'aviso' | 'perigo' | 'primario'> = {
+export const TOM_STATUS_PEDIDO_INSERCAO: Record<string, 'neutro' | 'sucesso' | 'aviso' | 'perigo' | 'primario' | 'info'> = {
   Novo: 'neutro',
   Aprovado: 'primario',
   Checking: 'aviso',
@@ -619,12 +630,13 @@ export interface PedidosInsercaoFiltro {
 export const STATUS_CHECKING = ['Iniciado', 'Finalizado', 'Aprovado', 'Recusado', 'Cancelado'] as const;
 export type StatusChecking = (typeof STATUS_CHECKING)[number];
 
-export const TOM_STATUS_CHECKING: Record<string, 'neutro' | 'sucesso' | 'aviso' | 'perigo' | 'primario'> = {
-  Iniciado: 'neutro',
-  Finalizado: 'sucesso',
-  Aprovado: 'primario',
+export const TOM_STATUS_CHECKING: Record<string, 'neutro' | 'sucesso' | 'aviso' | 'perigo' | 'primario' | 'info'> = {
+  // Tons do Figma `184:2`: Iniciado azul, Finalizado ouro, Aprovado verde.
+  Iniciado: 'info',
+  Finalizado: 'aviso',
+  Aprovado: 'sucesso',
   Recusado: 'perigo',
-  Cancelado: 'perigo',
+  Cancelado: 'neutro',
 };
 
 /**
