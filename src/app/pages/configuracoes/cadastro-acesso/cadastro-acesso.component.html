@@ -1,72 +1,77 @@
 <aurum-page-header
-  eyebrow="Configurações"
   titulo="Cadastro e acesso"
   subtitulo="Regras aplicadas ao cadastro público de novas organizações na exibidora"
 />
 
 @if (erro) {
-  <p role="alert" class="cadastro-acesso__vazio">{{ erro }}</p>
+  <p role="alert" class="wl-estado wl-estado--erro">{{ erro }}</p>
 }
 
 @if (carregando) {
-  <p class="cadastro-acesso__vazio">Carregando configuração…</p>
+  <p class="wl-estado wl-estado--carregando">Carregando configuração…</p>
 } @else if (config) {
-  <aurum-card>
-    <div class="cadastro-acesso__bloco">
-      <div class="cadastro-acesso__linha">
-        <h2>E-mail corporativo no cadastro</h2>
-        <aurum-status-pill [rotulo]="rotuloEstado()" [tom]="exigirEmailCorporativo ? 'sucesso' : 'neutro'" />
+  <div class="cadastro-acesso__grade">
+    <section class="cadastro-acesso__cartao">
+      <div class="cadastro-acesso__topo">
+        <span class="cadastro-acesso__selo" aria-hidden="true">
+          <span class="aurum-ico" style="--ico: url(/assets/aurum/icon-pedidos-insercao.svg)"></span>
+        </span>
+        <div class="cadastro-acesso__titulo">
+          <div class="cadastro-acesso__linha">
+            <h2>E-mail corporativo no cadastro</h2>
+            <aurum-status-pill [rotulo]="rotuloEstado()" [tom]="exigirEmailCorporativo ? 'sucesso' : 'neutro'" compacto />
+          </div>
+          <p class="cadastro-acesso__descricao">
+            Quando ativo, novos cadastros públicos não podem usar provedores de e-mail
+            pessoal ou descartável.
+          </p>
+        </div>
+        <!-- Switch do Figma sobre checkbox nativo: teclado e leitor de tela de graça. -->
+        <label class="cadastro-acesso__switch">
+          <input
+            type="checkbox"
+            role="switch"
+            [checked]="exigirEmailCorporativo"
+            (change)="alternar($any($event.target).checked)"
+            aria-label="Exigir e-mail corporativo no cadastro público"
+          />
+          <span aria-hidden="true"></span>
+        </label>
       </div>
 
-      <aurum-checkbox
-        rotulo="Exigir e-mail corporativo no cadastro público"
-        [marcado]="exigirEmailCorporativo"
-        (marcadoChange)="alternar($event)"
-      />
+      <div class="cadastro-acesso__corpo">
+        <p class="cadastro-acesso__info">ⓘ A regra vale para o cadastro público de novas organizações.</p>
+        <!-- InfoLine 2 do frame confirma o PRD §5.14: a política NÃO bloqueia convites. -->
+        <p class="cadastro-acesso__info">⊘ Convites de organizações já aprovadas continuam permitidos.</p>
 
-      <p class="cadastro-acesso__info">
-        Quando ativo, novos cadastros públicos não podem usar provedores de e-mail
-        pessoal ou descartável.
-      </p>
-      <p class="cadastro-acesso__info">
-        A regra vale para o cadastro público de novas organizações.
-      </p>
-      <!-- InfoLine 2 do frame confirma o PRD §5.14: a política NÃO bloqueia convites. -->
-      <p class="cadastro-acesso__info">
-        Convites de organizações já aprovadas continuam permitidos.
-      </p>
-    </div>
+        <h3>Prévia da mensagem no App</h3>
+        <p class="cadastro-acesso__previa">
+          Use seu e-mail corporativo para continuar. Endereços de provedores pessoais
+          não são aceitos neste cadastro.
+        </p>
 
-    <div class="cadastro-acesso__bloco">
-      <h3>Prévia da mensagem no App</h3>
-      <p class="cadastro-acesso__previa">
-        Use seu e-mail corporativo para continuar. Endereços de provedores pessoais
-        não são aceitos neste cadastro.
-      </p>
-    </div>
+        <h3>Domínios bloqueados <small>(não editável nesta versão)</small></h3>
+        <!-- A lista vem do servidor, que é quem barra. Nenhum controle de edição é
+             renderizado — ausência, não `disabled` (invariante #8). -->
+        <ul class="cadastro-acesso__dominios">
+          @for (dominio of config.DominiosBloqueados; track dominio) {
+            <li class="cadastro-acesso__dominio">{{ dominio }}</li>
+          }
+        </ul>
 
-    <div class="cadastro-acesso__bloco">
-      <h3>Domínios bloqueados (não editável nesta versão)</h3>
-      <!-- A lista vem do servidor, que é quem barra. Nenhum controle de edição é
-           renderizado — ausência, não `disabled` (invariante #8). -->
-      <ul class="cadastro-acesso__dominios">
-        @for (dominio of config.DominiosBloqueados; track dominio) {
-          <li class="cadastro-acesso__dominio">{{ dominio }}</li>
-        }
-      </ul>
-    </div>
+        <div class="cadastro-acesso__acoes">
+          @if (sujo) {
+            <span class="cadastro-acesso__sujo">Alteração ainda não salva.</span>
+            <aurum-button variante="ghost" tamanho="sm" (click)="descartar()">Descartar</aurum-button>
+          }
+          <!-- É o Salvar que aplica. Alternar o switch sozinho não persiste nada. -->
+          <aurum-button variante="wine" tamanho="sm" [desabilitado]="!sujo || salvando" (click)="salvar()">
+            Salvar alterações
+          </aurum-button>
+        </div>
+      </div>
+    </section>
 
-    <div class="cadastro-acesso__acoes">
-      <!-- É o Salvar que aplica. Alternar o switch sozinho não persiste nada. -->
-      <aurum-button variante="wine" [desabilitado]="!sujo || salvando" (click)="salvar()">
-        Salvar alterações
-      </aurum-button>
-      @if (sujo) {
-        <aurum-button variante="ghost" (click)="descartar()">Descartar</aurum-button>
-        <span class="cadastro-acesso__sujo">Alteração ainda não salva.</span>
-      }
-    </div>
-  </aurum-card>
-
-  <aurum-history-card titulo="Histórico de alterações" [eventos]="eventosHistorico()" />
+    <aurum-history-card titulo="Histórico de alterações" [eventos]="eventosHistorico()" />
+  </div>
 }
