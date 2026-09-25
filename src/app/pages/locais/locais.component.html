@@ -60,7 +60,7 @@
               <div>Formato: <strong>{{ local.formatoDimensao || '—' }}</strong></div>
             </td>
             <td aurumTableCell class="locais__direita">
-              @if (local.valorPadrao !== null) {
+              @if (local.valorPadrao != null) {
                 <div class="locais__valor">{{ formatarMoeda(local.valorPadrao) }}</div>
                 <div class="locais__periodicidade">{{ periodicidadeLabel[local.periodicidade ?? 0] || '—' }}</div>
               } @else {
@@ -73,10 +73,16 @@
                   <span class="aurum-ico locais__ico-editar" style="--ico: url(/assets/aurum/icon-editar.svg)"></span>
                   Editar
                 </aurum-button>
-                <aurum-button variante="suave" tamanho="xs" [routerLink]="['/locais', local.id, 'pecas', 'nova']">+ Peça</aurum-button>
-                <aurum-button variante="outline" tamanho="xs" [desabilitado]="excluindoId() !== null" (click)="excluir(local)">
-                  {{ excluindoId() === local.id ? 'Atualizando…' : rotuloAcao(local) }}
-                </aurum-button>
+                <!-- O frame só desenha Editar; + Peça e a troca de situação ficam num menu. -->
+                <details class="locais__menu">
+                  <summary class="locais__menu-gatilho" [attr.aria-label]="'Mais ações de ' + local.codigo">⋯</summary>
+                  <div class="locais__menu-lista">
+                    <a [routerLink]="['/locais', local.id, 'pecas', 'nova']">+ Peça</a>
+                    <button type="button" [disabled]="excluindoId() !== null" (click)="excluir(local)">
+                      {{ excluindoId() === local.id ? 'Atualizando…' : rotuloAcao(local) }}
+                    </button>
+                  </div>
+                </details>
               </div>
             </td>
           </tr>
@@ -108,7 +114,7 @@
           <div>
             <div class="locais__card-rotulo">Valor padrão</div>
             <div class="locais__card-valor">
-              @if (local.valorPadrao !== null) {
+              @if (local.valorPadrao != null) {
                 {{ formatarMoeda(local.valorPadrao) }}
               } @else {
                 <span class="locais__sem-peca">Sem peça cadastrada</span>

@@ -149,7 +149,7 @@ import { AurumStatusPillComponent } from '../../shared/aurum/aurum-status-pill.c
                         {{ abrindoFoto === foto.id ? 'Abrindo…' : 'Ver foto' }}
                       </aurum-button>
                     </div>
-                    @if (foto.nota !== null) {
+                    @if (foto.nota != null) {
                       <span>Nota: {{ foto.nota }}</span>
                     }
                     @if (foto.observacaoAvaliacao) {
@@ -166,7 +166,7 @@ import { AurumStatusPillComponent } from '../../shared/aurum/aurum-status-pill.c
                         não registrada
                       }
                     </span>
-                    @if (foto.distanciaPeca !== null) {
+                    @if (foto.distanciaPeca != null) {
                       <span>Distância da peça: {{ foto.distanciaPeca }}m</span>
                     }
                     <span class="cd-foto-card__meta">
