@@ -57,6 +57,7 @@ const GRUPOS: GrupoNav[] = [
     itens: [
       { rotulo: 'Agências', rota: '/agencias', icone: 'agencias', permissao: 'ClienteGerenciar' },
       { rotulo: 'Análises KYC', rota: '/kyc', icone: 'kyc', permissao: 'ClienteGerenciar' },
+      { rotulo: 'Cadastros do App', rota: '/kyc/app', icone: 'kyc', permissao: 'ClienteGerenciar' },
     ],
   },
   {
