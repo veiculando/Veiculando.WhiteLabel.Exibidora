@@ -362,13 +362,13 @@ export class DashboardComponent implements OnInit {
    */
   formatarMoeda(valor: number | null): string {
     if (valor === null) return '—';
-    return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    return (valor ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   }
 
   /** O Figma mostra os valores do painel sem centavos ("R$ 428.750"). */
   formatarMoedaInteira(valor: number | null): string {
     if (valor === null) return '—';
-    return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
+    return (valor ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
   }
 
   tomReserva(status: string): AurumStatusPillTom {

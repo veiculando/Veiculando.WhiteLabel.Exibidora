@@ -48,7 +48,7 @@
       }
       @if (!f.faturamentoPrevisto.disponivel) {
         <span>Fórmula e fonte de receita ainda não definidas.</span>
-      } @else if (f.faturamentoPrevisto.variacaoPercentualVsCicloAnterior !== null) {
+      } @else if (f.faturamentoPrevisto.variacaoPercentualVsCicloAnterior != null) {
         <span class="kpi__linha">
           <span class="kpi__variacao" [class.kpi__variacao--queda]="f.faturamentoPrevisto.variacaoPercentualVsCicloAnterior < 0">
             <span class="aurum-ico" style="--ico: url(/assets/aurum/icon-seta-alta.svg)"></span>

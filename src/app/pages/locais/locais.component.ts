@@ -96,7 +96,8 @@ const ABAS: { valor: Aba; rotulo: string }[] = [
       .locais__tipo {
         font-size: 0.8125rem;
         color: var(--on-surface);
-        min-width: 200px;
+        min-width: 220px;
+        max-width: 280px;
       }
       .locais__tipo div + div {
         margin-top: 4px;
@@ -127,14 +128,16 @@ const ABAS: { valor: Aba; rotulo: string }[] = [
       .locais__acoes {
         display: flex;
         align-items: center;
-        flex-direction: column;
-        justify-content: center;
+        justify-content: flex-end;
         gap: 6px;
         white-space: nowrap;
       }
-      .locais__card-rodape .locais__acoes {
-        flex-direction: row;
-      }
+      .locais__menu { position: relative; }
+      .locais__menu-gatilho { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; background: var(--wine-tint); color: var(--primary-color); font-weight: 700; cursor: pointer; list-style: none; }
+      .locais__menu-gatilho::-webkit-details-marker { display: none; }
+      .locais__menu-lista { position: absolute; right: 0; top: calc(100% + 4px); z-index: 5; display: flex; flex-direction: column; min-width: 160px; padding: 6px; border: 1px solid var(--line-subtle); border-radius: 12px; background: var(--white); box-shadow: var(--shadow-card); }
+      .locais__menu-lista a, .locais__menu-lista button { padding: 8px 10px; border: none; border-radius: 8px; background: none; font: inherit; font-size: 0.8125rem; text-align: left; color: var(--charcoal); text-decoration: none; cursor: pointer; }
+      .locais__menu-lista a:hover, .locais__menu-lista button:hover { background: var(--paper-bg); }
       .locais__cards {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -299,7 +302,7 @@ export class LocaisComponent implements OnInit {
 
   /** `pt-BR` explícito e sem centavos, como o Figma ("R$ 18.500"). */
   formatarMoeda(valor: number): string {
-    return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
+    return (valor ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
   }
 
   rotuloAcao(local: LocalListItem): string {
