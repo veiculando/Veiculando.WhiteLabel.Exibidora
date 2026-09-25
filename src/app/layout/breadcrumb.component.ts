@@ -28,6 +28,7 @@ const ROTULOS: Record<string, string> = {
   'pedidos-insercao': 'Pedidos de Inserção',
   agencias: 'Agências',
   kyc: 'Análises KYC',
+  'kyc/app': 'Cadastros do App',
   'kyc/:id': 'Detalhe da Análise KYC',
   campanhas: 'Campanhas',
   prospeccao: 'Prospecção',
@@ -39,7 +40,7 @@ const ROTULOS: Record<string, string> = {
 function rotuloDaUrl(url: string): string {
   const partes = url.split(/[?#]/)[0].split('/').filter(Boolean);
   if (partes.length === 0) return '';
-  const chave = partes.map((p, i) => (i > 0 && !['novo', 'nova', 'pecas', 'valores', 'cadastro-acesso'].includes(p) ? ':id' : p)).join('/');
+  const chave = partes.map((p, i) => (i > 0 && !['novo', 'nova', 'pecas', 'valores', 'cadastro-acesso', 'app'].includes(p) ? ':id' : p)).join('/');
   return ROTULOS[chave] ?? partes[partes.length - 1].replace(/-/g, ' ');
 }
 

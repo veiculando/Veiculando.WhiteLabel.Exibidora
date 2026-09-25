@@ -255,6 +255,13 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/kyc/kyc.component').then((m) => m.KycComponent),
       },
       {
+        path: 'kyc/app',
+        title: 'Cadastros do App',
+        data: { permission: 'ClienteGerenciar' },
+        canActivate: [authGuard],
+        loadComponent: () => import('./pages/kyc/app-review/kyc-app-review.component').then((m) => m.KycAppReviewComponent),
+      },
+      {
         path: 'kyc/:id',
         title: 'Análise KYC',
         data: { permission: 'ClienteGerenciar' },
