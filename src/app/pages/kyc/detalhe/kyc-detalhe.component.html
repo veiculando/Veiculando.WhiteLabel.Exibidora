@@ -11,9 +11,9 @@
     </span>
     <div>
       <div class="kyc-detalhe__titulo">
-        <h1>Análise #{{ detalhe.Id }}</h1>
-        <aurum-status-pill [rotulo]="rotuloTipo(detalhe.Tipo)" [tom]="rotuloTipo(detalhe.Tipo) === 'Agência' ? 'info' : 'ouro'" compacto />
-        <aurum-status-pill [rotulo]="rotuloEstado(detalhe.Estado)" [tom]="tomEstado(detalhe.Estado)" compacto />
+        <h1>Análise #{{ detalhe.id }}</h1>
+        <aurum-status-pill [rotulo]="rotuloTipo(detalhe.tipo)" [tom]="rotuloTipo(detalhe.tipo) === 'Agência' ? 'info' : 'ouro'" compacto />
+        <aurum-status-pill [rotulo]="rotuloEstado(detalhe.estado)" [tom]="tomEstado(detalhe.estado)" compacto />
       </div>
       <p>Revisão do pedido de onboarding e decisão registrada em histórico.</p>
     </div>
@@ -41,8 +41,8 @@
     @switch (aba) {
       @case ('empresa') {
         <h2>Dados da empresa</h2>
-        @if (detalhe.IdOrganizacao) {
-          <p>Organização #{{ detalhe.IdOrganizacao }} criada no sistema após a aprovação.</p>
+        @if (detalhe.idOrganizacao) {
+          <p>Organização #{{ detalhe.idOrganizacao }} criada no sistema após a aprovação.</p>
         } @else {
           <!--
             Lacuna de modelo herdada de VEI-RD-78 (plano 2): OrganizacaoOnboarding
@@ -63,14 +63,14 @@
 
       @case ('responsavel') {
         <h2>Responsável legal</h2>
-        @if (detalhe.ResponsavelLegal; as responsavel) {
+        @if (detalhe.responsavelLegal; as responsavel) {
           <div class="kyc-detalhe__campos">
-            <span class="kyc-detalhe__campo"><span class="kyc-detalhe__rotulo">Nome</span>{{ responsavel.Nome }}</span>
-            <span class="kyc-detalhe__campo"><span class="kyc-detalhe__rotulo">CPF</span>{{ responsavel.Cpf }}</span>
-            <span class="kyc-detalhe__campo"><span class="kyc-detalhe__rotulo">Cargo</span>{{ responsavel.Cargo }}</span>
-            <span class="kyc-detalhe__campo"><span class="kyc-detalhe__rotulo">E-mail</span>{{ responsavel.Email }}</span>
-            <span class="kyc-detalhe__campo"><span class="kyc-detalhe__rotulo">Celular</span>{{ responsavel.Celular }}</span>
-            <span class="kyc-detalhe__campo"><span class="kyc-detalhe__rotulo">Declaração de poderes</span>{{ responsavel.DeclaracaoPoderes }}</span>
+            <span class="kyc-detalhe__campo"><span class="kyc-detalhe__rotulo">Nome</span>{{ responsavel.nome }}</span>
+            <span class="kyc-detalhe__campo"><span class="kyc-detalhe__rotulo">CPF</span>{{ responsavel.cpf }}</span>
+            <span class="kyc-detalhe__campo"><span class="kyc-detalhe__rotulo">Cargo</span>{{ responsavel.cargo }}</span>
+            <span class="kyc-detalhe__campo"><span class="kyc-detalhe__rotulo">E-mail</span>{{ responsavel.email }}</span>
+            <span class="kyc-detalhe__campo"><span class="kyc-detalhe__rotulo">Celular</span>{{ responsavel.celular }}</span>
+            <span class="kyc-detalhe__campo"><span class="kyc-detalhe__rotulo">Declaração de poderes</span>{{ responsavel.declaracaoPoderes }}</span>
           </div>
         } @else {
           <p class="kyc-detalhe__vazio">Nenhum responsável legal informado.</p>
@@ -79,15 +79,15 @@
 
       @case ('documentos') {
         <h2>Documentos</h2>
-        @if (detalhe.Documentos.length === 0) {
+        @if (detalhe.documentos.length === 0) {
           <p class="kyc-detalhe__vazio">Nenhum documento enviado.</p>
         } @else {
-          @for (documento of detalhe.Documentos; track documento.Id) {
+          @for (documento of detalhe.documentos; track documento.id) {
             <div class="kyc-detalhe__doc">
-              <strong>{{ rotuloTipoDocumento(documento.Tipo) }}</strong>
-              <aurum-status-pill [rotulo]="rotuloStatusDocumento(documento.Status)" tom="neutro" />
-              @if (documento.MotivoPendencia) {
-                <span>{{ documento.MotivoPendencia }}</span>
+              <strong>{{ rotuloTipoDocumento(documento.tipo) }}</strong>
+              <aurum-status-pill [rotulo]="rotuloStatusDocumento(documento.status)" tom="neutro" />
+              @if (documento.motivoPendencia) {
+                <span>{{ documento.motivoPendencia }}</span>
               }
               <!-- Abre por URL temporária pedida no clique, nunca por link permanente. -->
               <aurum-button variante="ghost" (click)="abrirDocumento(documento)">Visualizar</aurum-button>
@@ -106,13 +106,13 @@
 
       @case ('usuarios') {
         <h2>Usuários e convites</h2>
-        @if (detalhe.UsuariosEConvites.length === 0) {
+        @if (detalhe.usuariosEConvites.length === 0) {
           <p class="kyc-detalhe__vazio">Nenhum convite emitido para esta organização.</p>
         } @else {
-          @for (convite of detalhe.UsuariosEConvites; track convite.Id) {
+          @for (convite of detalhe.usuariosEConvites; track convite.id) {
             <div class="kyc-detalhe__doc">
-              <strong>{{ convite.Email }}</strong>
-              <span>Expira em {{ expiracao(convite.DataExpiracao) }}</span>
+              <strong>{{ convite.email }}</strong>
+              <span>Expira em {{ expiracao(convite.dataExpiracao) }}</span>
             </div>
           }
         }
@@ -136,7 +136,7 @@
   </aurum-card>
 
   <div class="kyc-detalhe__barra">
-    <span class="kyc-detalhe__barra-texto">Análise #{{ detalhe.Id }} · {{ rotuloEstado(detalhe.Estado) }}</span>
+    <span class="kyc-detalhe__barra-texto">Análise #{{ detalhe.id }} · {{ rotuloEstado(detalhe.estado) }}</span>
     <aurum-button variante="gold" tamanho="sm" (click)="abrirDecisao('ajustes')">Solicitar ajustes</aurum-button>
     <aurum-button variante="perigo" tamanho="sm" (click)="abrirDecisao('rejeitar')">Rejeitar</aurum-button>
     <aurum-button variante="wine" tamanho="sm" (click)="abrirDecisao('aprovar')">Aprovar</aurum-button>

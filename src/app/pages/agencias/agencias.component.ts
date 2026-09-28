@@ -104,8 +104,8 @@ export class AgenciasComponent implements OnInit {
     this.erro = '';
     this.serv.listar({ status: this.aba, busca: this.busca }).subscribe({
       next: (pagina) => {
-        this.agencias = pagina.Itens;
-        this.total = pagina.Total;
+        this.agencias = pagina.itens;
+        this.total = pagina.total;
         this.carregando = false;
       },
       error: () => {
@@ -138,15 +138,15 @@ export class AgenciasComponent implements OnInit {
    * onde outras exibidoras podem estar usando. Divergência registrada ao design.
    */
   rotuloDaAcaoDeStatus(agencia: AgenciaListItem): string {
-    return agencia.Status === 1 ? 'Inativar' : 'Reativar';
+    return agencia.status === 1 ? 'Inativar' : 'Reativar';
   }
 
   alternarStatus(agencia: AgenciaListItem): void {
-    const ativar = agencia.Status !== 1;
+    const ativar = agencia.status !== 1;
     const acao = ativar ? 'reativar' : 'inativar';
-    if (!confirm(`Deseja ${acao} o vínculo com ${agencia.Nome}? A agência permanece cadastrada no sistema.`)) return;
+    if (!confirm(`Deseja ${acao} o vínculo com ${agencia.nome}? A agência permanece cadastrada no sistema.`)) return;
 
-    this.serv.alterarStatus(agencia.Id, ativar).subscribe({
+    this.serv.alterarStatus(agencia.id, ativar).subscribe({
       next: () => this.carregar(),
       error: (resposta) => {
         this.erro = resposta?.error?.message ?? 'Não foi possível alterar o vínculo.';
@@ -179,9 +179,9 @@ export class AgenciasComponent implements OnInit {
       next: (achada) => {
         // CNPJ existente propõe VÍNCULO — nunca uma segunda Agencia (PRD §8.14).
         this.consultaCnpj = achada;
-        this.consultaMensagem = achada.JaVinculadaAEstaAfiliada
-          ? `${achada.Nome} já está vinculada a esta exibidora.`
-          : `${achada.Nome} já existe no sistema. Vincule em vez de cadastrar.`;
+        this.consultaMensagem = achada.jaVinculadaAEstaAfiliada
+          ? `${achada.nome} já está vinculada a esta exibidora.`
+          : `${achada.nome} já existe no sistema. Vincule em vez de cadastrar.`;
       },
       error: () => {
         // 404 aqui é o caminho feliz: não há agência com este CNPJ, o cadastro segue.
@@ -193,7 +193,7 @@ export class AgenciasComponent implements OnInit {
 
   vincular(): void {
     if (!this.consultaCnpj) return;
-    this.serv.vincular(this.consultaCnpj.Id).subscribe({
+    this.serv.vincular(this.consultaCnpj.id).subscribe({
       next: () => {
         this.fecharForm();
         this.carregar();
@@ -226,23 +226,23 @@ export class AgenciasComponent implements OnInit {
 
   private formVazio(cnpj: string): AgenciaForm {
     return {
-      Nome: '',
-      RazaoSocial: '',
-      Cnpj: cnpj,
-      Cidade: '',
-      Uf: '',
-      Telefone: '',
-      Email: '',
-      Site: '',
-      Logradouro: '',
-      Numero: '',
-      Complemento: '',
-      Bairro: '',
-      Cep: '',
-      InscricaoEstadual: '',
-      InscricaoMunicipal: '',
-      BonificacaoVolume: 0,
-      ObservacoesAfiliada: '',
+      nome: '',
+      razaoSocial: '',
+      cnpj: cnpj,
+      cidade: '',
+      uf: '',
+      telefone: '',
+      email: '',
+      site: '',
+      logradouro: '',
+      numero: '',
+      complemento: '',
+      bairro: '',
+      cep: '',
+      inscricaoEstadual: '',
+      inscricaoMunicipal: '',
+      bonificacaoVolume: 0,
+      observacoesAfiliada: '',
     };
   }
 }

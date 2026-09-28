@@ -8,6 +8,7 @@ import {
   AgenciaListItem,
   AgenciaPorCnpj,
   CadastroAcessoConfig,
+  CampanhaDetalhe,
   CampanhaListItem,
   KycDecisao,
   KycDetalhe,
@@ -54,7 +55,7 @@ export class AgenciasService {
   }
 
   /** Condições comerciais: bonificação por volume e observações. */
-  atualizar(id: number, dto: { BonificacaoVolume: number; ObservacoesAfiliada: string }): Observable<unknown> {
+  atualizar(id: number, dto: { bonificacaoVolume: number; observacoesAfiliada: string }): Observable<unknown> {
     return this.http.put(`${this.base}/${id}`, dto);
   }
 
@@ -67,7 +68,7 @@ export class AgenciasService {
    * a `Agencia` permanece no Core, visível às outras exibidoras que a usam.
    */
   alterarStatus(id: number, ativo: boolean): Observable<unknown> {
-    return this.http.patch(`${this.base}/${id}/status`, { Ativo: ativo });
+    return this.http.patch(`${this.base}/${id}/status`, { ativo: ativo });
   }
 }
 
@@ -127,8 +128,8 @@ export class KycService {
    * um link emitido junto com a tela viveria enquanto a aba ficasse aberta, o que
    * é exatamente o que "temporária" existe para impedir.
    */
-  urlDocumento(id: number): Observable<{ Url: string; ExpiraEm: string; TtlSegundos: number }> {
-    return this.http.get<{ Url: string; ExpiraEm: string; TtlSegundos: number }>(
+  urlDocumento(id: number): Observable<{ url: string; expiraEm: string; ttlSegundos: number }> {
+    return this.http.get<{ url: string; expiraEm: string; ttlSegundos: number }>(
       `${this.base}/documentos/${id}/url`
     );
   }
@@ -144,8 +145,8 @@ export class CampanhasService {
     return this.http.get<Pagina<CampanhaListItem>>(this.base, { params: params(filtros) });
   }
 
-  obter(id: number): Observable<unknown> {
-    return this.http.get(`${this.base}/${id}`);
+  obter(id: number): Observable<CampanhaDetalhe> {
+    return this.http.get<CampanhaDetalhe>(`${this.base}/${id}`);
   }
 }
 
@@ -160,7 +161,7 @@ export class CadastroAcessoService {
   }
 
   salvar(exigir: boolean): Observable<unknown> {
-    return this.http.put(this.base, { ExigirEmailCorporativoNoCadastro: exigir });
+    return this.http.put(this.base, { exigirEmailCorporativoNoCadastro: exigir });
   }
 }
 
@@ -171,6 +172,6 @@ export class ProspeccaoService {
   private readonly base = `${environment.bffUrl}/prospeccao`;
 
   abrirSessao(anuncianteId?: number): Observable<ProspeccaoSessao> {
-    return this.http.post<ProspeccaoSessao>(`${this.base}/sessao`, { AnuncianteId: anuncianteId ?? null });
+    return this.http.post<ProspeccaoSessao>(`${this.base}/sessao`, { anuncianteId: anuncianteId ?? null });
   }
 }

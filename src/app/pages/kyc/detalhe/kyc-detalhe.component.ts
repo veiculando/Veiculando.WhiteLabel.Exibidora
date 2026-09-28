@@ -152,7 +152,7 @@ export class KycDetalheComponent implements OnInit {
   /** Aba 4 muda de nome conforme o tipo: uma Agência tem anunciantes, e vice-versa. */
   rotuloRepresentacao(): string {
     if (!this.detalhe) return 'Representação';
-    return this.detalhe.Tipo === TipoOrganizacao.Agencia ? 'Anunciantes vinculados' : 'Agências e representação';
+    return this.detalhe.tipo === TipoOrganizacao.Agencia ? 'Anunciantes vinculados' : 'Agências e representação';
   }
 
   rotuloEstado(estado: EstadoOnboarding): string {
@@ -194,8 +194,8 @@ export class KycDetalheComponent implements OnInit {
 
   /** Abre o documento por URL temporária, emitida agora. */
   abrirDocumento(documento: KycDocumento): void {
-    this.serv.urlDocumento(documento.Id).subscribe({
-      next: (link) => window.open(link.Url, '_blank', 'noopener'),
+    this.serv.urlDocumento(documento.id).subscribe({
+      next: (link) => window.open(link.url, '_blank', 'noopener'),
       error: () => (this.erro = 'Não foi possível abrir o documento.'),
     });
   }
@@ -205,12 +205,12 @@ export class KycDetalheComponent implements OnInit {
     if (!this.detalhe) return [];
     // A ordem vem do servidor e não é reordenada aqui: o append-only é garantia do
     // backend, e reordenar no cliente esconderia uma eventual quebra dela.
-    return this.detalhe.Historico.map((decisao) => ({
-      evento: decisao.Justificativa
-        ? `${this.rotuloEstado(decisao.Estado)} — ${decisao.Justificativa}`
-        : this.rotuloEstado(decisao.Estado),
-      timestamp: new Date(decisao.DataHora).toLocaleString('pt-BR'),
-      autor: decisao.Usuario ?? '—',
+    return this.detalhe.historico.map((decisao) => ({
+      evento: decisao.justificativa
+        ? `${this.rotuloEstado(decisao.estado)} — ${decisao.justificativa}`
+        : this.rotuloEstado(decisao.estado),
+      timestamp: new Date(decisao.dataHora).toLocaleString('pt-BR'),
+      autor: decisao.usuario ?? '—',
     }));
   }
 
@@ -262,10 +262,10 @@ export class KycDetalheComponent implements OnInit {
   enviarDecisao(): void {
     if (!this.detalhe || !this.decisaoAberta || !this.podeEnviar()) return;
 
-    const id = this.detalhe.Id;
+    const id = this.detalhe.id;
     const corpo = {
-      Justificativa: this.justificativa,
-      CamposPendentes: this.decisaoAberta === 'ajustes' ? this.camposPendentesSelecionados() : undefined,
+      justificativa: this.justificativa,
+      camposPendentes: this.decisaoAberta === 'ajustes' ? this.camposPendentesSelecionados() : undefined,
     };
 
     const chamadas = {
@@ -289,10 +289,10 @@ export class KycDetalheComponent implements OnInit {
 
   /** Suspender só existe para organização aprovada; reativar, só para suspensa. */
   podeSuspender(): boolean {
-    return this.detalhe?.Estado === EstadoOnboarding.Aprovado;
+    return this.detalhe?.estado === EstadoOnboarding.Aprovado;
   }
 
   podeReativar(): boolean {
-    return this.detalhe?.Estado === EstadoOnboarding.Suspenso;
+    return this.detalhe?.estado === EstadoOnboarding.Suspenso;
   }
 }

@@ -1,0 +1,29 @@
+{
+  "id": 1,
+  "nome": "Agencia Horizonte",
+  "razaoSocial": "Horizonte Comunicacao e Midia Ltda",
+  "cnpj": "11111111000191",
+  "cidade": "Sao Paulo",
+  "uf": "SP",
+  "telefone": "1100000000",
+  "email": "contato1@exemplo.invalid",
+  "site": null,
+  "inscricaoEstadual": null,
+  "inscricaoMunicipal": null,
+  "logoUrl": "",
+  "bonificacaoVolume": 0,
+  "observacoesAfiliada": null,
+  "status": 1,
+  "dataVinculo": "2026-09-23T10:51:40.18",
+  "vendaDireta": false,
+  "anunciantesVinculados": [
+    {
+      "id": 1,
+      "nome": "Cafe do Centro",
+      "razaoSocial": "Cafe do Centro Alimentos Ltda",
+      "comissaoAgencia": 0,
+      "dataInicioContrato": "2026-01-01T00:00:00",
+      "dataExpiracaoContrato": "2026-12-31T00:00:00"
+    }
+  ]
+}
