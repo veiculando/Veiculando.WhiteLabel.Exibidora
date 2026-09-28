@@ -8,13 +8,13 @@ describe('ProspeccaoComponent — VEI-RD-83', () => {
   const base = `${environment.bffUrl}/prospeccao/sessao`;
 
   const sessao = {
-    AppUrl: 'https://app.exemplo.com.br/',
-    Token: 'tok.en',
-    ExpiraEm: '2026-08-10T09:14:00Z',
-    TtlSegundos: 120,
-    FonteOrigem: 'WhiteLabel',
-    FonteAgenciaId: 7,
-    FonteUsuarioId: 42,
+    appUrl: 'https://app.exemplo.com.br/',
+    token: 'tok.en',
+    expiraEm: '2026-08-10T09:14:00Z',
+    ttlSegundos: 120,
+    fonteOrigem: 'WhiteLabel',
+    fonteAgenciaId: 7,
+    fonteUsuarioId: 42,
   };
 
   beforeEach(async () => {

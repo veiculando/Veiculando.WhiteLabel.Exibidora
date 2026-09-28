@@ -89,7 +89,7 @@ export class KycComponent implements OnInit {
   analistaId = '';
   /**
    * Data de envio — campo de data LIVRE, e aqui isso é legítimo. A regra do
-   * PRD §2.3 proíbe data livre onde o domínio exige `Periodo.Id`: período comercial
+   * PRD §2.3 proíbe data livre onde o domínio exige `Periodo.id`: período comercial
    * de veiculação. Isto é metadado do processo — não existe bissemana de envio de KYC.
    */
   dataEnvio = '';
@@ -128,8 +128,8 @@ export class KycComponent implements OnInit {
 
     this.serv.fila({ ...this.filtros(), estado: this.estadoSelecionado || undefined }).subscribe({
       next: (pagina) => {
-        this.analises = pagina.Itens;
-        this.total = pagina.Total;
+        this.analises = pagina.itens;
+        this.total = pagina.total;
         this.carregando = false;
       },
       error: () => {
@@ -190,8 +190,8 @@ export class KycComponent implements OnInit {
 
   /** Data E hora — o Figma mostra `10/08/2026 09:12`. */
   envio(item: KycFilaItem): string {
-    if (!item.DataEnvio) return '—';
-    const data = new Date(item.DataEnvio);
+    if (!item.dataEnvio) return '—';
+    const data = new Date(item.dataEnvio);
     const d = String(data.getDate()).padStart(2, '0');
     const m = String(data.getMonth() + 1).padStart(2, '0');
     const h = String(data.getHours()).padStart(2, '0');
@@ -201,11 +201,11 @@ export class KycComponent implements OnInit {
 
   /** Analista vazio renderiza travessão, não string vazia: confirma que ninguém assumiu. */
   analista(item: KycFilaItem): string {
-    return item.AnalistaNome ?? '—';
+    return item.analistaNome ?? '—';
   }
 
   assumir(item: KycFilaItem): void {
-    this.serv.assumir(item.Id).subscribe({
+    this.serv.assumir(item.id).subscribe({
       next: () => this.carregar(),
       error: (resposta) => {
         this.erro = resposta?.error?.message ?? 'Não foi possível assumir a análise.';

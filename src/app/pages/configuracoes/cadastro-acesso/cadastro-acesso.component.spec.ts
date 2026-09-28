@@ -3,21 +3,22 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { environment } from '../../../../environments/environment';
 import { CadastroAcessoComponent } from './cadastro-acesso.component';
+import { cadastroAcessoReal } from '../../../../testing/contratos/contratos';
 
 describe('CadastroAcessoComponent — VEI-RD-82', () => {
   const base = `${environment.bffUrl}/config/cadastro-acesso`;
 
   const config = {
-    ExigirEmailCorporativoNoCadastro: false,
-    DominiosBloqueados: ['gmail.com', 'hotmail.com', 'outlook.com', 'yahoo.com', 'live.com', 'icloud.com'],
-    DominiosEditaveis: false,
-    Historico: [
+    exigirEmailCorporativoNoCadastro: false,
+    dominiosBloqueados: ['gmail.com', 'hotmail.com', 'outlook.com', 'yahoo.com', 'live.com', 'icloud.com'],
+    dominiosEditaveis: false,
+    historico: [
       {
-        Id: 1,
-        ValorAnterior: 'Inativo',
-        ValorNovo: 'Ativo',
-        DataHora: '2026-08-01T14:12:00',
-        Usuario: 'Rafael Andrade',
+        id: 1,
+        valorAnterior: 'Inativo',
+        valorNovo: 'Ativo',
+        dataHora: '2026-08-01T14:12:00',
+        usuario: 'Rafael Andrade',
       },
     ],
   };
@@ -49,7 +50,7 @@ describe('CadastroAcessoComponent — VEI-RD-82', () => {
     // Seis, não quatro: o PRD §5.14 cita quatro e o frame acrescenta live.com e
     // icloud.com. A lista é do backend — o frontend só lê.
     const { texto } = montar();
-    for (const dominio of config.DominiosBloqueados) {
+    for (const dominio of config.dominiosBloqueados) {
       expect(texto()).toContain(dominio);
     }
   });
@@ -92,10 +93,10 @@ describe('CadastroAcessoComponent — VEI-RD-82', () => {
 
     const requisicao = http.expectOne(base);
     expect(requisicao.request.method).toBe('PUT');
-    expect(requisicao.request.body).toEqual({ ExigirEmailCorporativoNoCadastro: true });
+    expect(requisicao.request.body).toEqual({ exigirEmailCorporativoNoCadastro: true });
     requisicao.flush({});
 
-    http.expectOne(base).flush({ ...config, ExigirEmailCorporativoNoCadastro: true });
+    http.expectOne(base).flush({ ...config, exigirEmailCorporativoNoCadastro: true });
     // whenStable antes de ler o DOM: o PUT dispara o GET a partir da resposta, e o
     // scheduler coalescido do Angular 22 nao reavalia os @if do template so com um
     // detectChanges sincrono. Sem isto, um not.toContain passaria lendo a tela antiga.
@@ -141,7 +142,23 @@ describe('CadastroAcessoComponent — VEI-RD-82', () => {
   });
 
   it('o badge de estado sempre traz texto, nunca só cor', () => {
-    const { texto } = montar({ ...config, ExigirEmailCorporativoNoCadastro: true });
+    const { texto } = montar({ ...config, exigirEmailCorporativoNoCadastro: true });
     expect(texto()).toContain('Ativo');
+  });
+
+  describe('com a resposta real do BFF (src/testing/contratos)', () => {
+    it('renderiza a política e os domínios do preview', async () => {
+      const fixture = TestBed.createComponent(CadastroAcessoComponent);
+      const http = TestBed.inject(HttpTestingController);
+      fixture.detectChanges();
+      const real = cadastroAcessoReal();
+      http.expectOne(base).flush(real);
+      fixture.detectChanges();
+      await fixture.whenStable();
+      const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
+      expect(real.dominiosBloqueados.length).toBeGreaterThan(0);
+      for (const dominio of real.dominiosBloqueados) expect(texto).toContain(dominio);
+      expect(fixture.componentInstance.exigirEmailCorporativo).toBe(real.exigirEmailCorporativoNoCadastro);
+    });
   });
 });

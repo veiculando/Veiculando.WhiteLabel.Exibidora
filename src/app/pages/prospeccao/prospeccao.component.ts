@@ -84,7 +84,7 @@ export class ProspeccaoComponent {
    * outra aba, e a mensagem se perderia em silêncio.
    */
   private entregarAoApp(sessao: ProspeccaoSessao): void {
-    const destino = new URL('/prospeccao/entrar', sessao.AppUrl);
+    const destino = new URL('/prospeccao/entrar', sessao.appUrl);
     const aba = window.open(destino.toString(), '_blank', 'noopener=no');
 
     if (!aba) {
@@ -109,8 +109,8 @@ export class ProspeccaoComponent {
       aba.postMessage(
         {
           type: 'prospeccao-token',
-          token: sessao.Token,
-          operadorId: sessao.FonteUsuarioId,
+          token: sessao.token,
+          operadorId: sessao.fonteUsuarioId,
           anuncianteId: null,
         },
         origemApp

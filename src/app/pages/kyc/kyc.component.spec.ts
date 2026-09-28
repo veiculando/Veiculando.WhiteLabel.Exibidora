@@ -5,32 +5,33 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { KycComponent } from './kyc.component';
+import { kycFilaReal, kycResumoReal } from '../../../testing/contratos/contratos';
 
 describe('KycComponent — VEI-RD-80', () => {
   const base = `${environment.bffUrl}/kyc/analises`;
 
   const pendente = {
-    Id: 10,
-    Tipo: 0,
-    Estado: 1,
-    DataEnvio: '2026-08-10T09:12:00',
-    AnalistaId: null,
-    AnalistaNome: null,
-    Nome: null,
-    RazaoSocial: null,
-    Cnpj: null,
-    Responsavel: { Nome: 'Sérgio Ramos', Cpf: '12345678900', Email: 's@x.com' },
+    id: 10,
+    tipo: 0,
+    estado: 1,
+    dataEnvio: '2026-08-10T09:12:00',
+    analistaId: null,
+    analistaNome: null,
+    nome: null,
+    razaoSocial: null,
+    cnpj: null,
+    responsavel: { nome: 'Sérgio Ramos', cpf: '12345678900', email: 's@x.com' },
   };
 
   const aprovado = {
     ...pendente,
-    Id: 11,
-    Estado: 4,
-    AnalistaId: 3,
-    AnalistaNome: 'Rafael Andrade',
-    Nome: 'Nova Onda Ag.',
-    RazaoSocial: 'Nova Onda Publicidade e Propaganda Ltda',
-    Cnpj: '98765432000110',
+    id: 11,
+    estado: 4,
+    analistaId: 3,
+    analistaNome: 'Rafael Andrade',
+    nome: 'Nova Onda Ag.',
+    razaoSocial: 'Nova Onda Publicidade e Propaganda Ltda',
+    cnpj: '98765432000110',
   };
 
   const resumo = {
@@ -42,7 +43,7 @@ describe('KycComponent — VEI-RD-80', () => {
   };
 
   function pagina(itens: unknown[]) {
-    return { Itens: itens, Page: 1, PageSize: 25, Total: itens.length, TotalPaginas: 1 };
+    return { itens: itens, page: 1, pageSize: 25, total: itens.length, totalPaginas: 1 };
   }
 
   beforeEach(async () => {
@@ -197,5 +198,25 @@ describe('KycComponent — VEI-RD-80', () => {
     http.expectOne((r) => r.url === `${base}/resumo` && r.params.get('busca') === 'Nova Onda' && r.params.get('dataEnvio') === '2026-08-10')
       .flush(resumo);
     fixture.detectChanges();
+  });
+
+  describe('com a resposta real do BFF (src/testing/contratos)', () => {
+    it('sai de "Carregando…", lista a fila e conta os chips do preview', async () => {
+      const fixture = TestBed.createComponent(KycComponent);
+      const http = TestBed.inject(HttpTestingController);
+      fixture.detectChanges();
+      http.expectOne((r) => r.url === base).flush(kycFilaReal());
+      http.expectOne((r) => r.url === `${base}/resumo`).flush(kycResumoReal());
+      fixture.detectChanges();
+      await fixture.whenStable();
+      const el = fixture.nativeElement as HTMLElement;
+      const texto = el.textContent ?? '';
+      expect(texto).not.toContain('Carregando');
+      expect(texto).toContain('Marina Costa');
+      expect(texto).toContain('Agencia Horizonte');
+      const chips = Array.from(el.querySelectorAll('.kyc__chip')).map((c) => c.textContent ?? '');
+      expect(chips.length).toBe(5);
+      for (const chip of chips) expect(chip).toContain('1');
+    });
   });
 });

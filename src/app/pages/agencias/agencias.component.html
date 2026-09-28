@@ -58,32 +58,32 @@
         </tr>
       </thead>
       <tbody>
-        @for (agencia of agencias; track agencia.Id) {
+        @for (agencia of agencias; track agencia.id) {
           <tr aurumTableRow>
             <td aurumTableCell>
               <span class="agencias__empresa">
-                <strong>{{ agencia.Nome }}</strong>
-                <span class="agencias__razao">{{ agencia.RazaoSocial }}</span>
+                <strong>{{ agencia.nome }}</strong>
+                <span class="agencias__razao">{{ agencia.razaoSocial }}</span>
               </span>
             </td>
             <td aurumTableCell>
               <!-- Bloco agregado, como o Figma consolidou: CNPJ · Cidade/UF · e-mail · telefone -->
               <span class="agencias__contato">
-                <span>CNPJ: <strong>{{ agencia.Cnpj }}</strong></span>
-                <span>{{ agencia.Cidade }}/{{ agencia.Uf }}</span>
-                <span>{{ agencia.Email }}</span>
-                <span>{{ agencia.Telefone }}</span>
+                <span>CNPJ: <strong>{{ agencia.cnpj }}</strong></span>
+                @if (agencia.cidade) { <span>{{ agencia.cidade }}{{ agencia.uf ? '/' + agencia.uf : '' }}</span> }
+                <span>{{ agencia.email }}</span>
+                <span>{{ agencia.telefone }}</span>
               </span>
             </td>
             <td aurumTableCell>
-              <aurum-status-pill [rotulo]="rotuloDoStatus(agencia.Status)" [tom]="tomDoStatus(agencia.Status)" compacto />
+              <aurum-status-pill [rotulo]="rotuloDoStatus(agencia.status)" [tom]="tomDoStatus(agencia.status)" compacto />
             </td>
-            <td aurumTableCell class="agencias__campanhas"><strong>{{ agencia.Campanhas }}</strong> campanhas</td>
+            <td aurumTableCell class="agencias__campanhas"><strong>{{ agencia.campanhas }}</strong> campanhas</td>
             <td aurumTableCell>
               <span class="agencias__acoes">
                 <aurum-button variante="suave" tamanho="xs">Editar</aurum-button>
                 <!-- Inativação, não exclusão: o rótulo diz o que o sistema faz. -->
-                <aurum-button [variante]="agencia.Status === 1 ? 'perigo' : 'sucesso'" tamanho="xs" (click)="alternarStatus(agencia)">
+                <aurum-button [variante]="agencia.status === 1 ? 'perigo' : 'sucesso'" tamanho="xs" (click)="alternarStatus(agencia)">
                   {{ rotuloDaAcaoDeStatus(agencia) }}
                 </aurum-button>
               </span>
@@ -95,24 +95,24 @@
   </div>
 } @else {
   <div class="agencias__cards">
-    @for (agencia of agencias; track agencia.Id) {
+    @for (agencia of agencias; track agencia.id) {
       <article class="agencias__card">
         <div class="agencias__card-topo">
-          <h3>{{ agencia.Nome }}</h3>
-          <aurum-status-pill [rotulo]="rotuloDoStatus(agencia.Status)" [tom]="tomDoStatus(agencia.Status)" compacto />
+          <h3>{{ agencia.nome }}</h3>
+          <aurum-status-pill [rotulo]="rotuloDoStatus(agencia.status)" [tom]="tomDoStatus(agencia.status)" compacto />
         </div>
-        <p class="agencias__razao">{{ agencia.RazaoSocial }}</p>
+        <p class="agencias__razao">{{ agencia.razaoSocial }}</p>
         <div class="agencias__info">
-          <span><span class="aurum-ico" style="--ico: url(/assets/aurum/icon-escudo.svg)"></span> CNPJ: <strong>{{ agencia.Cnpj }}</strong></span>
-          <span><span class="aurum-ico" style="--ico: url(/assets/aurum/icon-locais.svg)"></span> {{ agencia.Cidade }}/{{ agencia.Uf }}</span>
-          <span><span class="aurum-ico" style="--ico: url(/assets/aurum/icon-pedidos-insercao.svg)"></span> {{ agencia.Email }}</span>
-          <span><span class="aurum-ico" style="--ico: url(/assets/aurum/icon-usuarios.svg)"></span> {{ agencia.Telefone }}</span>
+          <span><span class="aurum-ico" style="--ico: url(/assets/aurum/icon-escudo.svg)"></span> CNPJ: <strong>{{ agencia.cnpj }}</strong></span>
+          @if (agencia.cidade) { <span><span class="aurum-ico" style="--ico: url(/assets/aurum/icon-locais.svg)"></span> {{ agencia.cidade }}{{ agencia.uf ? '/' + agencia.uf : '' }}</span> }
+          <span><span class="aurum-ico" style="--ico: url(/assets/aurum/icon-pedidos-insercao.svg)"></span> {{ agencia.email }}</span>
+          <span><span class="aurum-ico" style="--ico: url(/assets/aurum/icon-usuarios.svg)"></span> {{ agencia.telefone }}</span>
         </div>
         <div class="agencias__card-rodape">
-          <span class="agencias__campanhas"><strong>{{ agencia.Campanhas }}</strong> campanhas vinculadas</span>
+          <span class="agencias__campanhas"><strong>{{ agencia.campanhas }}</strong> campanhas vinculadas</span>
           <span class="agencias__acoes">
             <aurum-button variante="suave" tamanho="xs">Editar</aurum-button>
-            <aurum-button [variante]="agencia.Status === 1 ? 'perigo' : 'sucesso'" tamanho="xs" (click)="alternarStatus(agencia)">
+            <aurum-button [variante]="agencia.status === 1 ? 'perigo' : 'sucesso'" tamanho="xs" (click)="alternarStatus(agencia)">
               {{ rotuloDaAcaoDeStatus(agencia) }}
             </aurum-button>
           </span>
@@ -148,30 +148,30 @@
          entidade Agencia não têm o campo (PRD §5.5). -->
     <div class="agencias__form aurum-form">
       <fieldset>
-        <label>CNPJ (Obrigatório) *<input type="text" [(ngModel)]="form.Cnpj" /></label>
-        <label>Razão social *<input type="text" [(ngModel)]="form.RazaoSocial" placeholder="Razão Social completa" /></label>
-        <label>Nome fantasia<input type="text" [(ngModel)]="form.Nome" placeholder="Nome de exibição" /></label>
-        <label>Telefone<input type="text" [(ngModel)]="form.Telefone" placeholder="(12) 99999-0000" /></label>
-        <label>E-mail de contato<input type="email" [(ngModel)]="form.Email" placeholder="midia@agencia.com.br" /></label>
-        <label>Site<input type="text" [(ngModel)]="form.Site" /></label>
-        <label>Logradouro<input type="text" [(ngModel)]="form.Logradouro" /></label>
-        <label>Número<input type="text" [(ngModel)]="form.Numero" /></label>
-        <label>Bairro<input type="text" [(ngModel)]="form.Bairro" /></label>
-        <label>CEP<input type="text" [(ngModel)]="form.Cep" /></label>
-        <label>Cidade<input type="text" [(ngModel)]="form.Cidade" /></label>
-        <label>UF<input type="text" [(ngModel)]="form.Uf" maxlength="2" /></label>
-        <label>Inscrição estadual<input type="text" [(ngModel)]="form.InscricaoEstadual" /></label>
-        <label>Inscrição municipal<input type="text" [(ngModel)]="form.InscricaoMunicipal" /></label>
-        <label>Observações<textarea [(ngModel)]="form.ObservacoesAfiliada"></textarea></label>
+        <label>CNPJ (Obrigatório) *<input type="text" [(ngModel)]="form.cnpj" /></label>
+        <label>Razão social *<input type="text" [(ngModel)]="form.razaoSocial" placeholder="Razão Social completa" /></label>
+        <label>Nome fantasia<input type="text" [(ngModel)]="form.nome" placeholder="Nome de exibição" /></label>
+        <label>Telefone<input type="text" [(ngModel)]="form.telefone" placeholder="(12) 99999-0000" /></label>
+        <label>E-mail de contato<input type="email" [(ngModel)]="form.email" placeholder="midia@agencia.com.br" /></label>
+        <label>Site<input type="text" [(ngModel)]="form.site" /></label>
+        <label>Logradouro<input type="text" [(ngModel)]="form.logradouro" /></label>
+        <label>Número<input type="text" [(ngModel)]="form.numero" /></label>
+        <label>Bairro<input type="text" [(ngModel)]="form.bairro" /></label>
+        <label>CEP<input type="text" [(ngModel)]="form.cep" /></label>
+        <label>Cidade<input type="text" [(ngModel)]="form.cidade" /></label>
+        <label>UF<input type="text" [(ngModel)]="form.uf" maxlength="2" /></label>
+        <label>Inscrição estadual<input type="text" [(ngModel)]="form.inscricaoEstadual" /></label>
+        <label>Inscrição municipal<input type="text" [(ngModel)]="form.inscricaoMunicipal" /></label>
+        <label>Observações<textarea [(ngModel)]="form.observacoesAfiliada"></textarea></label>
       </fieldset>
     </div>
   }
 
   <aurum-button aurumModalRodape variante="ghost" tamanho="sm" (click)="fecharForm()">Cancelar</aurum-button>
-  @if (!form && !(consultaCnpj && !consultaCnpj.JaVinculadaAEstaAfiliada)) {
+  @if (!form && !(consultaCnpj && !consultaCnpj.jaVinculadaAEstaAfiliada)) {
     <aurum-button aurumModalRodape variante="wine" tamanho="sm" (click)="consultarCnpj()">Consultar CNPJ</aurum-button>
   }
-  @if (consultaCnpj && !consultaCnpj.JaVinculadaAEstaAfiliada) {
+  @if (consultaCnpj && !consultaCnpj.jaVinculadaAEstaAfiliada) {
     <aurum-button aurumModalRodape variante="gold" tamanho="sm" (click)="vincular()">Vincular agência existente</aurum-button>
   }
   @if (form) {

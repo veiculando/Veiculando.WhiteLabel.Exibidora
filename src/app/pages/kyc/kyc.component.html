@@ -59,16 +59,16 @@
         </tr>
       </thead>
       <tbody>
-        @for (item of analises; track item.Id) {
+        @for (item of analises; track item.id) {
           <tr aurumTableRow>
             <td aurumTableCell>
-              <aurum-status-pill [rotulo]="rotuloTipo(item.Tipo)" [tom]="rotuloTipo(item.Tipo) === 'Agência' ? 'info' : 'ouro'" compacto />
+              <aurum-status-pill [rotulo]="rotuloTipo(item.tipo)" [tom]="rotuloTipo(item.tipo) === 'Agência' ? 'info' : 'ouro'" compacto />
             </td>
             <td aurumTableCell>
-              @if (item.Nome) {
+              @if (item.nome) {
                 <span class="kyc__empresa">
-                  <strong>{{ item.Nome }}</strong>
-                  <span class="kyc__razao">{{ item.RazaoSocial }}</span>
+                  <strong>{{ item.nome }}</strong>
+                  <span class="kyc__razao">{{ item.razaoSocial }}</span>
                 </span>
               } @else {
                 <!-- Lacuna de modelo herdada de VEI-RD-78: OrganizacaoOnboarding não
@@ -77,20 +77,20 @@
                 <span class="kyc__pendente">Dados da empresa disponíveis após a aprovação</span>
               }
             </td>
-            <td aurumTableCell>{{ item.Cnpj ?? '—' }}</td>
-            <td aurumTableCell>{{ item.Responsavel?.Nome ?? '—' }}</td>
+            <td aurumTableCell>{{ item.cnpj ?? '—' }}</td>
+            <td aurumTableCell>{{ item.responsavel?.nome ?? '—' }}</td>
             <td aurumTableCell class="kyc__envio">{{ envio(item) }}</td>
             <td aurumTableCell>
-              <aurum-status-pill [rotulo]="rotuloEstado(item.Estado)" [tom]="tomEstado(item.Estado)" />
+              <aurum-status-pill [rotulo]="rotuloEstado(item.estado)" [tom]="tomEstado(item.estado)" />
             </td>
             <td aurumTableCell>{{ analista(item) }}</td>
             <td aurumTableCell>
               <span class="kyc__acoes">
-                <a class="kyc__acao" [routerLink]="['/kyc', item.Id]" title="Abrir análise">
+                <a class="kyc__acao" [routerLink]="['/kyc', item.id]" title="Abrir análise">
                   <span class="aurum-ico" style="--ico: url(/assets/aurum/icon-olho.svg)"></span>
                   <span class="aurum-sr">Abrir</span>
                 </a>
-                @if (!item.AnalistaId) {
+                @if (!item.analistaId) {
                   <button type="button" class="kyc__acao kyc__acao--ouro" title="Assumir análise" (click)="assumir(item)">
                     <span class="aurum-ico" style="--ico: url(/assets/aurum/icon-assumir.svg)"></span>
                     <span class="aurum-sr">Assumir</span>

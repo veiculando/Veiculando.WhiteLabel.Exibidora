@@ -4,34 +4,35 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { environment } from '../../../environments/environment';
 import { CampanhasComponent } from './campanhas.component';
+import { campanhasListaReal } from '../../../testing/contratos/contratos';
 
 describe('CampanhasComponent — VEI-RD-51 (módulo consultivo)', () => {
   const base = `${environment.bffUrl}/campanhas`;
 
   const campanha = {
-    Id: 1,
-    Codigo: 'CMP-2026-091',
-    Nome: 'Lançamento Residencial Andrômeda',
-    Status: 1,
-    DataInicioPrevisto: '2026-08-03T00:00:00',
-    DataFimPrevisto: '2026-08-16T00:00:00',
-    Anunciante: 'Construtora Vale Sul',
-    Agencia: 'Ímpar Propaganda',
-    Periodo: {
-      Id: 16,
-      Codigo: 'Bissemana 16 — 2026',
-      Periodicidade: 0,
-      DataInicio: '2026-08-03T00:00:00',
-      DataFim: '2026-08-16T00:00:00',
+    id: 1,
+    codigo: 'CMP-2026-091',
+    nome: 'Lançamento Residencial Andrômeda',
+    status: 1,
+    dataInicioPrevisto: '2026-08-03T00:00:00',
+    dataFimPrevisto: '2026-08-16T00:00:00',
+    anunciante: 'Construtora Vale Sul',
+    agencia: 'Ímpar Propaganda',
+    periodo: {
+      id: 16,
+      codigo: 'Bissemana 16 — 2026',
+      periodicidade: 0,
+      dataInicio: '2026-08-03T00:00:00',
+      dataFim: '2026-08-16T00:00:00',
     },
-    Pecas: 4,
-    ValorTotal: 44000,
+    pecas: 4,
+    valorTotal: 44000,
   };
 
-  const semAgencia = { ...campanha, Id: 2, Nome: 'Campanha Direta', Agencia: null };
+  const semAgencia = { ...campanha, id: 2, nome: 'Campanha Direta', agencia: null };
 
   function pagina(itens: unknown[]) {
-    return { Itens: itens, Page: 1, PageSize: 25, Total: itens.length, TotalPaginas: 1 };
+    return { itens: itens, page: 1, pageSize: 25, total: itens.length, totalPaginas: 1 };
   }
 
   beforeEach(async () => {
@@ -139,5 +140,22 @@ describe('CampanhasComponent — VEI-RD-51 (módulo consultivo)', () => {
   it('o valor total vem formatado como moeda, somado no servidor', () => {
     const { texto } = montar();
     expect(texto()).toContain('44.000');
+  });
+
+  describe('com a resposta real do BFF (src/testing/contratos)', () => {
+    it('sai de "Carregando…" e lista a campanha do preview', async () => {
+      const fixture = TestBed.createComponent(CampanhasComponent);
+      const http = TestBed.inject(HttpTestingController);
+      fixture.detectChanges();
+      http.expectOne((r) => r.url === base).flush(campanhasListaReal());
+      fixture.detectChanges();
+      await fixture.whenStable();
+      const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
+      expect(texto).not.toContain('Carregando');
+      expect(texto).toContain('AURINV26');
+      expect(texto).toContain('Campanha Inverno 2026');
+      expect(texto).toContain('Cafe do Centro');
+      expect(texto).toContain('AUR-AGO26');
+    });
   });
 });

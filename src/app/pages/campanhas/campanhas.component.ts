@@ -103,8 +103,8 @@ export class CampanhasComponent implements OnInit {
     this.erro = '';
     this.serv.listar({ status: this.status || undefined, nome: this.busca || undefined }).subscribe({
       next: (pagina) => {
-        this.campanhas = pagina.Itens;
-        this.total = pagina.Total;
+        this.campanhas = pagina.itens;
+        this.total = pagina.total;
         this.carregando = false;
       },
       error: () => {
@@ -128,7 +128,7 @@ export class CampanhasComponent implements OnInit {
    * Venda sem agência não é ausência de agência — é a agência-espelho da exibidora.
    */
   agencia(campanha: CampanhaListItem): string {
-    return campanha.Agencia || 'Venda Direta (Sem Agência)';
+    return campanha.agencia || 'Venda Direta (Sem Agência)';
   }
 
   /**
@@ -137,13 +137,13 @@ export class CampanhasComponent implements OnInit {
    */
   periodo(periodo: CampanhaPeriodo | null): string {
     if (!periodo) return '—';
-    const inicio = new Date(periodo.DataInicio).toLocaleDateString('pt-BR');
-    const fim = new Date(periodo.DataFim).toLocaleDateString('pt-BR');
-    return `${periodo.Codigo} (${inicio} - ${fim})`;
+    const inicio = new Date(periodo.dataInicio).toLocaleDateString('pt-BR');
+    const fim = new Date(periodo.dataFim).toLocaleDateString('pt-BR');
+    return `${periodo.codigo} (${inicio} - ${fim})`;
   }
 
   valor(campanha: CampanhaListItem): string {
-    return (campanha.ValorTotal ?? 0).toLocaleString('pt-BR', {
+    return (campanha.valorTotal ?? 0).toLocaleString('pt-BR', {
       style: 'currency',
       currency: 'BRL',
       minimumFractionDigits: 0,
