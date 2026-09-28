@@ -1,0 +1,13 @@
+{
+  "exigirEmailCorporativoNoCadastro": false,
+  "dominiosBloqueados": [
+    "gmail.com",
+    "hotmail.com",
+    "outlook.com",
+    "yahoo.com",
+    "live.com",
+    "icloud.com"
+  ],
+  "dominiosEditaveis": false,
+  "historico": []
+}

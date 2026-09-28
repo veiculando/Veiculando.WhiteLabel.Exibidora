@@ -84,8 +84,8 @@ export class CadastroAcessoComponent implements OnInit {
     this.serv.obter().subscribe({
       next: (config) => {
         this.config = config;
-        this.valorPersistido = config.ExigirEmailCorporativoNoCadastro;
-        this.exigirEmailCorporativo = config.ExigirEmailCorporativoNoCadastro;
+        this.valorPersistido = config.exigirEmailCorporativoNoCadastro;
+        this.exigirEmailCorporativo = config.exigirEmailCorporativoNoCadastro;
         this.carregando = false;
       },
       error: () => {
@@ -132,10 +132,10 @@ export class CadastroAcessoComponent implements OnInit {
   /** Formato do Figma: `Inativo → Ativo` · `Rafael Andrade · 01/08/2026 14:12`. */
   eventosHistorico(): AurumHistoryEvento[] {
     if (!this.config) return [];
-    return this.config.Historico.map((item) => ({
-      evento: `${item.ValorAnterior} → ${item.ValorNovo}`,
-      timestamp: new Date(item.DataHora).toLocaleString('pt-BR'),
-      autor: item.Usuario ?? '—',
+    return this.config.historico.map((item) => ({
+      evento: `${item.valorAnterior} → ${item.valorNovo}`,
+      timestamp: new Date(item.dataHora).toLocaleString('pt-BR'),
+      autor: item.usuario ?? '—',
     }));
   }
 }

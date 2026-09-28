@@ -9,26 +9,26 @@ describe('KycDetalheComponent — VEI-RD-81', () => {
   const base = `${environment.bffUrl}/kyc/analises/10`;
 
   const detalhe = {
-    Id: 10,
-    Tipo: 0,
-    Estado: 2,
-    DataEnvio: '2026-08-10T09:12:00',
-    DataDecisao: null,
-    IdOrganizacao: null,
-    AnalistaId: 3,
-    AnalistaNome: 'Rafael Andrade',
-    ResponsavelLegal: {
-      Nome: 'Sérgio Ramos',
-      Cpf: '12345678900',
-      Cargo: 'Diretor',
-      Email: 'sergio@impar.com.br',
-      Celular: '12999998888',
-      DeclaracaoPoderes: 'Contrato social cláusula 7',
+    id: 10,
+    tipo: 0,
+    estado: 2,
+    dataEnvio: '2026-08-10T09:12:00',
+    dataDecisao: null,
+    idOrganizacao: null,
+    analistaId: 3,
+    analistaNome: 'Rafael Andrade',
+    responsavelLegal: {
+      nome: 'Sérgio Ramos',
+      cpf: '12345678900',
+      cargo: 'Diretor',
+      email: 'sergio@impar.com.br',
+      celular: '12999998888',
+      declaracaoPoderes: 'Contrato social cláusula 7',
     },
-    Documentos: [{ Id: 55, Tipo: 0, Status: 0, MotivoPendencia: null }],
-    UsuariosEConvites: [],
-    Historico: [
-      { Id: 1, Estado: 2, Justificativa: 'Assumido para análise', CamposPendentesJson: null, DataHora: '2026-08-10T10:00:00', Usuario: 'Rafael Andrade' },
+    documentos: [{ id: 55, tipo: 0, status: 0, motivoPendencia: null }],
+    usuariosEConvites: [],
+    historico: [
+      { id: 1, estado: 2, justificativa: 'Assumido para análise', camposPendentesJson: null, dataHora: '2026-08-10T10:00:00', usuario: 'Rafael Andrade' },
     ],
   };
 
@@ -71,7 +71,7 @@ describe('KycDetalheComponent — VEI-RD-81', () => {
     const outra = TestBed.createComponent(KycDetalheComponent);
     const http = TestBed.inject(HttpTestingController);
     outra.detectChanges();
-    http.expectOne(base).flush({ ...detalhe, Tipo: 1 });
+    http.expectOne(base).flush({ ...detalhe, tipo: 1 });
     outra.detectChanges();
     expect(abas(outra).map((a) => a.textContent?.trim())).toContain('Agências e representação');
   });
@@ -115,9 +115,9 @@ describe('KycDetalheComponent — VEI-RD-81', () => {
       .click();
 
     http.expectOne(`${environment.bffUrl}/kyc/documentos/55/url`).flush({
-      Url: '/api/wl/kyc/documentos/55/conteudo?token=abc',
-      ExpiraEm: '2026-08-10T09:17:00Z',
-      TtlSegundos: 300,
+      url: '/api/wl/kyc/documentos/55/conteudo?token=abc',
+      expiraEm: '2026-08-10T09:17:00Z',
+      ttlSegundos: 300,
     });
     fixture.detectChanges();
 
@@ -155,8 +155,8 @@ describe('KycDetalheComponent — VEI-RD-81', () => {
 
     const requisicao = http.expectOne(`${base}/ajustes`);
     expect(requisicao.request.body).toEqual({
-      Justificativa: 'Faltam documentos.',
-      CamposPendentes: ['Contrato social'],
+      justificativa: 'Faltam documentos.',
+      camposPendentes: ['Contrato social'],
     });
     requisicao.flush({});
     http.expectOne(base).flush(detalhe);
@@ -170,14 +170,14 @@ describe('KycDetalheComponent — VEI-RD-81', () => {
   });
 
   it('organização aprovada oferece suspender, e suspensa oferece reativar', () => {
-    const aprovada = montar({ ...detalhe, Estado: 4 });
+    const aprovada = montar({ ...detalhe, estado: 4 });
     expect(aprovada.texto()).toContain('Suspender');
     expect(aprovada.texto()).not.toContain('Reativar');
 
     const outra = TestBed.createComponent(KycDetalheComponent);
     const http = TestBed.inject(HttpTestingController);
     outra.detectChanges();
-    http.expectOne(base).flush({ ...detalhe, Estado: 6 });
+    http.expectOne(base).flush({ ...detalhe, estado: 6 });
     outra.detectChanges();
     const texto = (outra.nativeElement as HTMLElement).textContent ?? '';
     expect(texto).toContain('Reativar');
@@ -185,7 +185,7 @@ describe('KycDetalheComponent — VEI-RD-81', () => {
 
   it('reativar é a única decisão que não exige justificativa', () => {
     // É o desfazer de uma suspensão já justificada, não uma decisão nova.
-    const { fixture } = montar({ ...detalhe, Estado: 6 });
+    const { fixture } = montar({ ...detalhe, estado: 6 });
     fixture.componentInstance.abrirDecisao('reativar');
     expect(fixture.componentInstance.podeEnviar()).toBe(true);
   });

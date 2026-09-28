@@ -54,7 +54,7 @@
         <!-- A lista vem do servidor, que é quem barra. Nenhum controle de edição é
              renderizado — ausência, não `disabled` (invariante #8). -->
         <ul class="cadastro-acesso__dominios">
-          @for (dominio of config.DominiosBloqueados; track dominio) {
+          @for (dominio of config.dominiosBloqueados; track dominio) {
             <li class="cadastro-acesso__dominio">{{ dominio }}</li>
           }
         </ul>

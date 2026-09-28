@@ -1,0 +1,88 @@
+{
+  "itens": [
+    {
+      "id": 1,
+      "tipo": 1,
+      "estado": 1,
+      "dataEnvio": "2026-09-21T10:51:40.18",
+      "analistaId": null,
+      "analistaNome": null,
+      "nome": null,
+      "razaoSocial": null,
+      "cnpj": null,
+      "responsavel": {
+        "nome": "Marina Costa",
+        "cpf": "10000001111",
+        "email": "contato2@exemplo.invalid"
+      }
+    },
+    {
+      "id": 2,
+      "tipo": 0,
+      "estado": 2,
+      "dataEnvio": "2026-09-18T10:51:40.18",
+      "analistaId": null,
+      "analistaNome": null,
+      "nome": null,
+      "razaoSocial": null,
+      "cnpj": null,
+      "responsavel": {
+        "nome": "Rafael Lima",
+        "cpf": "10000003333",
+        "email": "contato4@exemplo.invalid"
+      }
+    },
+    {
+      "id": 3,
+      "tipo": 1,
+      "estado": 3,
+      "dataEnvio": "2026-09-14T10:51:40.18",
+      "analistaId": null,
+      "analistaNome": null,
+      "nome": null,
+      "razaoSocial": null,
+      "cnpj": null,
+      "responsavel": {
+        "nome": "Bianca Moraes",
+        "cpf": "10000005555",
+        "email": "contato6@exemplo.invalid"
+      }
+    },
+    {
+      "id": 4,
+      "tipo": 1,
+      "estado": 5,
+      "dataEnvio": "2026-09-09T10:51:40.18",
+      "analistaId": null,
+      "analistaNome": null,
+      "nome": null,
+      "razaoSocial": null,
+      "cnpj": null,
+      "responsavel": {
+        "nome": "Carlos Vieira",
+        "cpf": "10000007777",
+        "email": "contato8@exemplo.invalid"
+      }
+    },
+    {
+      "id": 5,
+      "tipo": 0,
+      "estado": 4,
+      "dataEnvio": "2026-09-03T10:51:40.18",
+      "analistaId": null,
+      "analistaNome": null,
+      "nome": "Agencia Horizonte",
+      "razaoSocial": "Horizonte Comunicacao e Midia Ltda",
+      "cnpj": "11111111000191",
+      "responsavel": {
+        "nome": "Helena Prado",
+        "cpf": "10000009999",
+        "email": "contato10@exemplo.invalid"
+      }
+    }
+  ],
+  "page": 1,
+  "pageSize": 25,
+  "total": 5,
+  "totalPaginas": 1
+}

@@ -1,65 +1,67 @@
 /**
  * Modelos das telas comerciais e de KYC da sprint 10 — VEI-RD-79, 80, 81, 82, 51, 83.
  *
- * Os nomes espelham o que o BFF devolve, em PascalCase, porque é assim que o
- * ASP.NET serializa os tipos anônimos destes endpoints. Renomear no cliente criaria
- * um mapa de tradução que precisaria ser mantido em sincronia com o servidor — o
- * mesmo tipo de duplicação que a lista de domínios bloqueados já custou uma vez.
+ * Os nomes espelham o JSON que o BFF devolve: camelCase, a serialização padrão do
+ * ASP.NET (o BFF não configura naming policy). A única exceção são CHAVES de
+ * dicionário (`KycResumo`), que o serializador não reescreve e chegam com o nome
+ * do enum. As fixtures em `src/testing/contratos/` são respostas reais do preview
+ * e travam este contrato nos testes.
  */
 
 /** Página paginada devolvida por `WlPaginacao.Montar`. */
 export interface Pagina<T> {
-  Itens: T[];
-  Page: number;
-  PageSize: number;
-  Total: number;
-  TotalPaginas: number;
+  itens: T[];
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPaginas: number;
 }
 
 /** `StatusVinculoEnum` do domínio: 0 = Inativo, 1 = Ativo. */
 export type StatusVinculo = 0 | 1;
 
 export interface AgenciaListItem {
-  Id: number;
-  Nome: string;
-  RazaoSocial: string;
-  Cnpj: string;
-  Cidade: string;
-  Uf: string;
-  Email: string;
-  Telefone: string;
-  Status: StatusVinculo;
+  id: number;
+  nome: string;
+  razaoSocial: string;
+  cnpj: string;
+  cidade: string;
+  uf: string;
+  email: string;
+  telefone: string;
+  status: StatusVinculo;
   /** Contagem agregada no servidor — nunca somada no navegador. */
-  Campanhas: number;
+  campanhas: number;
 }
 
-export interface AgenciaDetalhe extends AgenciaListItem {
-  Site: string;
-  InscricaoEstadual: string;
-  InscricaoMunicipal: string;
-  LogoUrl: string;
-  BonificacaoVolume: number;
-  ObservacoesAfiliada: string;
-  DataVinculo: string;
+/** O detalhe não traz a contagem de campanhas — só a lista agrega. */
+export interface AgenciaDetalhe extends Omit<AgenciaListItem, 'campanhas'> {
+  site: string;
+  inscricaoEstadual: string;
+  inscricaoMunicipal: string;
+  logoUrl: string;
+  bonificacaoVolume: number;
+  observacoesAfiliada: string;
+  dataVinculo: string;
   /** Espelho de venda direta: a ação de inativar não é desenhada para ela. */
-  VendaDireta: boolean;
-  AnunciantesVinculados: {
-    Id: number;
-    Nome: string;
-    RazaoSocial: string;
-    ComissaoAgencia: number;
-    DataInicioContrato: string;
-    DataExpiracaoContrato: string;
+  vendaDireta: boolean;
+  anunciantesVinculados: {
+    id: number;
+    nome: string;
+    razaoSocial: string;
+    comissaoAgencia: number;
+    dataInicioContrato: string;
+    dataExpiracaoContrato: string;
   }[];
 }
 
 export interface AgenciaPorCnpj {
-  Id: number;
-  Nome: string;
-  RazaoSocial: string;
-  Cnpj: string;
-  JaVinculadaAEstaAfiliada: boolean;
-  PropostaDeVinculo: boolean;
+  id: number;
+  nome: string;
+  razaoSocial: string;
+  cnpj: string;
+  jaVinculadaAEstaAfiliada: boolean;
+  propostaDeVinculo: boolean;
 }
 
 /**
@@ -70,23 +72,23 @@ export interface AgenciaPorCnpj {
  * `Cliente`, que tem. Um campo aqui não teria onde ser gravado.
  */
 export interface AgenciaForm {
-  Nome: string;
-  RazaoSocial: string;
-  Cnpj: string;
-  Cidade: string;
-  Uf: string;
-  Telefone: string;
-  Email: string;
-  Site: string;
-  Logradouro: string;
-  Numero: string;
-  Complemento: string;
-  Bairro: string;
-  Cep: string;
-  InscricaoEstadual: string;
-  InscricaoMunicipal: string;
-  BonificacaoVolume: number;
-  ObservacoesAfiliada: string;
+  nome: string;
+  razaoSocial: string;
+  cnpj: string;
+  cidade: string;
+  uf: string;
+  telefone: string;
+  email: string;
+  site: string;
+  logradouro: string;
+  numero: string;
+  complemento: string;
+  bairro: string;
+  cep: string;
+  inscricaoEstadual: string;
+  inscricaoMunicipal: string;
+  bonificacaoVolume: number;
+  observacoesAfiliada: string;
 }
 
 /** `EstadoOnboardingEnum`. A fila enxerga 5 dos 7. */
@@ -107,124 +109,150 @@ export enum TipoOrganizacao {
 }
 
 export interface KycFilaItem {
-  Id: number;
-  Tipo: TipoOrganizacao;
-  Estado: EstadoOnboarding;
-  DataEnvio: string | null;
-  AnalistaId: number | null;
-  AnalistaNome: string | null;
+  id: number;
+  tipo: TipoOrganizacao;
+  estado: EstadoOnboarding;
+  dataEnvio: string | null;
+  analistaId: number | null;
+  analistaNome: string | null;
   /**
    * `null` enquanto o KYC não foi aprovado — ver a lacuna de modelo documentada em
    * `KycController`. É `null`, e não string vazia, exatamente para a tela distinguir
    * "ainda não existe" de "veio em branco".
    */
-  Nome: string | null;
-  RazaoSocial: string | null;
-  Cnpj: string | null;
-  Responsavel: { Nome: string; Cpf: string; Email: string } | null;
+  nome: string | null;
+  razaoSocial: string | null;
+  cnpj: string | null;
+  responsavel: { nome: string; cpf: string; email: string } | null;
 }
 
 /** Contagem por estado, chaveada pelo nome do enum. */
 export type KycResumo = Record<string, number>;
 
 export interface KycDocumento {
-  Id: number;
+  id: number;
   /** `TipoDocumentoOnboardingEnum`: 0 ContratoSocial, 1 Identificacao, 2 Procuracao. */
-  Tipo: number;
+  tipo: number;
   /** `StatusDocumentoOnboardingEnum`: 0 Pendente, 1 Aprovado, 2 Rejeitado. */
-  Status: number;
-  MotivoPendencia: string | null;
+  status: number;
+  motivoPendencia: string | null;
 }
 
 export interface KycDecisaoHistorico {
-  Id: number;
-  Estado: EstadoOnboarding;
-  Justificativa: string | null;
-  CamposPendentesJson: string | null;
-  DataHora: string;
-  Usuario: string | null;
+  id: number;
+  estado: EstadoOnboarding;
+  justificativa: string | null;
+  camposPendentesJson: string | null;
+  dataHora: string;
+  usuario: string | null;
 }
 
 export interface KycDetalhe {
-  Id: number;
-  Tipo: TipoOrganizacao;
-  Estado: EstadoOnboarding;
-  DataEnvio: string | null;
-  DataDecisao: string | null;
-  IdOrganizacao: number | null;
-  AnalistaId: number | null;
-  AnalistaNome: string | null;
-  ResponsavelLegal: {
-    Nome: string;
-    Cpf: string;
-    Cargo: string;
-    Email: string;
-    Celular: string;
-    DeclaracaoPoderes: string;
+  id: number;
+  tipo: TipoOrganizacao;
+  estado: EstadoOnboarding;
+  dataEnvio: string | null;
+  dataDecisao: string | null;
+  idOrganizacao: number | null;
+  analistaId: number | null;
+  analistaNome: string | null;
+  responsavelLegal: {
+    nome: string;
+    cpf: string;
+    cargo: string;
+    email: string;
+    celular: string;
+    declaracaoPoderes: string;
   } | null;
-  Documentos: KycDocumento[];
-  UsuariosEConvites: {
-    Id: number;
-    Email: string;
-    Papel: number | null;
-    Estado: number;
-    Audience: number;
-    DataExpiracao: string;
+  documentos: KycDocumento[];
+  usuariosEConvites: {
+    id: number;
+    email: string;
+    papel: number | null;
+    estado: number;
+    audience: number;
+    dataExpiracao: string;
   }[];
-  Historico: KycDecisaoHistorico[];
+  historico: KycDecisaoHistorico[];
 }
 
 export interface KycDecisao {
-  Justificativa: string;
+  justificativa: string;
   /** Obrigatório em `/ajustes` — validado no servidor, não só no formulário. */
-  CamposPendentes?: string[];
+  camposPendentes?: string[];
 }
 
 export interface CampanhaPeriodo {
-  Id: number;
-  Codigo: string;
+  id: number;
+  codigo: string;
   /** `PeriodicidadeEnum`. Mensal formata diferente de bissemana. */
-  Periodicidade: number;
-  DataInicio: string;
-  DataFim: string;
+  periodicidade: number;
+  dataInicio: string;
+  dataFim: string;
 }
 
 export interface CampanhaListItem {
-  Id: number;
-  Codigo: string;
-  Nome: string;
+  id: number;
+  codigo: string;
+  nome: string;
   /** `StatusCampanhaEnum`. */
-  Status: number;
-  DataInicioPrevisto: string;
-  DataFimPrevisto: string;
-  Anunciante: string;
+  status: number;
+  dataInicioPrevisto: string;
+  dataFimPrevisto: string;
+  anunciante: string;
   /** Vazio vira "Venda Direta (Sem Agência)" na tela — nunca travessão. */
-  Agencia: string | null;
-  Periodo: CampanhaPeriodo | null;
-  Pecas: number;
-  ValorTotal: number;
+  agencia: string | null;
+  periodo: CampanhaPeriodo | null;
+  pecas: number;
+  valorTotal: number;
+}
+
+export interface CampanhaPedido {
+  id: number;
+  codigo: string;
+  status: number;
+  statusPagamento: number;
+  periodo: CampanhaPeriodo | null;
+  pecas: number;
+  valor: number;
+}
+
+/** Detalhe de campanha (`GET /campanhas/{id}`): os valores ficam nos pedidos. */
+export interface CampanhaDetalhe {
+  id: number;
+  codigo: string;
+  nome: string;
+  produto: string | null;
+  job: string | null;
+  status: number;
+  dataInicioPrevisto: string;
+  dataFimPrevisto: string;
+  verba: number | null;
+  anunciante: string;
+  agencia: string | null;
+  pedidos: CampanhaPedido[];
 }
 
 export interface CadastroAcessoConfig {
-  ExigirEmailCorporativoNoCadastro: boolean;
+  exigirEmailCorporativoNoCadastro: boolean;
   /** Servida pelo backend. O frontend só lê e exibe. */
-  DominiosBloqueados: string[];
-  DominiosEditaveis: boolean;
-  Historico: {
-    Id: number;
-    ValorAnterior: string;
-    ValorNovo: string;
-    DataHora: string;
-    Usuario: string | null;
+  dominiosBloqueados: string[];
+  dominiosEditaveis: boolean;
+  historico: {
+    id: number;
+    valorAnterior: string;
+    valorNovo: string;
+    dataHora: string;
+    usuario: string | null;
   }[];
 }
 
 export interface ProspeccaoSessao {
-  AppUrl: string;
-  Token: string;
-  ExpiraEm: string;
-  TtlSegundos: number;
-  FonteOrigem: string;
-  FonteAgenciaId: number;
-  FonteUsuarioId: number;
+  appUrl: string;
+  token: string;
+  expiraEm: string;
+  ttlSegundos: number;
+  fonteOrigem: string;
+  fonteAgenciaId: number;
+  fonteUsuarioId: number;
 }

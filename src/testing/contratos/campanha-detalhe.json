@@ -1,0 +1,30 @@
+{
+  "id": 1,
+  "codigo": "AURINV26",
+  "nome": "Campanha Inverno 2026",
+  "produto": null,
+  "job": null,
+  "status": 1,
+  "dataInicioPrevisto": "2026-08-17T00:00:00",
+  "dataFimPrevisto": "2026-08-30T00:00:00",
+  "verba": null,
+  "anunciante": "Cafe do Centro",
+  "agencia": "Agencia Horizonte",
+  "pedidos": [
+    {
+      "id": 1,
+      "codigo": "PED-AUR-001",
+      "status": 0,
+      "statusPagamento": 0,
+      "periodo": {
+        "id": 1,
+        "codigo": "AUR-AGO26",
+        "periodicidade": 0,
+        "dataInicio": "2026-08-17T00:00:00",
+        "dataFim": "2026-08-30T00:00:00"
+      },
+      "pecas": 1,
+      "valor": 16500
+    }
+  ]
+}

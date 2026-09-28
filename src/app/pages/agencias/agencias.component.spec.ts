@@ -4,27 +4,28 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { environment } from '../../../environments/environment';
 import { AgenciasComponent } from './agencias.component';
+import { agenciaPorCnpjReal, agenciasListaReal } from '../../../testing/contratos/contratos';
 
 describe('AgenciasComponent — VEI-RD-79', () => {
   const base = `${environment.bffUrl}/agencias`;
 
   const impar = {
-    Id: 1,
-    Nome: 'Ímpar Propaganda',
-    RazaoSocial: 'Ímpar Propaganda e Mídia Ltda',
-    Cnpj: '12345678000190',
-    Cidade: 'São José dos Campos',
-    Uf: 'SP',
-    Email: 'contato@impar.com.br',
-    Telefone: '(12) 3622-1000',
-    Status: 1 as const,
-    Campanhas: 14,
+    id: 1,
+    nome: 'Ímpar Propaganda',
+    razaoSocial: 'Ímpar Propaganda e Mídia Ltda',
+    cnpj: '12345678000190',
+    cidade: 'São José dos Campos',
+    uf: 'SP',
+    email: 'contato@impar.com.br',
+    telefone: '(12) 3622-1000',
+    status: 1 as const,
+    campanhas: 14,
   };
 
-  const inativa = { ...impar, Id: 2, Nome: 'Agência Parada', Status: 0 as const, Campanhas: 0 };
+  const inativa = { ...impar, id: 2, nome: 'Agência Parada', status: 0 as const, campanhas: 0 };
 
   function pagina(itens: unknown[]) {
-    return { Itens: itens, Page: 1, PageSize: 25, Total: itens.length, TotalPaginas: 1 };
+    return { itens: itens, page: 1, pageSize: 25, total: itens.length, totalPaginas: 1 };
   }
 
   beforeEach(async () => {
@@ -112,7 +113,7 @@ describe('AgenciasComponent — VEI-RD-79', () => {
 
     const requisicao = http.expectOne(`${base}/1/status`);
     expect(requisicao.request.method).toBe('PATCH');
-    expect(requisicao.request.body).toEqual({ Ativo: false });
+    expect(requisicao.request.body).toEqual({ ativo: false });
     requisicao.flush({});
 
     http.expectOne((r) => r.url === base).flush(pagina([inativa]));
@@ -169,12 +170,12 @@ describe('AgenciasComponent — VEI-RD-79', () => {
     fixture.componentInstance.consultarCnpj();
 
     http.expectOne(`${base}/por-cnpj/12345678000190`).flush({
-      Id: 9,
-      Nome: 'Ímpar Propaganda',
-      RazaoSocial: 'Ímpar Propaganda e Mídia Ltda',
-      Cnpj: '12345678000190',
-      JaVinculadaAEstaAfiliada: false,
-      PropostaDeVinculo: true,
+      id: 9,
+      nome: 'Ímpar Propaganda',
+      razaoSocial: 'Ímpar Propaganda e Mídia Ltda',
+      cnpj: '12345678000190',
+      jaVinculadaAEstaAfiliada: false,
+      propostaDeVinculo: true,
     });
     fixture.detectChanges();
 
@@ -195,7 +196,7 @@ describe('AgenciasComponent — VEI-RD-79', () => {
     fixture.detectChanges();
 
     expect(texto()).toContain('Razão social');
-    expect(fixture.componentInstance.form?.Cnpj).toBe('99999999000199');
+    expect(fixture.componentInstance.form?.cnpj).toBe('99999999000199');
   });
 
   it('o formulário não tem campo de prazo de pagamento', () => {
@@ -229,5 +230,43 @@ describe('AgenciasComponent — VEI-RD-79', () => {
     expect(texto).not.toContain('exibidora');
     expect(texto).not.toContain('afiliada');
     expect(Object.keys(fixture.componentInstance.form!)).not.toContain('IdAfiliada');
+  });
+
+  describe('com a resposta real do BFF (src/testing/contratos)', () => {
+    async function montarReal() {
+      const fixture = TestBed.createComponent(AgenciasComponent);
+      const http = TestBed.inject(HttpTestingController);
+      fixture.detectChanges();
+      http.expectOne((r) => r.url === base).flush(agenciasListaReal());
+      fixture.detectChanges();
+      await fixture.whenStable();
+      return { fixture, http, texto: () => (fixture.nativeElement as HTMLElement).textContent ?? '' };
+    }
+
+    it('sai de "Carregando…" e lista as agências do preview', async () => {
+      const { texto } = await montarReal();
+      expect(texto()).not.toContain('Carregando agências');
+      expect(texto()).toContain('Agencia Horizonte');
+      expect(texto()).toContain('Horizonte Comunicacao e Midia Ltda');
+      expect(texto()).toContain('5 cadastradas');
+      expect(texto()).toContain('1 campanhas');
+    });
+
+    it('rotula o vínculo inativo que veio do servidor', async () => {
+      const { texto } = await montarReal();
+      expect(texto()).toContain('Inativo');
+      expect(texto()).toContain('Reativar');
+    });
+
+    it('a consulta de CNPJ real reconhece a agência já vinculada', async () => {
+      const { fixture, http } = await montarReal();
+      fixture.componentInstance.abrirConsultaCnpj();
+      fixture.componentInstance.cnpjConsulta = '11111111000191';
+      fixture.componentInstance.consultarCnpj();
+      http.expectOne(`${base}/por-cnpj/11111111000191`).flush(agenciaPorCnpjReal());
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(fixture.componentInstance.consultaMensagem).toBe('Agencia Horizonte já está vinculada a esta exibidora.');
+    });
   });
 });

@@ -1,0 +1,68 @@
+{
+  "itens": [
+    {
+      "id": 3,
+      "nome": "Agência Aurora QA",
+      "razaoSocial": null,
+      "cnpj": "81024567000108",
+      "cidade": null,
+      "uf": null,
+      "email": "contato1@exemplo.invalid",
+      "telefone": null,
+      "status": 1,
+      "campanhas": 0
+    },
+    {
+      "id": 5,
+      "nome": "Agência Conecta QA",
+      "razaoSocial": null,
+      "cnpj": "81024569000199",
+      "cidade": null,
+      "uf": null,
+      "email": "contato2@exemplo.invalid",
+      "telefone": null,
+      "status": 1,
+      "campanhas": 0
+    },
+    {
+      "id": 1,
+      "nome": "Agencia Horizonte",
+      "razaoSocial": "Horizonte Comunicacao e Midia Ltda",
+      "cnpj": "11111111000191",
+      "cidade": "Sao Paulo",
+      "uf": "SP",
+      "email": "contato3@exemplo.invalid",
+      "telefone": "1100000000",
+      "status": 1,
+      "campanhas": 1
+    },
+    {
+      "id": 4,
+      "nome": "Agência Métrica QA",
+      "razaoSocial": null,
+      "cnpj": "81024568000144",
+      "cidade": null,
+      "uf": null,
+      "email": "contato4@exemplo.invalid",
+      "telefone": null,
+      "status": 1,
+      "campanhas": 0
+    },
+    {
+      "id": 2,
+      "nome": "Midia Prime",
+      "razaoSocial": "Midia Prime Publicidade Ltda",
+      "cnpj": "33333333000191",
+      "cidade": "Campinas",
+      "uf": "SP",
+      "email": "contato5@exemplo.invalid",
+      "telefone": "1100000000",
+      "status": 0,
+      "campanhas": 0
+    }
+  ],
+  "page": 1,
+  "pageSize": 25,
+  "total": 5,
+  "totalPaginas": 1
+}

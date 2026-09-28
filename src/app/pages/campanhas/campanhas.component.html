@@ -38,21 +38,21 @@
   <p class="wl-estado wl-estado--vazio">Nenhuma campanha encontrada para este filtro.</p>
 } @else if (modo === 'card') {
   <div class="campanhas__cards">
-    @for (campanha of campanhas; track campanha.Id) {
+    @for (campanha of campanhas; track campanha.id) {
       <article class="campanhas__card">
         <div class="campanhas__topo">
-          <aurum-code>{{ campanha.Codigo }}</aurum-code>
-          <aurum-status-pill [rotulo]="rotuloStatus(campanha.Status)" [tom]="tomStatus(campanha.Status)" compacto />
+          <aurum-code>{{ campanha.codigo }}</aurum-code>
+          <aurum-status-pill [rotulo]="rotuloStatus(campanha.status)" [tom]="tomStatus(campanha.status)" compacto />
         </div>
-        <h3 class="campanhas__nome">{{ campanha.Nome }}</h3>
+        <h3 class="campanhas__nome">{{ campanha.nome }}</h3>
         <div class="campanhas__info">
-          <p><span class="aurum-ico" style="--ico: url(/assets/aurum/icon-usuarios.svg)"></span> Anunciante: <strong>{{ campanha.Anunciante }}</strong></p>
+          <p><span class="aurum-ico" style="--ico: url(/assets/aurum/icon-usuarios.svg)"></span> Anunciante: <strong>{{ campanha.anunciante }}</strong></p>
           <p><span class="aurum-ico" style="--ico: url(/assets/aurum/icon-agencias.svg)"></span> Agência: <strong>{{ agencia(campanha) }}</strong></p>
-          <p><span class="aurum-ico" style="--ico: url(/assets/aurum/icon-calendario.svg)"></span> Período: <strong>{{ periodo(campanha.Periodo) }}</strong></p>
+          <p><span class="aurum-ico" style="--ico: url(/assets/aurum/icon-calendario.svg)"></span> Período: <strong>{{ periodo(campanha.periodo) }}</strong></p>
         </div>
         <div class="campanhas__rodape">
           <div>
-            <span class="campanhas__rotulo">{{ campanha.Pecas }} Peças • Valor Total</span>
+            <span class="campanhas__rotulo">{{ campanha.pecas }} Peças • Valor Total</span>
             <span class="campanhas__valor">{{ valor(campanha) }}</span>
           </div>
           <!-- Única ação: consulta. Nenhum controle de mutação é renderizado. -->
@@ -85,17 +85,17 @@
         </tr>
       </thead>
       <tbody>
-        @for (campanha of campanhas; track campanha.Id) {
+        @for (campanha of campanhas; track campanha.id) {
           <tr aurumTableRow>
-            <td aurumTableCell><aurum-code>{{ campanha.Codigo }}</aurum-code></td>
-            <td aurumTableCell class="campanhas__celula-nome">{{ campanha.Nome }}</td>
-            <td aurumTableCell>{{ campanha.Anunciante }}</td>
+            <td aurumTableCell><aurum-code>{{ campanha.codigo }}</aurum-code></td>
+            <td aurumTableCell class="campanhas__celula-nome">{{ campanha.nome }}</td>
+            <td aurumTableCell>{{ campanha.anunciante }}</td>
             <td aurumTableCell>{{ agencia(campanha) }}</td>
-            <td aurumTableCell>{{ periodo(campanha.Periodo) }}</td>
-            <td aurumTableCell>{{ campanha.Pecas }}</td>
+            <td aurumTableCell>{{ periodo(campanha.periodo) }}</td>
+            <td aurumTableCell>{{ campanha.pecas }}</td>
             <td aurumTableCell class="campanhas__valor">{{ valor(campanha) }}</td>
             <td aurumTableCell>
-              <aurum-status-pill [rotulo]="rotuloStatus(campanha.Status)" [tom]="tomStatus(campanha.Status)" compacto />
+              <aurum-status-pill [rotulo]="rotuloStatus(campanha.status)" [tom]="tomStatus(campanha.status)" compacto />
             </td>
             <td aurumTableCell>
               <aurum-button variante="wine" tamanho="xs" (click)="detalhe = campanha">
@@ -111,19 +111,19 @@
 }
 
 @if (detalhe; as c) {
-  <aurum-modal [aberto]="true" largura="md" [titulo]="c.Nome" (fechar)="detalhe = null">
+  <aurum-modal [aberto]="true" largura="md" [titulo]="c.nome" (fechar)="detalhe = null">
     <div aurumModalSubtitulo class="campanhas__modal-sub">
-      <aurum-code>{{ c.Codigo }}</aurum-code>
+      <aurum-code>{{ c.codigo }}</aurum-code>
       <span>Detalhamento consultivo do plano de mídia e alocação de peças.</span>
     </div>
     <div class="campanhas__resumo">
-      <div><span>Anunciante</span><strong>{{ c.Anunciante }}</strong></div>
+      <div><span>Anunciante</span><strong>{{ c.anunciante }}</strong></div>
       <div><span>Agência parceira</span><strong>{{ agencia(c) }}</strong></div>
-      <div><span>Período comercial</span><strong>{{ periodo(c.Periodo) }}</strong></div>
+      <div><span>Período comercial</span><strong>{{ periodo(c.periodo) }}</strong></div>
       <div><span>Valor bruto alocado</span><strong class="campanhas__valor">{{ valor(c) }}</strong></div>
     </div>
     <p class="campanhas__pecas">
-      {{ c.Pecas }} {{ c.Pecas === 1 ? 'peça alocada' : 'peças alocadas' }} · {{ rotuloStatus(c.Status) }}
+      {{ c.pecas }} {{ c.pecas === 1 ? 'peça alocada' : 'peças alocadas' }} · {{ rotuloStatus(c.status) }}
     </p>
   </aurum-modal>
 }
