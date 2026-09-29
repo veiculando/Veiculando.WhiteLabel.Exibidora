@@ -544,12 +544,27 @@ export const TOM_STATUS_PEDIDO_INSERCAO: Record<string, 'neutro' | 'sucesso' | '
 };
 
 /**
+ * Período de veiculação de uma PI (`WlPeriodoVeiculacao` no BFF, HF-5).
+ *
+ * `rotulo` é o `Periodo.Nome` do primeiro período ("Agosto De 2026",
+ * "P1 - de 01/07 a 14/07"); `dataInicio`/`dataFim` cobrem TODOS os períodos
+ * da PI; `quantidade` diz quantos períodos distintos ela tem.
+ */
+export interface PeriodoVeiculacao {
+  id: number;
+  rotulo: string;
+  dataInicio: string;
+  dataFim: string;
+  quantidade: number;
+}
+
+/**
  * `GET /api/wl/pedidos-insercao` — espelha `PedidosInsercaoController.GetAll`.
  *
- * `cidade` e as datas de veiculação (`periodoInicio`/`periodoFim`) são pedidas
- * pelo Figma (`154:7083`) mas o commit atual do BFF ainda não as projeta na
- * listagem (só filtra por `idPeriodoInicial`/`idPeriodoFinal`, sem devolver o
- * período nem a cidade da PI) — a UI mostra "—" até o backend acrescentar.
+ * `cidade` é a primeira cidade (ordem alfabética, a mesma do `sort=cidade`)
+ * entre os itens da PI, e `qtdCidades` quantas cidades distintas ela tem.
+ * `periodo` é `null` quando nenhum item tem período. Ambos chegaram no HF-5
+ * (D8); antes a coluna mostrava "—".
  * `agencia` já vem sempre preenchida pelo servidor (nunca null): PI sem
  * agência real recebe o nome da agência-espelho
  * `AgenciaVendaDiretaProvisionamento.NomeFantasia` = "Venda Direta (Sem Agência)".
@@ -566,9 +581,9 @@ export interface PedidoInsercaoListItem {
   anunciante: string | null;
   valorLiquidoVeiculacao: number | null;
   itensCount: number;
-  cidade?: string | null;
-  periodoInicio?: string | null;
-  periodoFim?: string | null;
+  cidade: string | null;
+  qtdCidades: number;
+  periodo: PeriodoVeiculacao | null;
 }
 
 /** Uma entrada de `resumo.porStatus` — sempre os 6 status oficiais, mesmo com quantidade 0. */
@@ -584,14 +599,11 @@ export interface PedidoInsercaoResumoStatus {
  * sobre a MESMA query filtrada, antes do Skip/Take, para nunca divergir da
  * lista). Os agregados mudam com o filtro; o cliente nunca soma em memória.
  *
- * `afiliadaId` é o que alimentaria o badge "Afiliada #4821" do cabeçalho
- * (`154:7083`) — o commit atual de `MontarResumoAsync` ainda não o projeta.
- * O frontend nunca inventa esse número: o badge só renderiza quando o campo
- * vier preenchido (ADR-WL-008 — a UI não conhece o tenant por conta própria,
- * o Host/JWT nunca expõe o id ao cliente hoje).
+ * O badge "Afiliada #N" do cabeçalho (`154:7083`) não sai daqui: vem da
+ * sessão (`PermissionService.getAfiliadaId()`), a mesma fonte do subtítulo
+ * de Locais.
  */
 export interface PedidosInsercaoResumo {
-  afiliadaId?: number | null;
   totalPIs: number;
   totalPecas: number;
   valorLiquidoTotal: number;
@@ -619,6 +631,8 @@ export interface PedidosInsercaoFiltro {
   status?: StatusPedidoInsercao | null;
   idPeriodoInicial?: number | null;
   idPeriodoFinal?: number | null;
+  /** Filtro "Período" da barra: um período comercial exato (D8). */
+  periodoId?: number | null;
 }
 
 // ---------------------------------------------------------------- Check out (VEI-RD-91)
@@ -673,8 +687,9 @@ export interface CheckoutFiltro {
  * Recusado/ErroGeolocalizacao/Recebido/Aprovado — não existe um terceiro
  * estado "em checking" distinto do "recebido"/"aprovado".
  *
- * Sem `periodo`: a listagem não projeta um intervalo de veiculação
- * agregado (só filtra por ele) — a coluna Período fica "—".
+ * `periodo` é o período de veiculação da PI (datas dos itens da PI, não do
+ * checking), `null` quando a PI não tem período. A coluna mostra o
+ * intervalo "dd/mm – dd/mm" (D14).
  */
 export interface CheckoutListItem {
   id: number;
@@ -689,6 +704,7 @@ export interface CheckoutListItem {
   itensAprovados: number;
   itensRecebidos: number;
   cidades: string[];
+  periodo: PeriodoVeiculacao | null;
 }
 
 export interface CheckoutGeolocalizacao {

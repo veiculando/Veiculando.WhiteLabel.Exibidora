@@ -4,6 +4,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
 import { CheckoutListagemComponent } from './checkout-listagem.component';
 import { environment } from '../../../environments/environment';
+import { checkingListaReal } from '../../../testing/contratos/contratos';
 
 /**
  * Check out — listagem (VEI-RD-91, Figma `184:2`).
@@ -46,6 +47,7 @@ describe('CheckoutListagemComponent', () => {
           itensAprovados: 3,
           itensRecebidos: 2,
           cidades: ['São Paulo'],
+          periodo: null,
         },
       ],
       page: 1,
@@ -163,5 +165,34 @@ describe('CheckoutListagemComponent', () => {
     expect(req.request.params.has('campanha')).toBe(false);
     expect(req.request.params.has('anunciante')).toBe(false);
     req.flush({ itens: [], page: 1, pageSize: 25, total: 0, totalPaginas: 0 });
+  });
+
+  describe('coluna Período com a resposta real do BFF (D14)', () => {
+    async function montar(resposta: object) {
+      const fixture = TestBed.createComponent(CheckoutListagemComponent);
+      fixture.detectChanges();
+      httpMock.expectOne((r) => r.url === `${environment.bffUrl}/lookups/periodos`).flush([]);
+      httpMock.expectOne((r) => r.url === `${environment.bffUrl}/lookups/cidades`).flush([]);
+      httpMock.expectOne((r) => r.url === base).flush(resposta);
+      // Sem @Input mutado: o segundo detectChanges só re-renderiza o estado
+      // que o flush já gravou; o whenStable espera o scheduler do Angular 22.
+      fixture.detectChanges();
+      await fixture.whenStable();
+      const cabecalhos = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('th')).map((th) =>
+        th.textContent?.trim()
+      );
+      const celulas = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('tbody tr:first-child td'));
+      return celulas[cabecalhos.indexOf('Período')].textContent?.trim();
+    }
+
+    it('mostra o intervalo de veiculação da PI como "dd/mm – dd/mm"', async () => {
+      expect(await montar(checkingListaReal())).toBe('29/09 – 13/10');
+    });
+
+    it('PI sem período mostra travessão', async () => {
+      const real = checkingListaReal();
+      real.itens = real.itens.map((i) => ({ ...i, periodo: null }));
+      expect(await montar(real)).toBe('—');
+    });
   });
 });
