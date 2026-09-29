@@ -176,10 +176,10 @@ import {
                     <td aurumTableCell>
                       <span class="operador">
                         <span class="operador__avatar" aria-hidden="true">{{ iniciais(usuario.nome) }}</span>
-                        <strong>{{ usuario.nome }}</strong>
+                        <strong class="operador__nome">{{ usuario.nome }}</strong>
                       </span>
                     </td>
-                    <td aurumTableCell class="apagado">{{ usuario.email }}</td>
+                    <td aurumTableCell class="apagado"><span class="email">{{ usuario.email }}</span></td>
                     <td aurumTableCell>{{ usuario.cargo || '—' }}</td>
                     <td aurumTableCell>
                       <aurum-status-pill
@@ -196,6 +196,7 @@ import {
                       {{ usuario.dataUltimoLogin ? (usuario.dataUltimoLogin | date: 'dd/MM/yyyy HH:mm') : 'nunca' }}
                     </td>
                     <td aurumTableCell>
+                      <div class="permissoes-lista">
                       @for (p of usuario.permissoes; track p) {
                         <span class="permissao-chip">{{ rotulo(p) }}</span>
                       }
@@ -204,11 +205,13 @@ import {
                           sem permissões
                         </span>
                       }
+                      </div>
                     </td>
-                    <td aurumTableCell class="acoes">
+                    <td aurumTableCell>
                       @if (usuario.excluido) {
                         <span class="sem-permissao">Somente consulta</span>
                       } @else {
+                      <div class="acoes">
                       @if (usuario.statusConvite === 'Pendente') {
                         <aurum-button variante="suave" tamanho="xs"
                           [desabilitado]="reenviando !== null" (click)="reenviarConvite(usuario)">
@@ -221,6 +224,7 @@ import {
                       <aurum-button variante="perigo" tamanho="xs" (click)="excluir(usuario)">
                         Excluir
                       </aurum-button>
+                      </div>
                       }
                     </td>
                   </tr>
@@ -287,11 +291,12 @@ import {
     changeDetection: ChangeDetectionStrategy.Eager,
     styles: [
         `
-      .operador { display: inline-flex; align-items: center; gap: 10px; white-space: nowrap; }
+      .operador { display: inline-flex; align-items: center; gap: 10px; }
+      .operador__nome { max-width: 170px; }
       .operador strong { color: var(--charcoal); }
-      .operador__avatar { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--wine-grad); color: var(--white); font-size: 0.625rem; font-weight: 700; }
+      .operador__avatar { flex: none; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--wine-grad); color: var(--white); font-size: 0.625rem; font-weight: 700; }
       .apagado { color: var(--on-surface); }
-      .permissao-chip { display: inline-flex; margin: 2px 6px 2px 0; padding: 3px 8px; border-radius: 6px; background: var(--gold-tint); color: #8a6500; font-size: 0.6875rem; font-weight: 600; white-space: nowrap; }
+      .permissao-chip { display: inline-flex; margin: 2px 6px 2px 0; padding: 3px 8px; border-radius: 6px; background: var(--gold-tint); color: var(--gold-ink); font-size: 0.6875rem; font-weight: 600; }
       .permissao-chip::before { content: '⛉'; margin-right: 4px; font-size: 0.625rem; }
       .cartao__titulo {
         margin: 0 0 16px;
@@ -332,11 +337,20 @@ import {
         display: flex;
         gap: 12px;
       }
+      /*
+       * D15: a 1444 px a coluna Ações saía cortada. O flex estava no próprio
+       * <td> (tirava a célula do layout de tabela), e botões, nome e chips
+       * de permissão não quebravam. max-width em <td> é ignorado no layout
+       * automático de tabela, então o limite fica em wrappers internos.
+       */
       .acoes {
         display: flex;
-        gap: 12px;
-        white-space: nowrap;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
       }
+      .email { display: block; max-width: 170px; overflow-wrap: anywhere; }
+      .permissoes-lista { display: flex; flex-wrap: wrap; max-width: 230px; }
       .edicao {
         background: var(--surface-muted);
       }

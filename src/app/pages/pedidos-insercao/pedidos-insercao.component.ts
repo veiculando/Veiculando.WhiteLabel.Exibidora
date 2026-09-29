@@ -82,9 +82,9 @@ const OPCOES_ORDENACAO: { valor: PedidosInsercaoOrdenacao; rotulo: string }[] = 
   ],
   template: `
     <aurum-page-header
-      titulo="Pedidos de Inserção (PIs)"
+      titulo="Pedidos de inserção (PIs)"
       [badge]="afiliadaId ? 'Afiliada #' + afiliadaId : ''"
-      subtitulo="Documentos formais de veiculação e download de PDFs de Pedidos de Inserção."
+      subtitulo="Documentos formais de veiculação e download de PDFs de pedidos de inserção."
     />
 
     @if (resumo; as r) {
@@ -146,7 +146,7 @@ const OPCOES_ORDENACAO: { valor: PedidosInsercaoOrdenacao; rotulo: string }[] = 
               <th aurumTableHeaderCell>Agência</th>
               <th aurumTableHeaderCell>Campanha</th>
               <th aurumTableHeaderCell>Peças</th>
-              <th aurumTableHeaderCell>Valor Líquido</th>
+              <th aurumTableHeaderCell>Valor líquido</th>
               <th aurumTableHeaderCell>Data</th>
               <th aurumTableHeaderCell>Status</th>
               <th aurumTableHeaderCell>Ação</th>

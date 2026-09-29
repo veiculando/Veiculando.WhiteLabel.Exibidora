@@ -58,7 +58,7 @@ type Decisao = 'aprovar' | 'ajustes' | 'rejeitar' | 'suspender' | 'reativar';
     `
       .kyc-detalhe__voltar { display: inline-block; margin-bottom: 16px; color: var(--primary-color); font-size: 0.8125rem; font-weight: 600; text-decoration: none; }
       .kyc-detalhe__cabecalho { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; padding: 20px 24px; background: var(--white); border: 1px solid var(--line-subtle); border-radius: 18px; box-shadow: var(--shadow-card); }
-      .kyc-detalhe__selo { display: grid; place-items: center; flex: none; width: 52px; height: 52px; border-radius: 14px; background: var(--wine-grad); color: var(--gold-light); box-shadow: 0 6px 12px rgba(138, 0, 9, 0.25); }
+      .kyc-detalhe__selo { display: grid; place-items: center; flex: none; width: 52px; height: 52px; border-radius: 14px; background: var(--wine-grad); color: var(--gold-light); box-shadow: 0 6px 12px color-mix(in srgb, var(--primary-color) 25%, transparent); }
       .kyc-detalhe__selo .aurum-ico { width: 24px; height: 24px; }
       .kyc-detalhe__titulo { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
       .kyc-detalhe__titulo h1 { margin: 0; font-size: 1.5rem; font-weight: 700; }

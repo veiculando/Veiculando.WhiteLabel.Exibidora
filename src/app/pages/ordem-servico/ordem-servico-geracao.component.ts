@@ -69,7 +69,7 @@ const PAGE_SIZE_MAXIMO = 100;
   ],
   template: `
     <aurum-page-header
-      titulo="Nova Ordem de Serviço"
+      titulo="Nova ordem de serviço"
       subtitulo="Selecione as peças para gerar a rota e a autorização de colagem do período."
     />
 
@@ -117,7 +117,7 @@ const PAGE_SIZE_MAXIMO = 100;
     @if (totalPecas > PAGE_SIZE_MAXIMO) {
       <div class="wl-estado wl-estado--erro" role="note">
         Este período/filtro tem {{ totalPecas }} peças; só as {{ PAGE_SIZE_MAXIMO }} primeiras estão listadas
-        abaixo. Refine por Cidade ou Status para ver o restante.
+        abaixo. Refine por cidade ou status para ver o restante.
       </div>
     }
 
@@ -134,10 +134,10 @@ const PAGE_SIZE_MAXIMO = 100;
               <th aurumTableHeaderCell>Rota</th>
               <th aurumTableHeaderCell>Endereço</th>
               <th aurumTableHeaderCell>Bairro</th>
-              <th aurumTableHeaderCell>Campanha Atual</th>
-              <th aurumTableHeaderCell>Campanha Anterior</th>
+              <th aurumTableHeaderCell>Campanha atual</th>
+              <th aurumTableHeaderCell>Campanha anterior</th>
               <th aurumTableHeaderCell>Out</th>
-              <th aurumTableHeaderCell>Data Colagem</th>
+              <th aurumTableHeaderCell>Data de colagem</th>
               <th aurumTableHeaderCell>Serviço</th>
             </tr>
           </thead>
@@ -165,7 +165,7 @@ const PAGE_SIZE_MAXIMO = 100;
 
       <div class="og-rodape">
         <aurum-button [desabilitado]="selecionadas.size === 0 || gerando" (click)="gerarOs()">
-          {{ gerando ? 'Gerando…' : 'Gerar Ordem de Serviço (' + selecionadas.size + (selecionadas.size === 1 ? ' selecionado)' : ' selecionados)') }}
+          {{ gerando ? 'Gerando…' : 'Gerar ordem de serviço (' + selecionadas.size + (selecionadas.size === 1 ? ' selecionado)' : ' selecionados)') }}
         </aurum-button>
       </div>
     }
@@ -189,7 +189,7 @@ const PAGE_SIZE_MAXIMO = 100;
         background: var(--white);
         border: 1px solid var(--line-subtle);
         border-radius: 18px;
-        filter: drop-shadow(0 8px 16px rgba(74, 14, 14, 0.08));
+        filter: drop-shadow(0 8px 16px color-mix(in srgb, var(--shadow-tint) 8%, transparent));
       }
       .og-filtros {
         display: flex;

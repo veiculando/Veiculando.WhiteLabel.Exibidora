@@ -55,7 +55,7 @@ import {
     ],
     template: `
     <aurum-page-header
-      titulo="Solicitações de Reserva"
+      titulo="Solicitações de reserva"
       [badge]="afiliadaId ? 'Afiliada #' + afiliadaId : ''"
       subtitulo="Gestão de pedidos de reserva recebidos dos canais da WhiteLabel."
     />
@@ -96,7 +96,7 @@ import {
                 <tr aurumTableRow>
                   <td aurumTableCell class="pr-codigo">{{ pedido.codigo }}</td>
                   <td aurumTableCell class="pr-anunciante">{{ pedido.cliente || '—' }}</td>
-                  <td aurumTableCell class="pr-apagado">{{ pedido.agencia || 'Venda Direta (Sem Agência)' }}</td>
+                  <td aurumTableCell class="pr-apagado">{{ pedido.agencia || 'Venda Direta (sem agência)' }}</td>
                   <td aurumTableCell class="pr-forte">{{ pedido.itensCount }}</td>
                   <td aurumTableCell class="pr-apagado">{{ pedido.dataCadastro | date: 'dd/MM/yyyy HH:mm' }}</td>
                   <td aurumTableCell><aurum-status-pill [rotulo]="pedido.status" [tom]="tomStatus(pedido.status)" compacto /></td>
@@ -132,7 +132,7 @@ import {
         <aurum-modal
           [aberto]="true"
           largura="lg"
-          [titulo]="'Detalhes da Reserva' + (pedido.cliente ? ' — ' + pedido.cliente : '')"
+          [titulo]="'Detalhes da reserva' + (pedido.cliente ? ' — ' + pedido.cliente : '')"
           (fechar)="alternarDetalhe(pedido)"
         >
           <p aurumModalSubtitulo class="pr-modal__codigo">
@@ -154,7 +154,7 @@ import {
               </div>
             </div>
 
-            <h3 class="pr-modal__secao">Itens da Reserva (Controle de Status por Peça)</h3>
+            <h3 class="pr-modal__secao">Itens da reserva (controle de status por peça)</h3>
             @if (d.itens.length === 0) {
               <div class="wl-estado wl-estado--vazio">Nenhum item neste pedido.</div>
             }

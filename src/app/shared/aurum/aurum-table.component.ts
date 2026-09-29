@@ -41,7 +41,7 @@ export class AurumTableComponent {}
   styles: [
     `
       tbody :host:hover {
-        background: #faf9f6;
+        background: var(--row-hover);
       }
     `,
   ],

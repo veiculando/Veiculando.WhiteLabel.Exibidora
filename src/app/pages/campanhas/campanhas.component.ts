@@ -128,7 +128,7 @@ export class CampanhasComponent implements OnInit {
    * Venda sem agência não é ausência de agência — é a agência-espelho da exibidora.
    */
   agencia(campanha: CampanhaListItem): string {
-    return campanha.agencia || 'Venda Direta (Sem Agência)';
+    return campanha.agencia || 'Venda Direta (sem agência)';
   }
 
   /**

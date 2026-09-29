@@ -72,7 +72,7 @@ export type AurumButtonTamanho = 'md' | 'sm' | 'xs';
       .aurum-button--wine {
         background: var(--primary-color);
         color: var(--white);
-        box-shadow: 0 8px 16px rgba(74, 14, 14, 0.1);
+        box-shadow: 0 8px 16px color-mix(in srgb, var(--shadow-tint) 10%, transparent);
       }
       .aurum-button--wine:not(:disabled):hover {
         background: var(--primary-dark);
@@ -81,7 +81,7 @@ export type AurumButtonTamanho = 'md' | 'sm' | 'xs';
       .aurum-button--gold {
         background: var(--gold-grad);
         color: var(--primary-dark);
-        box-shadow: 0 2px 4px rgba(74, 14, 14, 0.15);
+        box-shadow: 0 2px 4px color-mix(in srgb, var(--shadow-tint) 15%, transparent);
       }
       .aurum-button--gold:not(:disabled):hover {
         filter: brightness(1.04);

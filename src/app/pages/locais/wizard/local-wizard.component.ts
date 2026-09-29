@@ -53,7 +53,7 @@ type Etapa = 0 | 1 | 2;
         padding: 28px;
         background: var(--white);
         border-radius: var(--radius-modal);
-        filter: drop-shadow(0 16px 24px rgba(74, 14, 14, 0.18));
+        filter: drop-shadow(0 16px 24px color-mix(in srgb, var(--shadow-tint) 18%, transparent));
       }
       .local-wizard__cabecalho p {
         margin: 4px 0 0;
@@ -132,8 +132,8 @@ export class LocalWizardComponent implements OnInit {
   private readonly publicoService = inject(LocalPublicoService);
 
   readonly etapas: { indice: Etapa; rotulo: string }[] = [
-    { indice: 0, rotulo: 'Dados do Local' },
-    { indice: 1, rotulo: 'Dados Demográficos' },
+    { indice: 0, rotulo: 'Dados do local' },
+    { indice: 1, rotulo: 'Dados demográficos' },
     { indice: 2, rotulo: 'Peças' },
   ];
   readonly afiliadaId = inject(PermissionService).getAfiliadaId();

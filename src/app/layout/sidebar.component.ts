@@ -48,7 +48,7 @@ const GRUPOS: GrupoNav[] = [
     icone: 'inventario',
     itens: [
       { rotulo: 'Locais', rota: '/locais', icone: 'locais', permissao: 'PecaGerenciar' },
-      { rotulo: 'Valores de Peças', rota: '/pecas/valores', icone: 'valores', permissao: 'PecaGerenciar' },
+      { rotulo: 'Valores de peças', rota: '/pecas/valores', icone: 'valores', permissao: 'PecaGerenciar' },
     ],
   },
   {
@@ -68,8 +68,8 @@ const GRUPOS: GrupoNav[] = [
       // Solicitações de Reserva.
       { rotulo: 'Prospecção', rota: '/prospeccao', icone: 'prospeccao', permissao: 'PedidoCriar', externo: true },
       { rotulo: 'Campanhas', rota: '/campanhas', icone: 'campanhas', permissao: 'ClienteGerenciar' },
-      { rotulo: 'Solicitações de Reserva', rota: '/pedidos-reserva', icone: 'reservas', permissao: 'PedidoReservaGerenciar' },
-      { rotulo: 'Pedidos de Inserção', rota: '/pedidos-insercao', icone: 'pedidos-insercao', permissao: 'PedidoInsercaoGerenciar' },
+      { rotulo: 'Solicitações de reserva', rota: '/pedidos-reserva', icone: 'reservas', permissao: 'PedidoReservaGerenciar' },
+      { rotulo: 'Pedidos de inserção', rota: '/pedidos-insercao', icone: 'pedidos-insercao', permissao: 'PedidoInsercaoGerenciar' },
     ],
   },
   {
@@ -80,7 +80,7 @@ const GRUPOS: GrupoNav[] = [
       // O Figma não desenha ícone para Check out e Ordem de Serviço: reaproveitam
       // o escudo de verificação e a chave do grupo Operacional.
       { rotulo: 'Check out', rota: '/checkout', icone: 'kyc', permissao: 'CheckingGerenciar' },
-      { rotulo: 'Ordem de Serviço', rota: '/ordens-servico', icone: 'operacional', permissao: 'PecaGerenciar' },
+      { rotulo: 'Ordem de serviço', rota: '/ordens-servico', icone: 'operacional', permissao: 'PecaGerenciar' },
     ],
   },
   {
@@ -187,9 +187,9 @@ const CHAVE_COLAPSADO = 'wl-sidebar-colapsado';
       </nav>
 
       <div class="sb__rodape">
-        <button type="button" class="sb__sair" [attr.aria-label]="colapsado() ? 'Sair da Sessão' : null" (click)="sair()">
+        <button type="button" class="sb__sair" [attr.aria-label]="colapsado() ? 'Sair da sessão' : null" (click)="sair()">
           <span class="aurum-ico sb-ico sb-ico--sair" [style.--ico]="icone('sair')"></span>
-          <span class="nav-item__rotulo">Sair da Sessão</span>
+          <span class="nav-item__rotulo">Sair da sessão</span>
         </button>
       </div>
     </aside>
@@ -359,7 +359,7 @@ const CHAVE_COLAPSADO = 'wl-sidebar-colapsado';
     .nav-item.active:hover {
       background: var(--gold-grad);
       color: var(--primary-dark);
-      filter: drop-shadow(0 2px 4px rgba(74, 14, 14, 0.25));
+      filter: drop-shadow(0 2px 4px color-mix(in srgb, var(--shadow-tint) 25%, transparent));
     }
     .nav-item.active .sb-ico {
       color: var(--primary-dark);
@@ -415,7 +415,7 @@ const CHAVE_COLAPSADO = 'wl-sidebar-colapsado';
       border: 1px solid color-mix(in srgb, var(--secondary-color) 18%, transparent);
       border-radius: 12px;
       background: var(--sidebar-bg);
-      box-shadow: 0 16px 32px rgba(26, 5, 5, 0.35);
+      box-shadow: 0 16px 32px color-mix(in srgb, var(--shadow-tint-deep) 35%, transparent);
     }
     .sb--colapsado .nav-item--filho {
       padding-left: 20px;

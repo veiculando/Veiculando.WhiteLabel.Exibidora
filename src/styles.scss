@@ -71,7 +71,7 @@ textarea {
   padding: 12px 24px;
   border-radius: var(--radius-pill);
   background: var(--primary-color);
-  box-shadow: 0 8px 16px rgba(74, 14, 14, 0.1);
+  box-shadow: 0 8px 16px color-mix(in srgb, var(--shadow-tint) 10%, transparent);
   color: var(--white);
   font-size: 0.875rem;
   font-weight: 600;
@@ -133,7 +133,7 @@ textarea {
   --ag-header-foreground-color: var(--on-surface);
   --ag-border-color: var(--line-subtle);
   --ag-row-border-color: var(--line-subtle);
-  --ag-row-hover-color: #faf9f6;
+  --ag-row-hover-color: var(--row-hover);
   --ag-selected-row-background-color: var(--wine-tint);
   --ag-border-radius: var(--radius-card);
   --ag-wrapper-border-radius: var(--radius-card);

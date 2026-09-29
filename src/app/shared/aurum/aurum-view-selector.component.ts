@@ -1,4 +1,13 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  EventEmitter,
+  Input,
+  OnInit,
+  Output,
+  viewChildren,
+} from '@angular/core';
 
 export type AurumViewSelectorModo = 'lista' | 'card';
 
@@ -14,6 +23,10 @@ export type AurumViewSelectorModo = 'lista' | 'card';
  * A preferência persiste em localStorage por `storageKey` (a rota que o
  * hospeda), não no banco — não é dado de negócio (ADR-WL — decisão do
  * Humano, 2026-09-16).
+ *
+ * Teclado segue o padrão ARIA de radiogroup: roving tabindex (só o radio
+ * marcado entra na ordem de Tab) e o foco acompanha a seleção nas setas,
+ * Home e End — senão um Space logo depois desfazia a escolha (D12).
  */
 @Component({
   selector: 'aurum-view-selector',
@@ -28,9 +41,11 @@ export type AurumViewSelectorModo = 'lista' | 'card';
       <button
         type="button"
         role="radio"
+        #radio
         class="aurum-view-selector__btn"
         [class.aurum-view-selector__btn--ativo]="modo === 'lista'"
         [attr.aria-checked]="modo === 'lista'"
+        [attr.tabindex]="modo === 'lista' ? 0 : -1"
         aria-label="Visualizar em lista"
         (click)="selecionar('lista')"
       >
@@ -43,9 +58,11 @@ export type AurumViewSelectorModo = 'lista' | 'card';
       <button
         type="button"
         role="radio"
+        #radio
         class="aurum-view-selector__btn"
         [class.aurum-view-selector__btn--ativo]="modo === 'card'"
         [attr.aria-checked]="modo === 'card'"
+        [attr.tabindex]="modo === 'card' ? 0 : -1"
         aria-label="Visualizar em cartões"
         (click)="selecionar('card')"
       >
@@ -90,6 +107,9 @@ export class AurumViewSelectorComponent implements OnInit {
 
   @Output() modoChange = new EventEmitter<AurumViewSelectorModo>();
 
+  private static readonly MODOS: readonly AurumViewSelectorModo[] = ['lista', 'card'];
+  private readonly radios = viewChildren<ElementRef<HTMLButtonElement>>('radio');
+
   ngOnInit(): void {
     const persistido = this.lerPersistido();
     if (persistido && persistido !== this.modo) {
@@ -109,10 +129,30 @@ export class AurumViewSelectorComponent implements OnInit {
   }
 
   aoTeclado(event: KeyboardEvent): void {
-    const teclasNavegacao = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
-    if (!teclasNavegacao.includes(event.key)) return;
+    const modos = AurumViewSelectorComponent.MODOS;
+    const atual = modos.indexOf(this.modo);
+    let proximo: number;
+    switch (event.key) {
+      case 'ArrowRight':
+      case 'ArrowDown':
+        proximo = (atual + 1) % modos.length;
+        break;
+      case 'ArrowLeft':
+      case 'ArrowUp':
+        proximo = (atual - 1 + modos.length) % modos.length;
+        break;
+      case 'Home':
+        proximo = 0;
+        break;
+      case 'End':
+        proximo = modos.length - 1;
+        break;
+      default:
+        return;
+    }
     event.preventDefault();
-    this.selecionar(this.modo === 'lista' ? 'card' : 'lista');
+    this.selecionar(modos[proximo]);
+    this.radios()[proximo]?.nativeElement.focus();
   }
 
   private chaveStorage(): string {

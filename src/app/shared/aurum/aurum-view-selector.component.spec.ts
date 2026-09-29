@@ -61,6 +61,71 @@ describe('AurumViewSelectorComponent', () => {
     expect(component.modo).toBe('lista');
   });
 
+  describe('roving tabindex (D12)', () => {
+    let host: HTMLElement;
+
+    // Anexado ao document para o foco ser real; autoDetect para que
+    // whenStable() renderize cada troca (sem um segundo detectChanges()).
+    beforeEach(async () => {
+      host = fixture.nativeElement as HTMLElement;
+      document.body.appendChild(host);
+      fixture.autoDetectChanges();
+      await fixture.whenStable();
+    });
+
+    afterEach(() => host.remove());
+
+    function teclar(alvo: HTMLElement, key: string): void {
+      alvo.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
+    }
+
+    it('so o radio marcado entra na ordem de Tab', () => {
+      const [lista, card] = botoes();
+      expect(lista.getAttribute('tabindex')).toBe('0');
+      expect(card.getAttribute('tabindex')).toBe('-1');
+    });
+
+    it('a seta move o foco junto com a selecao e o tabindex acompanha', async () => {
+      const [lista, card] = botoes();
+      lista.focus();
+
+      teclar(lista, 'ArrowRight');
+      await fixture.whenStable();
+
+      expect(component.modo).toBe('card');
+      expect(document.activeElement).toBe(card);
+      expect(card.getAttribute('tabindex')).toBe('0');
+      expect(lista.getAttribute('tabindex')).toBe('-1');
+    });
+
+    it('Space logo apos a seta nao desfaz a escolha', async () => {
+      const [lista] = botoes();
+      lista.focus();
+
+      teclar(lista, 'ArrowDown');
+      (document.activeElement as HTMLButtonElement).click();
+      await fixture.whenStable();
+
+      expect(component.modo).toBe('card');
+      expect(localStorage.getItem('aurum-view-selector:locais')).toBe('card');
+    });
+
+    it('Home e End vao ao primeiro e ao ultimo radio', async () => {
+      const [lista, card] = botoes();
+      lista.focus();
+
+      teclar(lista, 'End');
+      await fixture.whenStable();
+      expect(component.modo).toBe('card');
+      expect(document.activeElement).toBe(card);
+
+      teclar(card, 'Home');
+      await fixture.whenStable();
+      expect(component.modo).toBe('lista');
+      expect(document.activeElement).toBe(lista);
+    });
+  });
+
   it('persiste a escolha em localStorage por rota (storageKey), nao no banco', () => {
     fixture.detectChanges();
     botoes()[1].click();
