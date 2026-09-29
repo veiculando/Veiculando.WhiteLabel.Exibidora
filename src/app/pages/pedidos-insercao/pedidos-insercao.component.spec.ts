@@ -4,6 +4,8 @@ import { provideHttpClient } from '@angular/common/http';
 import { PedidosInsercaoComponent } from './pedidos-insercao.component';
 import { PedidosInsercaoService } from '../../core/services/pedidos.service';
 import { environment } from '../../../environments/environment';
+import { PermissionService } from '../../core/auth/permission.service';
+import { pedidosInsercaoListaReal } from '../../../testing/contratos/contratos';
 
 /**
  * VEI-RD-94 (Figma `154:7083`).
@@ -15,37 +17,42 @@ import { environment } from '../../../environments/environment';
 describe('PedidosInsercaoComponent', () => {
   let httpMock: HttpTestingController;
   const base = `${environment.bffUrl}/pedidos-insercao`;
+  const periodos = `${environment.bffUrl}/lookups/periodos`;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [PedidosInsercaoService, provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        PedidosInsercaoService,
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: PermissionService, useValue: { getAfiliadaId: () => '4821' } },
+      ],
     });
     httpMock = TestBed.inject(HttpTestingController);
   });
 
   afterEach(() => httpMock.verify());
 
+  /**
+   * Parte da resposta REAL do BFF (fixture de contrato) e só troca os valores
+   * que os testes abaixo afirmam — as chaves continuam as do servidor.
+   */
   function respostaPadrao() {
+    const real = pedidosInsercaoListaReal();
     return {
+      ...real,
       itens: [
         {
-          id: 1,
+          ...real.itens[0],
           codigo: 'PI-2026-0311',
-          dataCadastro: '2026-08-01T10:30:00',
-          dataPedido: '2026-07-30T09:00:00',
-          status: 'Novo',
-          campanha: 'Campanha Y',
           agencia: 'Venda Direta (Sem Agência)',
-          anunciante: 'Cliente Y',
-          valorLiquidoVeiculacao: 100,
           itensCount: 3,
         },
       ],
-      page: 1,
       pageSize: 25,
       total: 1,
-      totalPaginas: 1,
       resumo: {
+        ...real.resumo,
         totalPIs: 1,
         totalPecas: 3,
         valorLiquidoTotal: 100,
@@ -66,6 +73,7 @@ describe('PedidosInsercaoComponent', () => {
     const componente = fixture.componentInstance;
     componente.ngOnInit();
 
+    httpMock.expectOne((r) => r.url === periodos).flush([]);
     httpMock.expectOne((r) => r.url === base).flush(respostaPadrao());
 
     return componente;
@@ -139,6 +147,7 @@ describe('PedidosInsercaoComponent', () => {
     const componente = TestBed.createComponent(PedidosInsercaoComponent).componentInstance;
     componente.pageSize = 5000;
     componente.ngOnInit();
+    httpMock.expectOne((r) => r.url === periodos).flush([]);
 
     httpMock
       .expectOne((r) => r.url === base)
@@ -191,5 +200,92 @@ describe('PedidosInsercaoComponent', () => {
 
     // Uma unica requisicao: a segunda chamada saiu pelo guard de `baixando`.
     httpMock.expectOne(`${base}/PI-2026-0311/pdf`).flush(new Blob(['%PDF-']));
+  });
+
+  it('filtro de Período vem de lookups/periodos e vai como periodoId (D8)', () => {
+    const fixture = TestBed.createComponent(PedidosInsercaoComponent);
+    const componente = fixture.componentInstance;
+    componente.ngOnInit();
+    httpMock
+      .expectOne((r) => r.url === periodos)
+      .flush([{ id: 7, nome: 'Agosto De 2026', dataInicio: '2026-08-01T00:00:00', dataFim: '2026-08-31T00:00:00' }]);
+    httpMock.expectOne((r) => r.url === base).flush(respostaPadrao());
+
+    expect(componente.opcoesPeriodo).toEqual([
+      { valor: '', rotulo: 'Todos' },
+      { valor: '7', rotulo: 'Agosto De 2026' },
+    ]);
+
+    componente.mudarPeriodo('7');
+    let req = httpMock.expectOne((r) => r.url === base && r.params.get('page') === '1');
+    expect(req.request.params.get('periodoId')).toBe('7');
+    req.flush(respostaPadrao());
+
+    componente.limparFiltros();
+    req = httpMock.expectOne((r) => r.url === base && r.params.get('page') === '1');
+    expect(req.request.params.has('periodoId')).toBe(false);
+    req.flush(respostaPadrao());
+  });
+
+  it('falha no lookup de períodos não bloqueia a lista', () => {
+    const componente = TestBed.createComponent(PedidosInsercaoComponent).componentInstance;
+    componente.ngOnInit();
+    httpMock.expectOne((r) => r.url === periodos).flush(null, { status: 500, statusText: 'Erro' });
+    httpMock.expectOne((r) => r.url === base).flush(respostaPadrao());
+
+    expect(componente.opcoesPeriodo).toEqual([{ valor: '', rotulo: 'Todos' }]);
+    expect(componente.pedidos.length).toBe(1);
+  });
+
+  describe('tela com a resposta real do BFF (D8)', () => {
+    async function montar(resposta: object = pedidosInsercaoListaReal()) {
+      const fixture = TestBed.createComponent(PedidosInsercaoComponent);
+      fixture.detectChanges();
+      httpMock.expectOne((r) => r.url === periodos).flush([]);
+      httpMock.expectOne((r) => r.url === base).flush(resposta);
+      // Sem @Input mutado: o segundo detectChanges só re-renderiza o estado
+      // que o flush já gravou; o whenStable espera o scheduler do Angular 22.
+      fixture.detectChanges();
+      await fixture.whenStable();
+      const el = fixture.nativeElement as HTMLElement;
+      return { el, linhas: () => Array.from(el.querySelectorAll('tbody tr')) };
+    }
+
+    it('colunas Cidade e Período mostram os dados da PI, não travessão', async () => {
+      const { linhas } = await montar();
+      const primeira = linhas()[0].querySelectorAll('td');
+      expect(primeira[1].textContent?.trim()).toBe('Sao Paulo');
+      expect(primeira[2].textContent).toContain('P1 - de');
+      expect(primeira[2].textContent).toContain('29/09 – 13/10');
+    });
+
+    it('PI em mais de uma cidade e mais de um período indica "+N"', async () => {
+      const real = pedidosInsercaoListaReal();
+      real.itens = [
+        {
+          ...real.itens[0],
+          qtdCidades: 3,
+          periodo: real.itens[0].periodo != null ? { ...real.itens[0].periodo, quantidade: 2 } : null,
+        },
+      ];
+      const { linhas } = await montar(real);
+      const celulas = linhas()[0].querySelectorAll('td');
+      expect(celulas[1].textContent?.trim()).toBe('Sao Paulo +2');
+      expect(celulas[2].textContent).toContain('+1');
+    });
+
+    it('PI sem período mostra travessão', async () => {
+      const real = pedidosInsercaoListaReal();
+      real.itens = [{ ...real.itens[0], cidade: null, qtdCidades: 0, periodo: null }];
+      const { linhas } = await montar(real);
+      const celulas = linhas()[0].querySelectorAll('td');
+      expect(celulas[1].textContent?.trim()).toBe('—');
+      expect(celulas[2].textContent?.trim()).toBe('—');
+    });
+
+    it('cabeçalho traz o badge da afiliada da sessão', async () => {
+      const { el } = await montar();
+      expect(el.querySelector('aurum-page-header')?.textContent).toContain('Afiliada #4821');
+    });
   });
 });

@@ -5,6 +5,12 @@
  * mocks escritos à mão: um mock repete o engano de quem o escreveu (foi assim que o
  * PascalCase passou verde — D1, VEI-SUP-27). Para recapturar, basta salvar de novo o
  * JSON do endpoint indicado em cada export.
+ *
+ * Exceção: locais, PIs e checking (HF-5) foram capturados do BFF da branch do
+ * HF-5 rodando contra SQL Server real (Testcontainers, `ListagensLacunasHf5Tests`),
+ * porque os campos novos ainda não estavam no preview. São respostas do
+ * controller real, com a massa sintética daqueles testes. Recapturar do preview
+ * depois do deploy.
  */
 import {
   AgenciaDetalhe,
@@ -18,14 +24,25 @@ import {
   KycResumo,
   Pagina,
 } from '../../app/core/models/comercial.models';
+import {
+  CheckoutListItem,
+  PaginaPedidosInsercao,
+  PedidoInsercaoListItem,
+  PedidosInsercaoResumo,
+  PeriodoVeiculacao,
+} from '../../app/core/models/wl.models';
+import { LocalListItem } from '../../app/pages/locais/models/local.model';
 import agenciaDetalhe from './agencia-detalhe.json';
 import agenciaPorCnpj from './agencia-por-cnpj.json';
 import agenciasLista from './agencias-lista.json';
 import cadastroAcesso from './cadastro-acesso.json';
 import campanhaDetalhe from './campanha-detalhe.json';
 import campanhasLista from './campanhas-lista.json';
+import checkingLista from './checking-lista.json';
 import kycFila from './kyc-fila.json';
 import kycResumo from './kyc-resumo.json';
+import locaisLista from './locais-lista.json';
+import pedidosInsercaoLista from './pedidos-insercao-lista.json';
 
 /** Cópia profunda: um teste que muta a fixture não pode contaminar o próximo. */
 const copia = <T>(valor: unknown): T => structuredClone(valor) as T;
@@ -46,6 +63,12 @@ export const campanhasListaReal = () => copia<Pagina<CampanhaListItem>>(campanha
 export const campanhaDetalheReal = () => copia<CampanhaDetalhe>(campanhaDetalhe);
 /** `GET /api/wl/config/cadastro-acesso` */
 export const cadastroAcessoReal = () => copia<CadastroAcessoConfig>(cadastroAcesso);
+/** `GET /api/wl/locais` — array cru; o segundo local não tem peça (colunas null). */
+export const locaisListaReal = () => copia<LocalListItem[]>(locaisLista);
+/** `GET /api/wl/pedidos-insercao?pageSize=100` — página + resumo. */
+export const pedidosInsercaoListaReal = () => copia<PaginaPedidosInsercao>(pedidosInsercaoLista);
+/** `GET /api/wl/checking?pageSize=100` */
+export const checkingListaReal = () => copia<Pagina<CheckoutListItem>>(checkingLista);
 
 /**
  * Lista das chaves de um modelo. O `Record<keyof T, true>` obriga a listar TODAS —
@@ -85,6 +108,27 @@ export const CHAVES = {
     id: true, codigo: true, nome: true, produto: true, job: true, status: true, dataInicioPrevisto: true,
     dataFimPrevisto: true, verba: true, anunciante: true, agencia: true, pedidos: true,
   }),
+  localListItem: chaves<LocalListItem>({
+    timeStamp: true, id: true, codigo: true, descricao: true, cidade: true, uf: true, fonteOrigem: true,
+    fonteTimestamp: true, statusExibicao: true, endereco: true, suporte: true, formatoDimensao: true,
+    valorPadrao: true, periodicidade: true,
+  }),
+  pedidoInsercaoListItem: chaves<PedidoInsercaoListItem>({
+    id: true, codigo: true, dataCadastro: true, dataPedido: true, status: true, campanha: true, agencia: true,
+    anunciante: true, valorLiquidoVeiculacao: true, itensCount: true, cidade: true, qtdCidades: true, periodo: true,
+  }),
+  paginaPedidosInsercao: chaves<PaginaPedidosInsercao>({
+    itens: true, page: true, pageSize: true, total: true, totalPaginas: true, resumo: true,
+  }),
+  pedidosInsercaoResumo: chaves<PedidosInsercaoResumo>({
+    totalPIs: true, totalPecas: true, valorLiquidoTotal: true, porStatus: true,
+  }),
+  checkoutListItem: chaves<CheckoutListItem>({
+    id: true, status: true, dataCadastro: true, dataAtualizacao: true, piCodigo: true, campanha: true,
+    anunciante: true, itensPi: true, itensChecados: true, itensAprovados: true, itensRecebidos: true,
+    cidades: true, periodo: true,
+  }),
+  periodoVeiculacao: chaves<PeriodoVeiculacao>({ id: true, rotulo: true, dataInicio: true, dataFim: true, quantidade: true }),
   cadastroAcesso: chaves<CadastroAcessoConfig>({
     exigirEmailCorporativoNoCadastro: true, dominiosBloqueados: true, dominiosEditaveis: true, historico: true,
   }),

@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { mensagemDeErro } from '../../core/http/api-error';
+import { formatarDiaMes } from '../../core/http/datas';
 import {
   CheckoutListItem,
   CidadeLookup,
@@ -128,7 +129,7 @@ const TODOS = '';
                 <td aurumTableCell class="co-numero">{{ item.itensChecados }}</td>
                 <td aurumTableCell class="co-numero">{{ item.itensAprovados }}</td>
                 <td aurumTableCell class="co-numero">{{ item.itensRecebidos }}</td>
-                <td aurumTableCell>—</td>
+                <td aurumTableCell class="co-periodo">{{ periodoTexto(item) }}</td>
                 <td aurumTableCell class="co-pi">{{ item.piCodigo || '—' }}</td>
                 <td aurumTableCell>
                   <aurum-status-pill [rotulo]="item.status" [tom]="tomStatus(item.status)" />
@@ -160,6 +161,9 @@ const TODOS = '';
       .co-campanha {
         font-weight: 600;
         color: var(--primary-dark);
+      }
+      .co-periodo {
+        white-space: nowrap;
       }
       .co-pi {
         white-space: nowrap;
@@ -293,5 +297,11 @@ export class CheckoutListagemComponent implements OnInit {
 
   tomStatus(status: string): 'neutro' | 'sucesso' | 'aviso' | 'perigo' | 'primario' | 'info' {
     return TOM_STATUS_CHECKING[status] ?? 'neutro';
+  }
+
+  /** Datas de veiculação da PI (D14), não o período comercial do filtro. */
+  periodoTexto(item: CheckoutListItem): string {
+    if (item.periodo == null) return '—';
+    return `${formatarDiaMes(item.periodo.dataInicio)} – ${formatarDiaMes(item.periodo.dataFim)}`;
   }
 }
