@@ -58,9 +58,9 @@ describe('CampanhasComponent — VEI-RD-51 (módulo consultivo)', () => {
     return { fixture, http, texto: () => (fixture.nativeElement as HTMLElement).textContent ?? '' };
   }
 
-  it('mostra o badge "Módulo Consultivo"', () => {
+  it('mostra o badge "Módulo consultivo"', () => {
     const { texto } = montar();
-    expect(texto()).toContain('Módulo Consultivo');
+    expect(texto()).toContain('Módulo consultivo');
   });
 
   it('não renderiza nenhum controle de mutação', () => {
@@ -87,7 +87,7 @@ describe('CampanhasComponent — VEI-RD-51 (módulo consultivo)', () => {
     expect(texto()).toContain('Lançamento Residencial Andrômeda');
     expect(texto()).toContain('Construtora Vale Sul');
     expect(texto()).toContain('Ímpar Propaganda');
-    expect(texto()).toContain('4 Peças');
+    expect(texto()).toContain('4 peças');
   });
 
   it('o período mostra rótulo E intervalo', () => {
@@ -96,10 +96,10 @@ describe('CampanhasComponent — VEI-RD-51 (módulo consultivo)', () => {
     expect(texto()).toContain('Bissemana 16 — 2026 (03/08/2026 - 16/08/2026)');
   });
 
-  it('agência vazia vira "Venda Direta (Sem Agência)", nunca travessão', () => {
+  it('agência vazia vira "Venda Direta (sem agência)", nunca travessão', () => {
     // Invariante #12: venda sem agência não é ausência de agência.
     const { texto } = montar([semAgencia]);
-    expect(texto()).toContain('Venda Direta (Sem Agência)');
+    expect(texto()).toContain('Venda Direta (sem agência)');
     expect(texto()).not.toContain('Agência: —');
   });
 
@@ -133,7 +133,7 @@ describe('CampanhasComponent — VEI-RD-51 (módulo consultivo)', () => {
       .map((th) => th.textContent?.trim());
     expect(cabecalhos).toEqual([
       'Código', 'Campanha', 'Anunciante', 'Agência', 'Período',
-      'Peças', 'Valor Total', 'Status', 'Ação',
+      'Peças', 'Valor total', 'Status', 'Ação',
     ]);
   });
 

@@ -67,7 +67,7 @@ const TODOS = '';
   ],
   template: `
     <aurum-page-header
-      titulo="Check Out"
+      titulo="Check out"
       subtitulo="Consulte os checkings realizados em campo e acompanhe a colagem com base nas fotos recebidas."
     />
 

@@ -1,11 +1,11 @@
 <aurum-page-header
-  titulo="Agências Parceiras"
+  titulo="Agências parceiras"
   [badge]="total + (total === 1 ? ' cadastrada' : ' cadastradas')"
   [subtitulo]="'Gestão das agências de publicidade conectadas automaticamente à Afiliada' + (afiliadaId ? ' #' + afiliadaId : '') + '.'"
 >
   <aurum-button aurumPageHeaderAcoes variante="wine" (click)="abrirConsultaCnpj()">
     <span class="aurum-ico agencias__ico" style="--ico: url(/assets/aurum/icon-mais.svg)"></span>
-    Nova Agência
+    Nova agência
   </aurum-button>
 </aurum-page-header>
 
@@ -17,7 +17,7 @@
   <aurum-text-input
     [valor]="busca"
     (valorChange)="buscar($event)"
-    placeholder="Buscar por Nome, Razão Social, CNPJ ou Cidade…"
+    placeholder="Buscar por nome, razão social, CNPJ ou cidade…"
     rotulo="Buscar agências"
   />
 
@@ -51,7 +51,7 @@
       <thead>
         <tr aurumTableRow>
           <th aurumTableHeaderCell scope="col">Agência / Empresa</th>
-          <th aurumTableHeaderCell scope="col">Informações de Contato</th>
+          <th aurumTableHeaderCell scope="col">Informações de contato</th>
           <th aurumTableHeaderCell scope="col">Status</th>
           <th aurumTableHeaderCell scope="col">Campanhas</th>
           <th aurumTableHeaderCell scope="col">Ações</th>
@@ -122,7 +122,7 @@
   </div>
 }
 
-<aurum-modal [aberto]="formAberto" titulo="Cadastrar Nova Agência" largura="md" (fechar)="fecharForm()">
+<aurum-modal [aberto]="formAberto" titulo="Cadastrar nova agência" largura="md" (fechar)="fecharForm()">
   <p aurumModalSubtitulo class="agencias__modal-sub">
     A agência será vinculada à Afiliada <strong>{{ afiliadaId ? '#' + afiliadaId : '' }}</strong>.
   </p>
@@ -149,7 +149,7 @@
     <div class="agencias__form aurum-form">
       <fieldset>
         <label>CNPJ (Obrigatório) *<input type="text" [(ngModel)]="form.cnpj" /></label>
-        <label>Razão social *<input type="text" [(ngModel)]="form.razaoSocial" placeholder="Razão Social completa" /></label>
+        <label>Razão social *<input type="text" [(ngModel)]="form.razaoSocial" placeholder="Razão social completa" /></label>
         <label>Nome fantasia<input type="text" [(ngModel)]="form.nome" placeholder="Nome de exibição" /></label>
         <label>Telefone<input type="text" [(ngModel)]="form.telefone" placeholder="(12) 99999-0000" /></label>
         <label>E-mail de contato<input type="email" [(ngModel)]="form.email" placeholder="midia@agencia.com.br" /></label>
@@ -175,6 +175,6 @@
     <aurum-button aurumModalRodape variante="gold" tamanho="sm" (click)="vincular()">Vincular agência existente</aurum-button>
   }
   @if (form) {
-    <aurum-button aurumModalRodape variante="wine" tamanho="sm" (click)="salvar()">Cadastrar Agência</aurum-button>
+    <aurum-button aurumModalRodape variante="wine" tamanho="sm" (click)="salvar()">Cadastrar agência</aurum-button>
   }
 </aurum-modal>

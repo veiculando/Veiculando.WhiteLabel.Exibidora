@@ -51,9 +51,9 @@ import {
     AurumTableHeaderCellComponent,
   ],
   template: `
-    <a class="od-voltar" routerLink="/ordens-servico">← Voltar para Ordem de Serviço</a>
+    <a class="od-voltar" routerLink="/ordens-servico">← Voltar para ordem de serviço</a>
 
-    <aurum-page-header [titulo]="detalhe?.numeroFormatado || 'Ordem de Serviço'">
+    <aurum-page-header [titulo]="detalhe?.numeroFormatado || 'Ordem de serviço'">
       @if (detalhe; as os) {
         <aurum-status-pill aurumPageHeaderBadge [rotulo]="rotuloStatus(os.status)" [tom]="tomStatus(os.status)" />
       }
@@ -113,8 +113,8 @@ import {
                 <th aurumTableHeaderCell>Local</th>
                 <th aurumTableHeaderCell>Endereço</th>
                 <th aurumTableHeaderCell>Cidade</th>
-                <th aurumTableHeaderCell>Data Colagem</th>
-                <th aurumTableHeaderCell>Status Colagem</th>
+                <th aurumTableHeaderCell>Data de colagem</th>
+                <th aurumTableHeaderCell>Status da colagem</th>
               </tr>
             </thead>
             <tbody>

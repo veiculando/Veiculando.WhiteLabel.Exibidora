@@ -1,11 +1,11 @@
-<aurum-page-header titulo="Gestão de Locais e Pontos OOH" [badge]="locais().length + ' ponto' + (locais().length === 1 ? '' : 's')">
+<aurum-page-header titulo="Gestão de locais e pontos OOH" [badge]="locais().length + ' ponto' + (locais().length === 1 ? '' : 's')">
   <p aurumPageHeaderSubtitulo class="locais__subtitulo">
     Pontos de exibição atrelados à Afiliada
     <strong>{{ afiliadaId ? '#' + afiliadaId : '' }}{{ nomeAfiliada ? ' (' + nomeAfiliada + ')' : '' }}</strong>.
   </p>
   <a aurumPageHeaderAcoes class="aurum-botao-link" routerLink="/locais/novo">
     <span class="aurum-ico" style="--ico: url(/assets/aurum/icon-mais.svg)"></span>
-    Novo Local
+    Novo local
   </a>
 </aurum-page-header>
 
@@ -40,7 +40,7 @@
           <th aurumTableHeaderCell>Localização / Endereço</th>
           <th aurumTableHeaderCell>Status</th>
           <th aurumTableHeaderCell>Suporte / Formato</th>
-          <th aurumTableHeaderCell class="locais__direita">Valor Padrão</th>
+          <th aurumTableHeaderCell class="locais__direita">Valor padrão</th>
           <th aurumTableHeaderCell class="locais__centro">Ações</th>
         </tr>
       </thead>

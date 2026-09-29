@@ -74,7 +74,7 @@ describe('AgenciasComponent — VEI-RD-79', () => {
     ).map((th) => th.textContent?.trim());
     expect(cabecalhos).toEqual([
       'Agência / Empresa',
-      'Informações de Contato',
+      'Informações de contato',
       'Status',
       'Campanhas',
       'Ações',
@@ -154,7 +154,7 @@ describe('AgenciasComponent — VEI-RD-79', () => {
   it('o formulário exige consulta de CNPJ antes de abrir', () => {
     const { fixture, texto } = montar();
     const novo = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button'))
-      .find((b) => b.textContent?.trim() === 'Nova Agência')!;
+      .find((b) => b.textContent?.trim() === 'Nova agência')!;
     novo.click();
     fixture.detectChanges();
 

@@ -11,7 +11,7 @@
   } @else {
     <header class="local-wizard__cabecalho">
       <div class="local-wizard__titulo">
-        <h1>{{ idLocal() ? 'Editar Local' : 'Novo Local' }}</h1>
+        <h1>{{ idLocal() ? 'Editar local' : 'Novo local' }}</h1>
         @if (statusExibicao() !== null) {
           <aurum-status-pill [rotulo]="statusLabel[statusExibicao()!]" [tom]="tomStatus()" compacto />
         }

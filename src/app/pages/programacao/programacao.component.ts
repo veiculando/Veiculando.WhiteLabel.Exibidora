@@ -77,7 +77,7 @@ const TODOS = '';
   template: `
     <aurum-page-header
       titulo="Programação"
-      subtitulo="Grade matriz de peças por período — visualize e valide o status de programação de cada suporte antes de gerar Ordens de Serviço."
+      subtitulo="Grade matriz de peças por período — visualize e valide o status de programação de cada suporte antes de gerar ordens de serviço."
     />
 
     <section class="pg-filtros">
@@ -86,11 +86,11 @@ const TODOS = '';
           <aurum-dropdown [opcoes]="opcoesPeriodicidade" [valor]="String(periodicidade)" (valorChange)="mudarPeriodicidade($event)" />
         </aurum-filter-field>
 
-        <aurum-filter-field rotulo="Período Inicial" posicaoRotulo="acima">
+        <aurum-filter-field rotulo="Período inicial" posicaoRotulo="acima">
           <aurum-dropdown [opcoes]="opcoesPeriodo" [valor]="idPeriodoInicial === null ? TODOS : String(idPeriodoInicial)" (valorChange)="mudarPeriodoInicial($event)" />
         </aurum-filter-field>
 
-        <aurum-filter-field rotulo="Período Final" posicaoRotulo="acima">
+        <aurum-filter-field rotulo="Período final" posicaoRotulo="acima">
           <aurum-dropdown [opcoes]="opcoesPeriodo" [valor]="idPeriodoFinal === null ? TODOS : String(idPeriodoFinal)" (valorChange)="mudarPeriodoFinal($event)" />
         </aurum-filter-field>
 
@@ -107,7 +107,7 @@ const TODOS = '';
         <aurum-filter-field rotulo="Anunciante" posicaoRotulo="acima">
           <aurum-text-input placeholder="Buscar anunciante…" rotulo="Buscar anunciante" [valor]="anunciante" (valorChange)="mudarAnunciante($event)" />
         </aurum-filter-field>
-        <aurum-button variante="outline" tamanho="sm" (click)="limparFiltros()">Limpar Filtros</aurum-button>
+        <aurum-button variante="outline" tamanho="sm" (click)="limparFiltros()">Limpar filtros</aurum-button>
       </div>
 
       @if (erroValidacao) {
@@ -140,7 +140,7 @@ const TODOS = '';
         <span class="pg-vazio__icone" aria-hidden="true">🔍</span>
         <h2>Nenhuma peça encontrada para os filtros selecionados</h2>
         <p>Tente ajustar o período, a cidade ou o status para visualizar peças na grade de programação.</p>
-        <aurum-button variante="outline" tamanho="sm" (click)="limparFiltros()">Limpar Filtros</aurum-button>
+        <aurum-button variante="outline" tamanho="sm" (click)="limparFiltros()">Limpar filtros</aurum-button>
       </section>
     }
 
@@ -220,7 +220,7 @@ const TODOS = '';
         background: var(--white);
         border: 1px solid var(--line-subtle);
         border-radius: 18px;
-        filter: drop-shadow(0 8px 16px rgba(74, 14, 14, 0.08));
+        filter: drop-shadow(0 8px 16px color-mix(in srgb, var(--shadow-tint) 8%, transparent));
       }
       .pg-filtros__linha {
         display: flex;
@@ -260,7 +260,7 @@ const TODOS = '';
         background: var(--white);
         border: 1px solid var(--line-subtle);
         border-radius: 18px;
-        filter: drop-shadow(0 8px 16px rgba(74, 14, 14, 0.08));
+        filter: drop-shadow(0 8px 16px color-mix(in srgb, var(--shadow-tint) 8%, transparent));
       }
       .pg-vazio__icone {
         display: grid;

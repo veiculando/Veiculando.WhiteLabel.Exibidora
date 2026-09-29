@@ -40,7 +40,7 @@ describe('OrdemServicoEntregaModalComponent', () => {
     expect(texto).not.toContain('Colador');
   });
 
-  it('so renderiza a opcao Impressa (PDF) — Planilha de Programação', () => {
+  it('so renderiza a opcao Impressa (PDF) — Planilha de programação', () => {
     const fixture = TestBed.createComponent(OrdemServicoEntregaModalComponent);
     fixture.componentInstance.aberto = true;
     fixture.componentInstance.contexto = { id: 42, numeroFormatado: 'OS #0042', pecasCount: 3, periodoNome: 'Bissemana 16, 2026' };
@@ -50,7 +50,7 @@ describe('OrdemServicoEntregaModalComponent', () => {
     const opcoes = (fixture.nativeElement as HTMLElement).querySelectorAll('.oem-opcao');
     expect(opcoes.length).toBe(1);
     expect(opcoes[0].textContent).toContain('Impressa (PDF)');
-    expect(opcoes[0].textContent).toContain('Planilha de Programação');
+    expect(opcoes[0].textContent).toContain('Planilha de programação');
   });
 
   it('titulo e subtitulo seguem o texto exato do card', () => {
@@ -61,7 +61,7 @@ describe('OrdemServicoEntregaModalComponent', () => {
     fixture.detectChanges();
 
     const el = fixture.nativeElement as HTMLElement;
-    expect(el.querySelector('#oem-titulo')?.textContent?.trim()).toBe('Entregar Ordem de Serviço');
+    expect(el.querySelector('#oem-titulo')?.textContent?.trim()).toBe('Entregar ordem de serviço');
     expect(el.querySelector('#oem-subtitulo')?.textContent?.trim()).toBe(
       'OS #0042 gerada com 3 peças — Bissemana 16, 2026'
     );

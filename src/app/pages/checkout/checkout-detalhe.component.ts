@@ -201,7 +201,7 @@ import { AurumStatusPillComponent } from '../../shared/aurum/aurum-status-pill.c
         background: var(--white);
         border: 1px solid var(--line-subtle);
         border-radius: 18px;
-        filter: drop-shadow(0 8px 16px rgba(74, 14, 14, 0.08));
+        filter: drop-shadow(0 8px 16px color-mix(in srgb, var(--shadow-tint) 8%, transparent));
       }
       .cd-info h2,
       .cd-secao {

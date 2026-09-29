@@ -56,9 +56,9 @@ describe('ProspeccaoComponent — VEI-RD-83', () => {
     expect(texto()).not.toContain('Gestão das marcas anunciantes');
   });
 
-  it('tem o botão "Iniciar Prospecção"', () => {
+  it('tem o botão "Iniciar prospecção"', () => {
     const { texto } = montar();
-    expect(texto()).toContain('Iniciar Prospecção');
+    expect(texto()).toContain('Iniciar prospecção');
   });
 
   it('iniciar chama POST /prospeccao/sessao', () => {
@@ -67,7 +67,7 @@ describe('ProspeccaoComponent — VEI-RD-83', () => {
     vi.spyOn(window, 'open').mockReturnValue(null);
 
     const botao = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button'))
-      .find((b) => b.textContent?.trim() === 'Iniciar Prospecção')!;
+      .find((b) => b.textContent?.trim() === 'Iniciar prospecção')!;
     botao.click();
 
     const requisicao = http.expectOne(base);
@@ -84,7 +84,7 @@ describe('ProspeccaoComponent — VEI-RD-83', () => {
     const abrir = vi.spyOn(window, 'open').mockReturnValue(null);
 
     const botao = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button'))
-      .find((b) => b.textContent?.trim() === 'Iniciar Prospecção')!;
+      .find((b) => b.textContent?.trim() === 'Iniciar prospecção')!;
     botao.click();
 
     http.expectOne(base).flush(sessao);
@@ -105,7 +105,7 @@ describe('ProspeccaoComponent — VEI-RD-83', () => {
     vi.spyOn(window, 'open').mockReturnValue(abaFalsa as unknown as Window);
 
     Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button'))
-      .find((b) => b.textContent?.trim() === 'Iniciar Prospecção')!
+      .find((b) => b.textContent?.trim() === 'Iniciar prospecção')!
       .click();
     http.expectOne(base).flush(sessao);
     fixture.detectChanges();
@@ -132,7 +132,7 @@ describe('ProspeccaoComponent — VEI-RD-83', () => {
     vi.spyOn(window, 'open').mockReturnValue(abaFalsa as unknown as Window);
 
     Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button'))
-      .find((b) => b.textContent?.trim() === 'Iniciar Prospecção')!
+      .find((b) => b.textContent?.trim() === 'Iniciar prospecção')!
       .click();
     http.expectOne(base).flush(sessao);
     fixture.detectChanges();
@@ -152,7 +152,7 @@ describe('ProspeccaoComponent — VEI-RD-83', () => {
     vi.spyOn(window, 'open').mockReturnValue(abaFalsa as unknown as Window);
 
     Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button'))
-      .find((b) => b.textContent?.trim() === 'Iniciar Prospecção')!
+      .find((b) => b.textContent?.trim() === 'Iniciar prospecção')!
       .click();
     http.expectOne(base).flush(sessao);
     fixture.detectChanges();
@@ -171,7 +171,7 @@ describe('ProspeccaoComponent — VEI-RD-83', () => {
     vi.spyOn(window, 'open').mockReturnValue(null);
 
     const botao = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button'))
-      .find((b) => b.textContent?.trim() === 'Iniciar Prospecção')!;
+      .find((b) => b.textContent?.trim() === 'Iniciar prospecção')!;
     botao.click();
 
     http.expectOne(base).flush(

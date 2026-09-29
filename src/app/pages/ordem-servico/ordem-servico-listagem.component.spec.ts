@@ -90,7 +90,7 @@ describe('OrdemServicoListagemComponent', () => {
     const fixture = criar();
     fixture.detectChanges();
     const link = (fixture.nativeElement as HTMLElement).querySelector('a[href="/ordens-servico/nova"]');
-    expect(link?.textContent?.trim()).toContain('Nova Ordem de Serviço');
+    expect(link?.textContent?.trim()).toContain('Nova ordem de serviço');
   });
 
   it('acao Entregar abre o modal com o contexto da OS (numeroFormatado pronto, sem POST de entrega)', () => {

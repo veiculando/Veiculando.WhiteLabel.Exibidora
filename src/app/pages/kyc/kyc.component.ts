@@ -51,7 +51,7 @@ interface Chip {
   styles: [
     `
       .kyc__chips { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 16px; margin-bottom: 20px; }
-      .kyc__chip { display: flex; flex-direction: column; gap: 10px; padding: 18px 20px; border: 2px solid transparent; border-radius: 18px; background: var(--white); box-shadow: 0 8px 16px rgba(74, 14, 14, 0.08); font: inherit; text-align: left; cursor: pointer; }
+      .kyc__chip { display: flex; flex-direction: column; gap: 10px; padding: 18px 20px; border: 2px solid transparent; border-radius: 18px; background: var(--white); box-shadow: 0 8px 16px color-mix(in srgb, var(--shadow-tint) 8%, transparent); font: inherit; text-align: left; cursor: pointer; }
       .kyc__chip[aria-pressed='true'] { border-color: var(--primary-color); }
       .kyc__chip-topo { display: flex; align-items: center; justify-content: space-between; }
       .kyc__chip-icone { width: 18px; height: 18px; color: var(--tone-warning); }
@@ -70,7 +70,7 @@ interface Chip {
       .kyc__envio { white-space: nowrap; }
       .kyc__acoes { display: inline-flex; gap: 6px; }
       .kyc__acao { display: inline-grid; place-items: center; width: 28px; height: 28px; border: none; border-radius: 8px; background: var(--wine-tint); color: var(--primary-color); cursor: pointer; }
-      .kyc__acao--ouro { background: var(--gold-tint); color: #8a6500; }
+      .kyc__acao--ouro { background: var(--gold-tint); color: var(--gold-ink); }
       .kyc__acao .aurum-ico { width: 14px; height: 14px; }
     `,
   ],

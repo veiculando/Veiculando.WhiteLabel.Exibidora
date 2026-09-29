@@ -42,7 +42,7 @@ export type AurumStatCardTomRotulo = 'padrao' | 'sucesso' | 'aviso';
         background: var(--white);
         border: 1px solid var(--line-subtle);
         border-radius: 18px;
-        filter: drop-shadow(0 8px 16px rgba(74, 14, 14, 0.1));
+        filter: drop-shadow(0 8px 16px color-mix(in srgb, var(--shadow-tint) 10%, transparent));
       }
       .aurum-stat-card__topo {
         display: flex;
@@ -62,7 +62,7 @@ export type AurumStatCardTomRotulo = 'padrao' | 'sucesso' | 'aviso';
         color: var(--tone-success);
       }
       .aurum-stat-card__rotulo--aviso {
-        color: #b45309;
+        color: var(--tone-amber);
       }
       .aurum-stat-card__icone {
         display: grid;
@@ -78,11 +78,11 @@ export type AurumStatCardTomRotulo = 'padrao' | 'sucesso' | 'aviso';
       }
       .aurum-stat-card__icone--ouro {
         background: color-mix(in srgb, var(--secondary-color) 15%, transparent);
-        color: #8a6500;
+        color: var(--gold-ink);
       }
       .aurum-stat-card__icone--ambar {
-        background: rgba(234, 179, 8, 0.12);
-        color: #b45309;
+        background: var(--tone-amber-bg);
+        color: var(--tone-amber);
       }
       .aurum-stat-card__valor {
         padding-top: 12px;
@@ -91,7 +91,7 @@ export type AurumStatCardTomRotulo = 'padrao' | 'sucesso' | 'aviso';
         font-size: 1.625rem;
         line-height: 26px;
         font-variation-settings: 'SOFT' 0, 'WONK' 1;
-        color: #6e040b;
+        color: var(--primary-ink);
       }
       .aurum-stat-card__detalhe {
         padding-top: 10px;

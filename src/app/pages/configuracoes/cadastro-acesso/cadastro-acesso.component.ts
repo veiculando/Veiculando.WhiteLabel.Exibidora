@@ -50,7 +50,7 @@ import { AurumStatusPillComponent } from '../../../shared/aurum/aurum-status-pil
       .cadastro-acesso__switch span::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--white); transition: transform 160ms ease; }
       .cadastro-acesso__switch input:checked + span { background: var(--primary-color); }
       .cadastro-acesso__switch input:checked + span::after { transform: translateX(18px); }
-      .cadastro-acesso__switch input:focus-visible + span { outline: 3px solid color-mix(in srgb, var(--secondary-color) 70%, #fff); outline-offset: 2px; }
+      .cadastro-acesso__switch input:focus-visible + span { outline: 3px solid color-mix(in srgb, var(--secondary-color) 70%, var(--white)); outline-offset: 2px; }
       .cadastro-acesso__corpo { padding: 20px 24px; }
       .cadastro-acesso__info { margin: 0 0 10px; font-size: 0.78125rem; color: var(--on-surface); }
       .cadastro-acesso__corpo h3 { margin: 18px 0 8px; font-family: var(--font-ui); font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--on-surface); }

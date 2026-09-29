@@ -1,11 +1,11 @@
 <aurum-page-header
-  titulo="Valores de Peças e Tabela de Preços"
+  titulo="Valores de peças e tabela de preços"
   [badge]="total + ' peça' + (total === 1 ? '' : 's')"
   [subtitulo]="'Precificação das peças de mídia cadastradas para a Afiliada' + (afiliadaId ? ' #' + afiliadaId : '') + '.'"
 >
   <aurum-button aurumPageHeaderAcoes variante="wine" [desabilitado]="selecionadosCount === 0" (click)="abrirModal()">
     <span class="aurum-ico pv-ico" style="--ico: url(/assets/aurum/icon-cifrao.svg)"></span>
-    Alterar Preço ({{ selecionadosCount }} selecionada{{ selecionadosCount === 1 ? '' : 's' }})
+    Alterar preço ({{ selecionadosCount }} selecionada{{ selecionadosCount === 1 ? '' : 's' }})
   </aurum-button>
 </aurum-page-header>
 
@@ -94,7 +94,7 @@
     <span class="pv-sucesso__icone" aria-hidden="true">
       <svg viewBox="0 0 24 24" width="24" height="24"><path d="M6 12.5l4 4 8-9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
     </span>
-    <h2>Atualização Concluída!</h2>
+    <h2>Atualização concluída!</h2>
     <p>{{ sucesso }}</p>
     <aurum-button variante="wine" tamanho="sm" (click)="sucesso = ''">OK, Entendido</aurum-button>
   </div>

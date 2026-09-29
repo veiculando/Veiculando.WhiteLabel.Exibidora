@@ -34,7 +34,7 @@
 } @else if (resumo; as r) {
   <div class="kpis">
     <aurum-card class="kpi">
-      <span class="kpi__rotulo">Faturamento Previsto</span>
+      <span class="kpi__rotulo">Faturamento previsto</span>
       @if (r.faturamentoPrevisto.disponivel) {
         <span class="kpi__valor">{{ formatarMoeda(r.faturamentoPrevisto.valor) }}</span>
       } @else {
@@ -42,24 +42,24 @@
       }
     </aurum-card>
     <aurum-card class="kpi">
-      <span class="kpi__rotulo">Valor Líquido de Veiculação (PIs)</span>
+      <span class="kpi__rotulo">Valor líquido de veiculação (PIs)</span>
       <span class="kpi__valor">{{ formatarMoeda(r.valorLiquidoVeiculacaoTotal) }}</span>
     </aurum-card>
     <aurum-card class="kpi">
-      <span class="kpi__rotulo">Peças Veiculadas</span>
+      <span class="kpi__rotulo">Peças veiculadas</span>
       <span class="kpi__valor">{{ r.pecasVeiculadas }}</span>
     </aurum-card>
   </div>
 
   <div class="rel-tabelas">
     <div>
-      <h3>Pedidos de Inserção por status ({{ r.pedidosInsercao.total }} total)</h3>
+      <h3>Pedidos de inserção por status ({{ r.pedidosInsercao.total }} total)</h3>
       <table aurumTable>
         <thead>
           <tr aurumTableRow>
             <th aurumTableHeaderCell>Status</th>
             <th aurumTableHeaderCell>Quantidade</th>
-            <th aurumTableHeaderCell>Valor Líquido</th>
+            <th aurumTableHeaderCell>Valor líquido</th>
           </tr>
         </thead>
         <tbody>
