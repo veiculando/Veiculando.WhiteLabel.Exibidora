@@ -152,7 +152,7 @@ export const routes: Routes = [
       // sprint, nem como opção de UI nem como destino de navegação.
       {
         path: 'ordens-servico',
-        title: 'Ordem de Serviço',
+        title: 'Ordem de serviço',
         data: { permission: 'PecaGerenciar' },
         canActivate: [authGuard],
         loadComponent: () =>
@@ -162,7 +162,7 @@ export const routes: Routes = [
       },
       {
         path: 'ordens-servico/nova',
-        title: 'Gerar Ordem de Serviço',
+        title: 'Gerar ordem de serviço',
         data: { permission: 'PecaGerenciar' },
         canActivate: [authGuard],
         loadComponent: () =>
@@ -172,7 +172,7 @@ export const routes: Routes = [
       },
       {
         path: 'ordens-servico/:id',
-        title: 'Ordem de Serviço',
+        title: 'Ordem de serviço',
         data: { permission: 'PecaGerenciar' },
         canActivate: [authGuard],
         loadComponent: () =>
