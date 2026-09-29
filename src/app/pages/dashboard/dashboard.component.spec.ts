@@ -78,11 +78,11 @@ describe('DashboardComponent', () => {
         expect(texto).not.toContain('Receita mensal');
     });
 
-    it('Faturamento Previsto aparece como "Indisponível" quando o BFF nao tem a formula (nunca R$ 0,00 fixo)', async () => {
+    it('Faturamento previsto aparece como "Indisponível" quando o BFF nao tem a formula (nunca R$ 0,00 fixo)', async () => {
         await carregarTudo();
 
         const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
-        expect(texto).toContain('Faturamento Previsto');
+        expect(texto).toContain('Faturamento previsto');
         expect(texto).toContain('Indisponível');
         expect(texto).not.toContain('R$ 0,00');
     });
@@ -98,7 +98,7 @@ describe('DashboardComponent', () => {
         expect(texto).toContain('Pedidos pendentes');
     });
 
-    it('renderiza os 4 KPIs financeiros do Figma (Taxa de Ocupação, Campanhas Ativas, Demandas Pendentes)', async () => {
+    it('renderiza os 4 KPIs financeiros do Figma (Taxa de ocupação, Campanhas ativas, Demandas pendentes)', async () => {
         await carregarTudo({
             ...FINANCEIRO_PADRAO,
             taxaOcupacaoOOH: { disponivel: true, formulaProvisoria: true, percentual: 78, pecasOcupadas: 39, pecasAtivas: 50 },
@@ -107,11 +107,11 @@ describe('DashboardComponent', () => {
         });
 
         const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
-        expect(texto).toContain('Taxa de Ocupação OOH');
+        expect(texto).toContain('Taxa de ocupação OOH');
         expect(texto).toContain('78%');
-        expect(texto).toContain('Campanhas Ativas');
+        expect(texto).toContain('Campanhas ativas');
         expect(texto).toContain('37');
-        expect(texto).toContain('Demandas Pendentes');
+        expect(texto).toContain('Demandas pendentes');
         expect(texto).toContain('14 reservas');
         expect(texto).toContain('9 PIs');
     });

@@ -1,0 +1,87 @@
+{
+  "itens": [
+    {
+      "id": 1,
+      "codigo": "HF5-PI-A",
+      "dataCadastro": "2026-09-29T10:03:56.38",
+      "dataPedido": "2026-09-29T10:03:56.31",
+      "status": "Novo",
+      "campanha": "Campanha Teste",
+      "agencia": "Agencia Teste",
+      "anunciante": "Cliente Teste",
+      "valorLiquidoVeiculacao": 1000.0,
+      "itensCount": 1,
+      "cidade": "Sao Paulo",
+      "qtdCidades": 1,
+      "periodo": {
+        "id": 1,
+        "rotulo": "P1 - de  29/09 a  13/10",
+        "dataInicio": "2026-09-29T10:03:56.297",
+        "dataFim": "2026-10-13T10:03:56.297",
+        "quantidade": 1
+      }
+    },
+    {
+      "id": 2,
+      "codigo": "HF5-PI-B",
+      "dataCadastro": "2026-09-29T10:03:56.423",
+      "dataPedido": "2026-09-29T10:03:56.4",
+      "status": "Novo",
+      "campanha": "Campanha Teste",
+      "agencia": "Agencia Teste",
+      "anunciante": "Cliente Teste",
+      "valorLiquidoVeiculacao": 1000.0,
+      "itensCount": 1,
+      "cidade": "Sao Paulo",
+      "qtdCidades": 1,
+      "periodo": {
+        "id": 931001,
+        "rotulo": "HF5P - de  29/09 a  13/10",
+        "dataInicio": "2026-09-29T10:03:56.49",
+        "dataFim": "2026-10-13T10:03:56.49",
+        "quantidade": 1
+      }
+    }
+  ],
+  "page": 1,
+  "pageSize": 100,
+  "total": 2,
+  "totalPaginas": 1,
+  "resumo": {
+    "totalPIs": 2,
+    "totalPecas": 2,
+    "valorLiquidoTotal": 2000.0,
+    "porStatus": [
+      {
+        "status": "Novo",
+        "quantidade": 2,
+        "valor": 2000.0
+      },
+      {
+        "status": "Aprovado",
+        "quantidade": 0,
+        "valor": 0
+      },
+      {
+        "status": "Checking",
+        "quantidade": 0,
+        "valor": 0
+      },
+      {
+        "status": "Veiculado",
+        "quantidade": 0,
+        "valor": 0
+      },
+      {
+        "status": "Rejeitado",
+        "quantidade": 0,
+        "valor": 0
+      },
+      {
+        "status": "Cancelado",
+        "quantidade": 0,
+        "valor": 0
+      }
+    ]
+  }
+}

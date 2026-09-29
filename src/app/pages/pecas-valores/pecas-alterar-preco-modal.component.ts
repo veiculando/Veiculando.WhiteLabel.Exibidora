@@ -42,7 +42,7 @@ export interface AlterarPrecoConfirmacao {
   standalone: true,
   imports: [CommonModule, FormsModule, AurumButtonComponent, AurumModalComponent],
   template: `
-    <aurum-modal [aberto]="true" titulo="Alterar Preço de Peças" posicao="lateral" (fechar)="!salvando && fechar.emit()">
+    <aurum-modal [aberto]="true" titulo="Alterar preço de peças" posicao="lateral" (fechar)="!salvando && fechar.emit()">
       <div class="ppm-corpo">
         <p class="ppm-resumo">
           Resumo da seleção: <strong>{{ itens.length }} peça(s) selecionada(s)</strong>.
@@ -50,7 +50,7 @@ export interface AlterarPrecoConfirmacao {
 
         @if (escopo === 'todos') {
           <label class="wl-campo">
-            <span class="ppm-rotulo">Tipo de Alteração de Valor</span>
+            <span class="ppm-rotulo">Tipo de alteração de valor</span>
             <select [(ngModel)]="modo">
               <option value="valorExato">Definir valor exato em Reais (R$)</option>
               <option value="incrementar">Acrescentar valor em Reais (R$)</option>
@@ -79,9 +79,9 @@ export interface AlterarPrecoConfirmacao {
         </label>
 
         <label class="wl-campo">
-          <span class="ppm-rotulo">Configurar Valor Por Período Comercial</span>
+          <span class="ppm-rotulo">Configurar valor por período comercial</span>
           <select [(ngModel)]="escopo" (ngModelChange)="aoTrocarEscopo()">
-            <option value="todos">Valor Padrão Permanente (Todos os Períodos)</option>
+            <option value="todos">Valor padrão permanente (todos os períodos)</option>
             @for (periodo of periodos; track periodo.id) {
               <option [ngValue]="periodo.id.toString()">{{ periodo.nome }}</option>
             }
@@ -92,11 +92,11 @@ export interface AlterarPrecoConfirmacao {
           <div class="ppm-previa">
             <span class="ppm-previa__titulo">Prévia do impacto financeiro</span>
             <div class="ppm-previa__linha">
-              <span>Soma Total Atual:</span>
+              <span>Soma total atual:</span>
               <strong>{{ formatarMoeda(totalAtual()) }}</strong>
             </div>
             <div class="ppm-previa__linha ppm-previa__linha--nova">
-              <span>Soma Total Após Ajuste:</span>
+              <span>Soma total após ajuste:</span>
               <strong>{{ formatarMoeda(totalNovo()) }}</strong>
             </div>
             @if (variacaoMedia() !== null) {
@@ -117,7 +117,7 @@ export interface AlterarPrecoConfirmacao {
 
       <aurum-button aurumModalRodape class="ppm-acao" variante="ghost" [desabilitado]="salvando" (click)="fechar.emit()">Cancelar</aurum-button>
       <aurum-button aurumModalRodape class="ppm-acao" variante="gold" [desabilitado]="!podeConfirmar() || salvando" (click)="aoConfirmar()">
-        {{ salvando ? 'Salvando…' : 'Confirmar Alteração' }}
+        {{ salvando ? 'Salvando…' : 'Confirmar alteração' }}
       </aurum-button>
     </aurum-modal>
   `,

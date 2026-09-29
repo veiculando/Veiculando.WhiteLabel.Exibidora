@@ -1,9 +1,9 @@
 <aurum-page-header
-  titulo="Campanhas de Mídia"
+  titulo="Campanhas de mídia"
   [subtitulo]="'Visualização consultiva de veiculações alocadas para a Afiliada' + (afiliadaId ? ' #' + afiliadaId : '') + '.'"
 >
   <!-- O badge é o contrato com quem lê a tela: aqui não se cria nem se altera nada. -->
-  <aurum-status-pill aurumPageHeaderBadge rotulo="Módulo Consultivo" tom="primario" compacto />
+  <aurum-status-pill aurumPageHeaderBadge rotulo="Módulo consultivo" tom="primario" compacto />
 </aurum-page-header>
 
 @if (erro) {
@@ -52,7 +52,7 @@
         </div>
         <div class="campanhas__rodape">
           <div>
-            <span class="campanhas__rotulo">{{ campanha.pecas }} Peças • Valor Total</span>
+            <span class="campanhas__rotulo">{{ campanha.pecas }} peças • valor total</span>
             <span class="campanhas__valor">{{ valor(campanha) }}</span>
           </div>
           <!-- Única ação: consulta. Nenhum controle de mutação é renderizado. -->
@@ -79,7 +79,7 @@
           <th aurumTableHeaderCell scope="col">Agência</th>
           <th aurumTableHeaderCell scope="col">Período</th>
           <th aurumTableHeaderCell scope="col">Peças</th>
-          <th aurumTableHeaderCell scope="col">Valor Total</th>
+          <th aurumTableHeaderCell scope="col">Valor total</th>
           <th aurumTableHeaderCell scope="col">Status</th>
           <th aurumTableHeaderCell scope="col">Ação</th>
         </tr>

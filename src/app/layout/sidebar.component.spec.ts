@@ -57,13 +57,13 @@ describe('SidebarComponent', () => {
     fixture.detectChanges();
     const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
     expect(texto).toContain('Check out');
-    expect(texto).toContain('Ordem de Serviço');
+    expect(texto).toContain('Ordem de serviço');
   });
 
   it('Ordem de Servico exige PecaGerenciar (mesma policy do OrdensServicoController real) e some sem ela', () => {
     configurar(['CheckingGerenciar']);
     fixture.detectChanges();
-    expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('Ordem de Serviço');
+    expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('Ordem de serviço');
   });
 
   it('Check out some sem a permissao CheckingGerenciar', () => {
@@ -91,11 +91,11 @@ describe('SidebarComponent', () => {
     }
   });
 
-  it('Valores de Peças aparece em Inventário quando PecaGerenciar é concedida (VEI-RD-54)', () => {
+  it('Valores de peças aparece em Inventário quando PecaGerenciar é concedida (VEI-RD-54)', () => {
     configurar(['PecaGerenciar']);
     fixture.detectChanges();
     const link = (fixture.nativeElement as HTMLElement).querySelector('a[href="/pecas/valores"]');
-    expect(link?.textContent?.trim()).toBe('Valores de Peças');
+    expect(link?.textContent?.trim()).toBe('Valores de peças');
   });
 
   // Os dois lados, em testes separados: acender o item com a permissao certa E

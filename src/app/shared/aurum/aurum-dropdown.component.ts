@@ -27,7 +27,11 @@ export interface AurumDropdownOpcao {
         padding: 9px 32px 9px 12px;
         border: 1px solid var(--line-search);
         border-radius: var(--radius-search);
-        background: var(--paper-bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath d='M1 1l3 3 3-3' fill='none' stroke='%23544341' stroke-width='1.2' stroke-linecap='round'/%3E%3C/svg%3E") right 12px center no-repeat;
+        /* Chevron em gradiente, não SVG em data URI: a cor segue o tema em runtime. */
+        background:
+          linear-gradient(45deg, transparent calc(50% - 0.6px), var(--on-surface) calc(50% - 0.6px), var(--on-surface) calc(50% + 0.6px), transparent calc(50% + 0.6px)) right 16px center / 4px 4px no-repeat,
+          linear-gradient(-45deg, transparent calc(50% - 0.6px), var(--on-surface) calc(50% - 0.6px), var(--on-surface) calc(50% + 0.6px), transparent calc(50% + 0.6px)) right 12px center / 4px 4px no-repeat,
+          var(--paper-bg);
         appearance: none;
         color: var(--on-surface);
         font: inherit;

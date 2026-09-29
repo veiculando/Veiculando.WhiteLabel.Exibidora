@@ -48,17 +48,20 @@ import { AurumStatusPillComponent, AurumStatusPillTom } from '../../shared/aurum
     `
       .periodo {
         display: grid;
+        /* minmax(0, …): sem isso a trilha cresce até o texto da <option> mais longa (D11, 390 px). */
+        grid-template-columns: minmax(0, 1fr);
         gap: 4px;
         margin-bottom: 20px;
         padding: 24px;
         background: var(--white);
         border: 1px solid var(--line-subtle);
         border-radius: 18px;
-        filter: drop-shadow(0 8px 16px rgba(74, 14, 14, 0.1));
+        filter: drop-shadow(0 8px 16px color-mix(in srgb, var(--shadow-tint) 10%, transparent));
       }
       .periodo__titulo {
         display: flex;
         align-items: center;
+        flex-wrap: wrap;
         gap: 8px;
       }
       .periodo__titulo h1 {
@@ -66,7 +69,7 @@ import { AurumStatusPillComponent, AurumStatusPillTom } from '../../shared/aurum
         font-size: 1.125rem;
         font-weight: 700;
         line-height: 27px;
-        color: #6e040b;
+        color: var(--primary-ink);
       }
       .periodo__icone {
         color: var(--primary-color);
@@ -75,7 +78,7 @@ import { AurumStatusPillComponent, AurumStatusPillTom } from '../../shared/aurum
         padding: 2px 8px;
         border-radius: var(--radius-pill);
         background: var(--gold-grad);
-        color: #6e040b;
+        color: var(--primary-ink);
         font-size: 0.65625rem;
         font-weight: 700;
         line-height: 15.75px;
@@ -106,21 +109,28 @@ import { AurumStatusPillComponent, AurumStatusPillTom } from '../../shared/aurum
         height: 14px;
       }
       .periodo__seletor select {
-        min-width: min(400px, 100%);
+        flex: 1 1 240px;
+        min-width: 0;
+        max-width: 400px;
+        text-overflow: ellipsis;
         padding: 8px 40px 8px 20px;
         border: 1px solid var(--primary-color);
         border-radius: var(--radius-pill);
-        background: var(--paper-bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%238a0009' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") right 16px center no-repeat;
+        /* Chevron em gradiente, não SVG em data URI: a cor segue o tema em runtime. */
+        background:
+          linear-gradient(45deg, transparent calc(50% - 0.8px), var(--primary-color) calc(50% - 0.8px), var(--primary-color) calc(50% + 0.8px), transparent calc(50% + 0.8px)) right 21px center / 5px 5px no-repeat,
+          linear-gradient(-45deg, transparent calc(50% - 0.8px), var(--primary-color) calc(50% - 0.8px), var(--primary-color) calc(50% + 0.8px), transparent calc(50% + 0.8px)) right 16px center / 5px 5px no-repeat,
+          var(--paper-bg);
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         appearance: none;
-        color: #6e040b;
+        color: var(--primary-ink);
         font-size: 0.84375rem;
         font-weight: 700;
         cursor: pointer;
       }
       .kpis {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
         gap: 18px;
         margin-bottom: 20px;
       }
@@ -174,7 +184,7 @@ import { AurumStatusPillComponent, AurumStatusPillTom } from '../../shared/aurum
         font-weight: 700;
         font-size: 1.5rem;
         line-height: 36px;
-        color: #6e040b;
+        color: var(--primary-ink);
       }
       .kpi__composto small {
         margin-right: 16px;
@@ -184,7 +194,7 @@ import { AurumStatusPillComponent, AurumStatusPillTom } from '../../shared/aurum
       }
       .listas {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr));
         gap: 20px;
         margin-bottom: 32px;
       }
@@ -204,7 +214,7 @@ import { AurumStatusPillComponent, AurumStatusPillTom } from '../../shared/aurum
         font-size: 1rem;
         font-weight: 700;
         line-height: 24px;
-        color: #6e040b;
+        color: var(--primary-ink);
       }
       .lista__cabecalho a {
         flex: none;
@@ -241,7 +251,7 @@ import { AurumStatusPillComponent, AurumStatusPillTom } from '../../shared/aurum
       .lista__valor strong {
         font-size: 0.8125rem;
         line-height: 19.5px;
-        color: #6e040b;
+        color: var(--primary-ink);
       }
       .lista__texto span {
         font-size: 0.71875rem;
@@ -252,7 +262,7 @@ import { AurumStatusPillComponent, AurumStatusPillTom } from '../../shared/aurum
         margin: 0 0 16px;
         font-size: 1.125rem;
         font-weight: 700;
-        color: #6e040b;
+        color: var(--primary-ink);
       }
       .alerta {
         padding: 12px 16px;

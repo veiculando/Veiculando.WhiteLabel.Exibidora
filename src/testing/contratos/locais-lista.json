@@ -1,0 +1,34 @@
+[
+  {
+    "id": 1,
+    "codigo": "HF5LCOM",
+    "descricao": "Local HF5LCOM",
+    "cidade": "Sao Paulo",
+    "uf": "SP",
+    "endereco": null,
+    "fonteOrigem": 1,
+    "fonteTimestamp": null,
+    "statusExibicao": 1,
+    "timeStamp": "AAAAAAAAB9Q=",
+    "suporte": "Outdoor",
+    "formatoDimensao": "9,00 x 3,00",
+    "valorPadrao": 1500.0,
+    "periodicidade": 0
+  },
+  {
+    "id": 2,
+    "codigo": "HF5LSEM",
+    "descricao": "Local HF5LSEM",
+    "cidade": "Sao Paulo",
+    "uf": "SP",
+    "endereco": null,
+    "fonteOrigem": 1,
+    "fonteTimestamp": null,
+    "statusExibicao": 1,
+    "timeStamp": "AAAAAAAAB9Y=",
+    "suporte": null,
+    "formatoDimensao": null,
+    "valorPadrao": null,
+    "periodicidade": null
+  }
+]

@@ -41,7 +41,7 @@ export interface OsEntregaContexto {
           (click)="$event.stopPropagation()"
           (keydown.escape)="fechar.emit()"
         >
-          <h2 id="oem-titulo" class="oem-titulo">Entregar Ordem de Serviço</h2>
+          <h2 id="oem-titulo" class="oem-titulo">Entregar ordem de serviço</h2>
           @if (contexto) {
             <p id="oem-subtitulo" class="oem-subtitulo">{{ subtitulo(contexto) }}</p>
           }
@@ -54,7 +54,7 @@ export interface OsEntregaContexto {
             <span class="oem-opcao__icone" aria-hidden="true">🖨</span>
             <span class="oem-opcao__texto">
               <strong>Impressa (PDF)</strong>
-              <span>Planilha de Programação</span>
+              <span>Planilha de programação</span>
             </span>
           </button>
 
@@ -93,7 +93,7 @@ export interface OsEntregaContexto {
         padding: 36px 40px;
         background: var(--white);
         border-radius: 18px;
-        box-shadow: 0 20px 48px rgba(38, 5, 5, 0.28);
+        box-shadow: 0 20px 48px color-mix(in srgb, var(--shadow-tint-deep) 28%, transparent);
       }
       .oem-titulo {
         margin: 0;
@@ -104,7 +104,7 @@ export interface OsEntregaContexto {
       .oem-subtitulo {
         margin: -18px 0 0;
         font-size: 0.84375rem;
-        color: rgba(84, 67, 65, 0.75);
+        color: color-mix(in srgb, var(--on-surface) 75%, transparent);
       }
       .oem-opcao {
         display: flex;
@@ -138,7 +138,7 @@ export interface OsEntregaContexto {
         flex-direction: column;
         gap: 4px;
         font-size: 0.78125rem;
-        color: rgba(84, 67, 65, 0.75);
+        color: color-mix(in srgb, var(--on-surface) 75%, transparent);
       }
       .oem-opcao__texto strong {
         font-size: 0.90625rem;

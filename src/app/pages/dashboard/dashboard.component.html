@@ -1,7 +1,7 @@
 <section class="periodo">
   <div class="periodo__titulo">
     <span class="aurum-ico periodo__icone" style="--ico: url(/assets/aurum/icon-calendario.svg)"></span>
-    <h1>Período Comercial{{ financeiro?.periodo?.vigente ? ' Vigente' : '' }}</h1>
+    <h1>Período comercial{{ financeiro?.periodo?.vigente ? ' vigente' : '' }}</h1>
     @if (financeiro?.periodo?.vigente) {
       <span class="periodo__vigente">VIGENTE AGORA</span>
     }
@@ -15,7 +15,7 @@
   <label class="periodo__seletor">
     <span class="periodo__rotulo">
       <span class="aurum-ico" style="--ico: url(/assets/aurum/icon-filtro.svg)"></span>
-      Selecionar Período:
+      Selecionar período:
     </span>
     <select [(ngModel)]="idPeriodoSelecionado" (ngModelChange)="aoTrocarPeriodo()">
       @for (periodo of periodos; track periodo.id) {
@@ -38,7 +38,7 @@
 @if (financeiro; as f) {
   <div class="kpis">
     <aurum-stat-card
-      rotulo="Faturamento Previsto"
+      rotulo="Faturamento previsto"
       icone="tendencia"
       tom="vinho"
       [valor]="f.faturamentoPrevisto.disponivel ? formatarMoedaInteira(f.faturamentoPrevisto.valor) : null"
@@ -59,7 +59,7 @@
       }
     </aurum-stat-card>
 
-    <aurum-stat-card rotulo="Taxa de Ocupação OOH" icone="camadas" tom="ouro" [valor]="f.taxaOcupacaoOOH.percentual + '%'">
+    <aurum-stat-card rotulo="Taxa de ocupação OOH" icone="camadas" tom="ouro" [valor]="f.taxaOcupacaoOOH.percentual + '%'">
       <span
         class="kpi__barra"
         role="img"
@@ -69,11 +69,11 @@
       </span>
     </aurum-stat-card>
 
-    <aurum-stat-card rotulo="Campanhas Ativas" icone="megafone" tom="vinho" [valor]="f.campanhasAtivas">
+    <aurum-stat-card rotulo="Campanhas ativas" icone="megafone" tom="vinho" [valor]="f.campanhasAtivas">
       Programadas para <strong>{{ f.periodo.nome }}</strong>
     </aurum-stat-card>
 
-    <aurum-stat-card rotulo="Demandas Pendentes" icone="relogio" tom="ambar">
+    <aurum-stat-card rotulo="Demandas pendentes" icone="relogio" tom="ambar">
       <span aurumStatValor class="kpi__composto">
         {{ f.demandasPendentes.reservas }} <small>reservas</small>
         {{ f.demandasPendentes.pedidosInsercao }} <small>PIs</small>
@@ -85,7 +85,7 @@
   <div class="listas">
     <aurum-card class="lista">
       <div class="lista__cabecalho">
-        <h2>Solicitações de Reserva ({{ f.periodo.nome }})</h2>
+        <h2>Solicitações de reserva ({{ f.periodo.nome }})</h2>
         <a routerLink="/pedidos-reserva">Ver todas →</a>
       </div>
       @if (reservas.length === 0) {
@@ -108,7 +108,7 @@
 
     <aurum-card class="lista">
       <div class="lista__cabecalho">
-        <h2>Pedidos de Inserção ({{ f.periodo.nome }})</h2>
+        <h2>Pedidos de inserção ({{ f.periodo.nome }})</h2>
         <a routerLink="/pedidos-insercao">Ver PIs →</a>
       </div>
       @if (pedidosInsercao.length === 0) {

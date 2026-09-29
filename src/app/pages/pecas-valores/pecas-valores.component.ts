@@ -153,12 +153,12 @@ export class PecasValoresComponent implements OnInit {
   readonly colDefs: ColDef<PecaValorListItem>[] = [
     { headerCheckboxSelection: true, checkboxSelection: true, width: 44, pinned: 'left', sortable: false, resizable: false },
     { headerName: 'Código', field: 'codigo', sortable: true, flex: 1.1, cellClass: 'aurum-cel-codigo' },
-    { headerName: 'Código Interno', field: 'codigoInterno', sortable: false, flex: 1, cellClass: 'aurum-cel-mono' },
+    { headerName: 'Código interno', field: 'codigoInterno', sortable: false, flex: 1, cellClass: 'aurum-cel-mono' },
     { headerName: 'Suporte', field: 'suporte', sortable: false, flex: 1, cellRenderer: etiquetaSuporte },
     { headerName: 'Cidade', field: 'cidade', sortable: true, flex: 1, cellClass: 'aurum-cel-forte' },
     { headerName: 'Endereço', field: 'endereco', sortable: false, flex: 1.4, cellClass: 'aurum-cel-apagado' },
     {
-      headerName: 'Valor Padrão',
+      headerName: 'Valor padrão',
       field: 'valorPadrao',
       sortable: true,
       flex: 1,

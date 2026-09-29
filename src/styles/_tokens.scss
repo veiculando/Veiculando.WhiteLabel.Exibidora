@@ -24,8 +24,25 @@
   --gold-accent: var(--secondary-color);
   --gold-light: color-mix(in srgb, var(--secondary-color) 68%, #ffffff);
   --eyebrow-color: color-mix(in srgb, var(--secondary-color) 68%, #000000);
-  --gold-grad: linear-gradient(90deg, #d6b23a, #debb4d 35%, #eecc72 70%, var(--gold-light));
-  --wine-grad: linear-gradient(90deg, var(--primary-color), #c2302c 60%, #a51f1f);
+  /* Tinta de texto sobre papel: #6e040b / #8a6500 partindo do Aurum. */
+  --primary-ink: color-mix(in srgb, var(--primary-color) 80%, #000000);
+  --gold-ink: color-mix(in srgb, var(--secondary-color) 62%, #000000);
+  /* Base das sombras tingidas (rgb 74,14,14 / 26,5,5 no Aurum). */
+  --shadow-tint: var(--primary-dark);
+  --shadow-tint-deep: color-mix(in srgb, var(--primary-color) 25%, #000000);
+  --gold-grad: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--secondary-color) 97%, #000000),
+    color-mix(in srgb, var(--secondary-color) 94%, #ffffff) 35%,
+    color-mix(in srgb, var(--secondary-color) 70%, #ffffff) 70%,
+    var(--gold-light)
+  );
+  --wine-grad: linear-gradient(
+    90deg,
+    var(--primary-color),
+    var(--accent-color) 60%,
+    color-mix(in srgb, var(--accent-color) 70%, var(--primary-color))
+  );
 
   /* Design system fixo e compartilhado por todas as exibidoras. */
   --paper-bg: #f9f7f2;
@@ -81,12 +98,15 @@
   --tone-solid-orange: #d98c0d;
   --tone-solid-green: #22c55e;
   --tone-solid-purple: #7c3aed;
+  --tone-amber: #b45309;
+  --tone-amber-bg: rgba(234, 179, 8, 0.12);
+  --row-hover: #faf9f6;
 
-  --shadow-base: 0 8px 32px rgba(74, 14, 14, 0.10);
-  --shadow-hover: 0 16px 48px rgba(74, 14, 14, 0.18);
-  --shadow-card: 0 8px 24px rgba(74, 14, 14, 0.04);
-  --shadow-bar: 0 4px 8px rgba(74, 14, 14, 0.03);
-  --shadow-modal: 0 16px 24px rgba(74, 14, 14, 0.18);
+  --shadow-base: 0 8px 32px color-mix(in srgb, var(--shadow-tint) 10%, transparent);
+  --shadow-hover: 0 16px 48px color-mix(in srgb, var(--shadow-tint) 18%, transparent);
+  --shadow-card: 0 8px 24px color-mix(in srgb, var(--shadow-tint) 4%, transparent);
+  --shadow-bar: 0 4px 8px color-mix(in srgb, var(--shadow-tint) 3%, transparent);
+  --shadow-modal: 0 16px 24px color-mix(in srgb, var(--shadow-tint) 18%, transparent);
 
   /* Layout */
   --container-max-width: 1280px;

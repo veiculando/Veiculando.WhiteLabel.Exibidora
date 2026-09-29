@@ -7,8 +7,11 @@ import {
   campanhaDetalheReal,
   campanhasListaReal,
   chavesDe,
+  checkingListaReal,
   kycFilaReal,
   kycResumoReal,
+  locaisListaReal,
+  pedidosInsercaoListaReal,
 } from './contratos';
 
 /**
@@ -60,5 +63,34 @@ describe('Contrato comercial — fixtures reais do BFF', () => {
 
   it('CadastroAcessoConfig bate campo a campo', () => {
     expect(chavesDe(cadastroAcessoReal())).toEqual(CHAVES.cadastroAcesso);
+  });
+});
+
+/** HF-5 (D8, D9, D14): as listagens que ganharam campos novos. */
+describe('Contrato de listagens — fixtures reais do BFF (HF-5)', () => {
+  it('LocalListItem bate campo a campo, com e sem peça', () => {
+    const locais = locaisListaReal();
+    for (const local of locais) expect(chavesDe(local)).toEqual(CHAVES.localListItem);
+    expect(locais.some((l) => l.suporte != null), 'fixture precisa de um local com peça').toBe(true);
+    expect(locais.some((l) => l.suporte == null), 'fixture precisa de um local sem peça').toBe(true);
+  });
+
+  it('PedidoInsercaoListItem, resumo e período batem campo a campo', () => {
+    const pagina = pedidosInsercaoListaReal();
+    expect(chavesDe(pagina)).toEqual(CHAVES.paginaPedidosInsercao);
+    expect(chavesDe(pagina.resumo)).toEqual(CHAVES.pedidosInsercaoResumo);
+    for (const pi of pagina.itens) {
+      expect(chavesDe(pi)).toEqual(CHAVES.pedidoInsercaoListItem);
+      if (pi.periodo != null) expect(chavesDe(pi.periodo)).toEqual(CHAVES.periodoVeiculacao);
+    }
+  });
+
+  it('CheckoutListItem e período batem campo a campo', () => {
+    const pagina = checkingListaReal();
+    expect(chavesDe(pagina)).toEqual(CHAVES.pagina);
+    for (const item of pagina.itens) {
+      expect(chavesDe(item)).toEqual(CHAVES.checkoutListItem);
+      if (item.periodo != null) expect(chavesDe(item.periodo)).toEqual(CHAVES.periodoVeiculacao);
+    }
   });
 });

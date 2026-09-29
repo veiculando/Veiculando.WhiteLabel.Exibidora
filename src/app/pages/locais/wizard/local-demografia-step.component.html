@@ -1,6 +1,6 @@
 <form class="aurum-form local-demografia-step" [formGroup]="form" (ngSubmit)="onSubmit()">
   <fieldset [disabled]="salvando">
-    <legend>Dados Demográficos</legend>
+    <legend>Dados demográficos</legend>
 
     <label>
       Audiência por dia
@@ -32,5 +32,5 @@
     pontos de interesse podem ser detalhados após o cadastro inicial.
   </p>
 
-  <aurum-button tipo="submit" [desabilitado]="salvando">{{ salvando ? 'Salvando…' : 'Salvar Dados Demográficos' }}</aurum-button>
+  <aurum-button tipo="submit" [desabilitado]="salvando">{{ salvando ? 'Salvando…' : 'Salvar dados demográficos' }}</aurum-button>
 </form>

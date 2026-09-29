@@ -61,8 +61,8 @@ const TOM_STATUS_OS: Record<string, AurumStatusPillTom> = {
     OrdemServicoEntregaModalComponent,
   ],
   template: `
-    <aurum-page-header titulo="Ordem de Serviço" subtitulo="Gerencie as ordens de serviço geradas e acompanhe o status de execução.">
-      <a aurumPageHeaderAcoes class="aurum-botao-link" routerLink="/ordens-servico/nova">+ Nova Ordem de Serviço</a>
+    <aurum-page-header titulo="Ordem de serviço" subtitulo="Gerencie as ordens de serviço geradas e acompanhe o status de execução.">
+      <a aurumPageHeaderAcoes class="aurum-botao-link" routerLink="/ordens-servico/nova">+ Nova ordem de serviço</a>
     </aurum-page-header>
 
     <aurum-filter-bar>
@@ -128,7 +128,7 @@ const TOM_STATUS_OS: Record<string, AurumStatusPillTom> = {
                 <td aurumTableCell><aurum-status-pill [rotulo]="rotuloStatus(os.status)" [tom]="tomStatus(os.status)" /></td>
                 <td aurumTableCell class="vazio">{{ os.dataCadastro | date: 'dd/MM/yyyy' }}</td>
                 <td aurumTableCell class="os-acoes">
-                  <a class="os-link" [routerLink]="['/ordens-servico', os.id]">Ver Detalhes</a>
+                  <a class="os-link" [routerLink]="['/ordens-servico', os.id]">Ver detalhes</a>
                   <aurum-button variante="suave" tamanho="xs" (click)="abrirEntrega(os)">Entregar</aurum-button>
                 </td>
               </tr>
