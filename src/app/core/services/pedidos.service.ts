@@ -89,6 +89,7 @@ export class PedidosInsercaoService {
     if (filtro?.status) params = params.set('status', filtro.status);
     if (filtro?.idPeriodoInicial) params = params.set('idPeriodoInicial', filtro.idPeriodoInicial);
     if (filtro?.idPeriodoFinal) params = params.set('idPeriodoFinal', filtro.idPeriodoFinal);
+    if (filtro?.periodoId != null) params = params.set('periodoId', filtro.periodoId);
 
     return this.http.get<PaginaPedidosInsercao>(this.base, { params });
   }

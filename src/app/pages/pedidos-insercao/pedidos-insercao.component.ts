@@ -2,14 +2,17 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import {
   PedidoInsercaoListItem,
+  PeriodoLookup,
   PedidosInsercaoOrdenacao,
   PedidosInsercaoResumo,
   STATUS_PEDIDO_INSERCAO,
   StatusPedidoInsercao,
   TOM_STATUS_PEDIDO_INSERCAO,
 } from '../../core/models/wl.models';
+import { PermissionService } from '../../core/auth/permission.service';
 import { mensagemDeErro } from '../../core/http/api-error';
 import { formatarDiaMes } from '../../core/http/datas';
+import { LookupsService } from '../../core/services/lookups.service';
 import { PedidosInsercaoService } from '../../core/services/pedidos.service';
 import { PaginadorComponent } from '../../shared/paginador.component';
 import { AurumButtonComponent } from '../../shared/aurum/aurum-button.component';
@@ -80,7 +83,7 @@ const OPCOES_ORDENACAO: { valor: PedidosInsercaoOrdenacao; rotulo: string }[] = 
   template: `
     <aurum-page-header
       titulo="Pedidos de Inserção (PIs)"
-      [badge]="resumo?.afiliadaId ? 'Afiliada #' + resumo?.afiliadaId : ''"
+      [badge]="afiliadaId ? 'Afiliada #' + afiliadaId : ''"
       subtitulo="Documentos formais de veiculação e download de PDFs de Pedidos de Inserção."
     />
 
@@ -103,6 +106,9 @@ const OPCOES_ORDENACAO: { valor: PedidosInsercaoOrdenacao; rotulo: string }[] = 
       <aurum-text-input placeholder="Buscar por PI, anunciante, agência ou campanha…" rotulo="Buscar" [valor]="busca" (valorChange)="mudarBusca($event)" />
       <aurum-filter-field rotulo="Status">
         <aurum-dropdown [opcoes]="opcoesStatus" [valor]="status === null ? TODOS : status" (valorChange)="mudarStatus($event)" />
+      </aurum-filter-field>
+      <aurum-filter-field rotulo="Período">
+        <aurum-dropdown [opcoes]="opcoesPeriodo" [valor]="periodoId === null ? TODOS : '' + periodoId" (valorChange)="mudarPeriodo($event)" />
       </aurum-filter-field>
       <aurum-filter-field rotulo="Ordenar">
         <aurum-dropdown [opcoes]="opcoesOrdenacao" [valor]="ordenarPor" (valorChange)="mudarOrdenacao($event)" />
@@ -150,8 +156,15 @@ const OPCOES_ORDENACAO: { valor: PedidosInsercaoOrdenacao; rotulo: string }[] = 
             @for (pedido of pedidos; track pedido.id) {
               <tr aurumTableRow>
                 <td aurumTableCell class="pi-codigo">{{ pedido.codigo }}</td>
-                <td aurumTableCell class="pi-forte">{{ pedido.cidade || '—' }}</td>
-                <td aurumTableCell class="pi-apagado">{{ periodoTexto(pedido) }}</td>
+                <td aurumTableCell class="pi-forte">{{ cidadeTexto(pedido) }}</td>
+                <td aurumTableCell class="pi-apagado">
+                  @if (pedido.periodo; as periodo) {
+                    <div>{{ periodo.rotulo }}{{ periodo.quantidade > 1 ? ' +' + (periodo.quantidade - 1) : '' }}</div>
+                    <div class="pi-intervalo">{{ intervaloTexto(pedido) }}</div>
+                  } @else {
+                    —
+                  }
+                </td>
                 <td aurumTableCell class="pi-anunciante">{{ pedido.anunciante || '—' }}</td>
                 <td aurumTableCell class="pi-apagado">{{ pedido.agencia }}</td>
                 <td aurumTableCell>{{ pedido.campanha || '—' }}</td>
@@ -186,7 +199,7 @@ const OPCOES_ORDENACAO: { valor: PedidosInsercaoOrdenacao; rotulo: string }[] = 
         <span class="aurum-ico pi-download__icone" style="--ico: url(/assets/aurum/icon-pedidos-insercao.svg)"></span>
         <h2>{{ baixando || baixado }} — Download do PI</h2>
         @if (baixando) {
-          <p>Gerando o documento para a Afiliada{{ resumo?.afiliadaId ? ' #' + resumo?.afiliadaId : '' }}.</p>
+          <p>Gerando o documento para a Afiliada{{ afiliadaId ? ' #' + afiliadaId : '' }}.</p>
           <strong class="pi-download__estado">Preparando documento em PDF…</strong>
           <span class="pi-download__barra"><span></span></span>
         } @else {
@@ -220,6 +233,10 @@ const OPCOES_ORDENACAO: { valor: PedidosInsercaoOrdenacao; rotulo: string }[] = 
       }
       .pi-apagado {
         color: var(--on-surface);
+      }
+      .pi-intervalo {
+        font-size: 0.75rem;
+        white-space: nowrap;
       }
       .pi-valor {
         font-family: var(--font-display);
@@ -283,6 +300,10 @@ const OPCOES_ORDENACAO: { valor: PedidosInsercaoOrdenacao; rotulo: string }[] = 
 })
 export class PedidosInsercaoComponent implements OnInit {
   private service = inject(PedidosInsercaoService);
+  private lookups = inject(LookupsService);
+
+  /** Badge do cabeçalho: a afiliada da sessão, nunca escolhida na tela. */
+  readonly afiliadaId = inject(PermissionService).getAfiliadaId();
 
   readonly TODOS = TODOS;
   readonly opcoesStatus: AurumDropdownOpcao[] = [
@@ -290,6 +311,7 @@ export class PedidosInsercaoComponent implements OnInit {
     ...STATUS_PEDIDO_INSERCAO.map((status) => ({ valor: status, rotulo: status })),
   ];
   readonly opcoesOrdenacao: AurumDropdownOpcao[] = OPCOES_ORDENACAO.map((o) => ({ valor: o.valor, rotulo: o.rotulo }));
+  opcoesPeriodo: AurumDropdownOpcao[] = [{ valor: TODOS, rotulo: 'Todos' }];
 
   pedidos: PedidoInsercaoListItem[] = [];
   resumo: PedidosInsercaoResumo | null = null;
@@ -303,6 +325,7 @@ export class PedidosInsercaoComponent implements OnInit {
 
   busca = '';
   status: StatusPedidoInsercao | null = null;
+  periodoId: number | null = null;
   ordenarPor: PedidosInsercaoOrdenacao = 'dataPedido';
   desc = true;
 
@@ -314,7 +337,21 @@ export class PedidosInsercaoComponent implements OnInit {
   private timerBusca: ReturnType<typeof setTimeout> | undefined;
 
   ngOnInit(): void {
+    this.carregarPeriodos();
     this.carregar();
+  }
+
+  /** Falha no lookup não bloqueia a tela: o filtro fica só com "Todos". */
+  private carregarPeriodos(): void {
+    this.lookups.periodos().subscribe({
+      next: (periodos: PeriodoLookup[]) => {
+        this.opcoesPeriodo = [
+          { valor: TODOS, rotulo: 'Todos' },
+          ...periodos.map((p) => ({ valor: String(p.id), rotulo: p.nome })),
+        ];
+      },
+      error: () => {},
+    });
   }
 
   carregar(page = this.page): void {
@@ -323,7 +360,7 @@ export class PedidosInsercaoComponent implements OnInit {
 
     this.service
       .listar(
-        { busca: this.busca.trim() || null, status: this.status },
+        { busca: this.busca.trim() || null, status: this.status, periodoId: this.periodoId },
         { page, pageSize: this.pageSize, sort: this.ordenarPor, desc: this.desc }
       )
       .subscribe({
@@ -356,6 +393,11 @@ export class PedidosInsercaoComponent implements OnInit {
     this.carregar(1);
   }
 
+  mudarPeriodo(valor: string): void {
+    this.periodoId = valor === TODOS ? null : Number(valor);
+    this.carregar(1);
+  }
+
   mudarOrdenacao(valor: string): void {
     this.ordenarPor = valor as PedidosInsercaoOrdenacao;
     this.carregar(1);
@@ -369,6 +411,7 @@ export class PedidosInsercaoComponent implements OnInit {
   limparFiltros(): void {
     this.busca = '';
     this.status = null;
+    this.periodoId = null;
     this.ordenarPor = 'dataPedido';
     this.desc = true;
     this.carregar(1);
@@ -391,10 +434,16 @@ export class PedidosInsercaoComponent implements OnInit {
     return TOM_STATUS_PEDIDO_INSERCAO[status] ?? 'neutro';
   }
 
-  /** Cidade/Período ainda não vêm do BFF (ver `PedidoInsercaoListItem`) — "—" até existirem. */
-  periodoTexto(pedido: PedidoInsercaoListItem): string {
-    if (!pedido.periodoInicio || !pedido.periodoFim) return '—';
-    return `${formatarDiaMes(pedido.periodoInicio)}–${formatarDiaMes(pedido.periodoFim)}`;
+  /** Primeira cidade da PI e "+N" quando os itens estão em mais de uma. */
+  cidadeTexto(pedido: PedidoInsercaoListItem): string {
+    if (pedido.cidade == null) return '—';
+    return pedido.qtdCidades > 1 ? `${pedido.cidade} +${pedido.qtdCidades - 1}` : pedido.cidade;
+  }
+
+  /** Intervalo de veiculação de todos os períodos da PI: "dd/mm – dd/mm". */
+  intervaloTexto(pedido: PedidoInsercaoListItem): string {
+    if (pedido.periodo == null) return '—';
+    return `${formatarDiaMes(pedido.periodo.dataInicio)} – ${formatarDiaMes(pedido.periodo.dataFim)}`;
   }
 
   baixarPi(codigo: string): void {

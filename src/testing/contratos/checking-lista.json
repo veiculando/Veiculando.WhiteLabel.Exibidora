@@ -1,0 +1,31 @@
+{
+  "itens": [
+    {
+      "id": 1,
+      "status": "Iniciado",
+      "dataCadastro": "2026-09-29T10:03:58.497",
+      "dataAtualizacao": "2026-09-29T10:03:58.517",
+      "piCodigo": "HF5-PI-CK",
+      "campanha": "Campanha Teste",
+      "anunciante": "Cliente Teste",
+      "itensPi": 1,
+      "itensChecados": 1,
+      "itensAprovados": 0,
+      "itensRecebidos": 0,
+      "cidades": [
+        "Sao Paulo"
+      ],
+      "periodo": {
+        "id": 1,
+        "rotulo": "P1 - de  29/09 a  13/10",
+        "dataInicio": "2026-09-29T10:03:56.2966667",
+        "dataFim": "2026-10-13T10:03:56.2966667",
+        "quantidade": 1
+      }
+    }
+  ],
+  "page": 1,
+  "pageSize": 100,
+  "total": 1,
+  "totalPaginas": 1
+}
