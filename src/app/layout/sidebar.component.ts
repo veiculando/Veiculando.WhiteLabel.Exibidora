@@ -1,6 +1,8 @@
-import { Component, inject, ChangeDetectionStrategy, signal } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy, computed, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
-import { Router, RouterModule } from '@angular/router';
+import { NavigationEnd, Router, RouterModule } from '@angular/router';
+import { filter } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { PermissionService } from '../core/auth/permission.service';
 import { SecureStorage } from '../core/auth/secure-storage';
@@ -9,7 +11,7 @@ import { BrandingService } from '../core/branding/branding.service';
 interface ItemNav {
   rotulo: string;
   rota: string;
-  /** Arquivo `assets/aurum/icon-<icone>.svg`, aplicado como máscara sobre `currentColor`. */
+  /** Arquivo `assets/aurum/icon-<icone>.svg`. Subitens não o exibem (print do owner). */
   icone: string;
   permissao?: string;
   /** Prospecção abre o App WL em outra aba — o Figma marca com ícone externo. */
@@ -27,6 +29,9 @@ interface GrupoNav {
  * depois Inventário, Cadastros, Comercial, Operacional, Financeiro e
  * Configurações, cada grupo como acordeão. Aberto tem 288px; colapsado tem
  * 64px só com ícones, e o grupo abre num flyout ao lado.
+ *
+ * Estética dos subitens (sem ícone, linha vertical à esquerda) segue o print do
+ * owner, que vence o Figma.
  *
  * Checking saiu do menu (não há tela no Figma); a rota e o guard continuam.
  *
@@ -98,6 +103,8 @@ const GRUPOS: GrupoNav[] = [
   },
 ];
 
+const ROTAS_MENU = ['/dashboard', ...GRUPOS.flatMap((grupo) => grupo.itens.map((item) => item.rota))];
+
 const CHAVE_COLAPSADO = 'wl-sidebar-colapsado';
 
 @Component({
@@ -131,8 +138,9 @@ const CHAVE_COLAPSADO = 'wl-sidebar-colapsado';
       <nav class="sidebar-nav" aria-label="Menu principal">
         <a
           routerLink="/dashboard"
-          routerLinkActive="active"
           class="nav-item nav-item--dashboard"
+          [class.active]="ativo('/dashboard')"
+          [attr.aria-current]="ativo('/dashboard') ? 'page' : null"
           [attr.title]="colapsado() ? 'Dashboard' : null"
         >
           <span class="aurum-ico sb-ico" [style.--ico]="icone('dashboard')"></span>
@@ -172,8 +180,13 @@ const CHAVE_COLAPSADO = 'wl-sidebar-colapsado';
                   </span>
                 }
                 @for (item of itensVisiveis(grupo); track item.rota) {
-                  <a [routerLink]="item.rota" routerLinkActive="active" class="nav-item nav-item--filho" (click)="flyout.set(null)">
-                    <span class="aurum-ico sb-ico" [style.--ico]="icone(item.icone)"></span>
+                  <a
+                    [routerLink]="item.rota"
+                    class="nav-item nav-item--filho"
+                    [class.active]="ativo(item.rota)"
+                    [attr.aria-current]="ativo(item.rota) ? 'page' : null"
+                    (click)="flyout.set(null)"
+                  >
                     <span class="nav-item__rotulo">{{ item.rotulo }}</span>
                     @if (item.externo) {
                       <span class="aurum-ico sb-ico sb-ico--externo" [style.--ico]="icone('externo')"></span>
@@ -348,7 +361,7 @@ const CHAVE_COLAPSADO = 'wl-sidebar-colapsado';
       font-weight: 500;
     }
     .nav-item--filho {
-      padding-left: 24px;
+      padding-left: 16px;
       color: color-mix(in srgb, var(--paper-bg) 88%, transparent);
     }
     .nav-item:hover,
@@ -406,6 +419,11 @@ const CHAVE_COLAPSADO = 'wl-sidebar-colapsado';
     .nav-section__itens[hidden] {
       display: none;
     }
+    /* Linha fina ligando os subitens, alinhada ao centro do ícone do grupo. */
+    .sb:not(.sb--colapsado) .nav-section__itens {
+      margin-left: 20px;
+      border-left: 1px solid color-mix(in srgb, var(--secondary-color) 30%, transparent);
+    }
     .sb--colapsado .nav-section__itens {
       position: absolute;
       top: 0;
@@ -418,7 +436,7 @@ const CHAVE_COLAPSADO = 'wl-sidebar-colapsado';
       box-shadow: 0 16px 32px color-mix(in srgb, var(--shadow-tint-deep) 35%, transparent);
     }
     .sb--colapsado .nav-item--filho {
-      padding-left: 20px;
+      padding-left: 12px;
     }
     .nav-section__flyout-titulo {
       display: flex;
@@ -500,6 +518,32 @@ export class SidebarComponent {
   readonly flyout = signal<string | null>(null);
   /** Acordeão: todos os grupos começam abertos, como nas telas do Figma. */
   private readonly fechados = signal<ReadonlySet<string>>(new Set());
+  /** Caminho atual, sem query nem fragmento. */
+  private readonly caminho = signal(this.caminhoDe(this.router.url));
+  /** Rota de menu que casa com o caminho atual; a mais longa vence. */
+  private readonly rotaAtiva = computed(() => {
+    const caminho = this.caminho();
+    let melhor: string | null = null;
+    for (const rota of ROTAS_MENU) {
+      const casa = caminho === rota || caminho.startsWith(`${rota}/`);
+      if (casa && (melhor === null || rota.length > melhor.length)) melhor = rota;
+    }
+    return melhor;
+  });
+
+  constructor() {
+    this.router.events
+      .pipe(filter((evento): evento is NavigationEnd => evento instanceof NavigationEnd), takeUntilDestroyed())
+      .subscribe((evento) => this.caminho.set(this.caminhoDe(evento.urlAfterRedirects)));
+  }
+
+  /**
+   * Só o item de rota mais longa que casa com a URL fica ativo: /kyc/app não
+   * acende Análises KYC, mas /kyc/123 (detalhe) continua acendendo.
+   */
+  ativo(rota: string): boolean {
+    return this.rotaAtiva() === rota;
+  }
 
   itensVisiveis(grupo: GrupoNav): ItemNav[] {
     return grupo.itens.filter((item) => !item.permissao || this.permissionService.has(item.permissao));
@@ -546,6 +590,10 @@ export class SidebarComponent {
   sair(): void {
     SecureStorage.clear(environment.tokenKey);
     this.router.navigate(['/login']);
+  }
+
+  private caminhoDe(url: string): string {
+    return url.split(/[?#]/)[0];
   }
 
   private lerColapsado(): boolean {
