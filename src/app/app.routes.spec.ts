@@ -51,6 +51,10 @@ describe('app.routes', () => {
         // uma tela. Permissao de acao dentro de tela nao tem rota para declarar,
         // e e exatamente para esses casos que esta lista existe.
         'RelatorioExportar', // VEI-RD-92 (acao de exportar, nao tela)
+        // VEI-RD-106: a permissao nasce antes das telas de Marketing (Banners,
+        // Marcas Parceiras e Depoimentos, cards 6fcc4aa2, 5a05f573 e 3867cce1).
+        // Quem rotear a primeira delas tira ConteudoGerenciar daqui.
+        'ConteudoGerenciar',
     ] as const;
 
     it('toda permissao da whitelist esta roteada aqui OU e reserva documentada de outro card', () => {
@@ -73,6 +77,10 @@ describe('app.routes', () => {
                 `O guard no pai recebe o snapshot do pai, cujo data nao tem permission — ` +
                 `a checagem nao acontece.`).toContain(authGuard);
         });
+    });
+
+    it('ConteudoGerenciar esta na whitelist, espelhando WlPermissoesValidas (VEI-RD-106)', () => {
+        expect(PERMISSOES_WL as readonly string[]).toContain('ConteudoGerenciar');
     });
 
     it('toda permissao declarada nas rotas existe na whitelist do dominio', () => {

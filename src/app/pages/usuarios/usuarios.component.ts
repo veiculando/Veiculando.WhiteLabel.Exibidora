@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectionStrategy, computed } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { BrandingService } from '../../core/branding/branding.service';
 import { mensagemDeErro } from '../../core/http/api-error';
 import {
   PERMISSOES_WL,
@@ -32,6 +33,11 @@ import {
  * A validação real é do servidor — qualquer valor fora da lista volta 400 com
  * as permissões inválidas nomeadas. A lista aqui é para o operador não precisar
  * digitar identificadores.
+ *
+ * `ConteudoGerenciar` (VEI-RD-106) só aparece quando o branding da instância
+ * traz `cmsHabilitado === true`: numa exibidora sem o módulo CMS seria uma opção
+ * sem efeito. Quem já tem a permissão não a perde ao editar numa instância sem
+ * CMS — `permissoesEdicao` nasce das permissões atuais e é salvo inteiro.
  *
  * A senha é criada pelo próprio operador no convite de primeiro acesso; o
  * administrador nunca conhece nem define a credencial do convidado.
@@ -121,7 +127,7 @@ import {
           </div>
           <fieldset class="permissoes">
             <legend>Permissões</legend>
-            @for (permissao of permissoes; track permissao) {
+            @for (permissao of permissoes(); track permissao) {
               <label class="permissao">
                 <input
                   type="checkbox"
@@ -262,7 +268,7 @@ import {
                           </p>
                           <fieldset class="permissoes">
                             <legend>Permissões de {{ usuario.nome }}</legend>
-                            @for (permissao of permissoes; track permissao) {
+                            @for (permissao of permissoes(); track permissao) {
                               <label class="permissao">
                                 <input
                                   type="checkbox"
@@ -374,8 +380,13 @@ import {
 export class UsuariosComponent implements OnInit {
   private service = inject(UsuariosService);
   private fb = inject(FormBuilder);
+  private branding = inject(BrandingService).branding;
 
-  readonly permissoes = PERMISSOES_WL;
+  readonly permissoes = computed<readonly PermissaoWl[]>(() =>
+    this.branding()?.cmsHabilitado === true
+      ? PERMISSOES_WL
+      : PERMISSOES_WL.filter((p) => p !== 'ConteudoGerenciar'),
+  );
 
   usuarios: UsuarioWl[] = [];
   mostrarExcluidos = false;

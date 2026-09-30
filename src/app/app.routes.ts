@@ -21,6 +21,7 @@ import { authGuard } from './core/auth/auth.guard';
  *  - 'ProgramacaoVisualizar'
  *  - 'FinanceiroVisualizar'
  *  - 'RelatorioExportar'
+ *  - 'ConteudoGerenciar'     (Marketing do CMS: Banners, Marcas, Depoimentos — VEI-RD-106)
  *  - 'FinanceiroVisualizar' (VEI-RD-85/92, Plano 2 — VEI-RD-93)
  *  - 'RelatorioExportar' (VEI-RD-92, Plano 2 — VEI-RD-93)
  *  - 'CheckingGerenciar' (renomeada de 'Checking' em VEI-RD-93 — confirmado
