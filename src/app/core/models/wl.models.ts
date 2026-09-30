@@ -89,11 +89,15 @@ export interface OperadorLogado {
  * exige essa policy (`[Authorize(Policy = AuthorizationSetup.ProgramacaoVisualizar)]`)
  * — a rota `/programacao` passou a declará-la também, mesmo padrão de
  * `/checking`/`/checkout` neste arquivo.
- * `WlPermissoesValidas.Lista` no domínio tem 10 entradas no total
+ * `WlPermissoesValidas.Lista` no domínio tinha 10 entradas no total
  * (`ClienteGerenciar`, `PedidoCriar`, `FinanceiroVisualizar`,
  * `RelatorioExportar` além destas 6) — as outras 4 ainda não têm
  * rota/feature correspondente nesta sprint, então ficam de fora desta
  * whitelist por ora.
+ *
+ * `ConteudoGerenciar` (VEI-RD-106, 11ª entrada): telas de Marketing do CMS
+ * (Banners, Marcas Parceiras e Depoimentos). A tela Operadores só a oferece
+ * quando o branding da instância traz `cmsHabilitado === true`.
  */
 export const PERMISSOES_WL = [
   'PecaGerenciar',
@@ -111,6 +115,7 @@ export const PERMISSOES_WL = [
   'ProgramacaoVisualizar',
   'FinanceiroVisualizar',
   'RelatorioExportar',
+  'ConteudoGerenciar',
 ] as const;
 
 export type PermissaoWl = (typeof PERMISSOES_WL)[number];
@@ -126,6 +131,7 @@ export const PERMISSOES_WL_ROTULOS: Record<PermissaoWl, string> = {
   ProgramacaoVisualizar: 'Visualizar programação',
   FinanceiroVisualizar: 'Visualizar financeiro',
   RelatorioExportar: 'Exportar relatórios',
+  ConteudoGerenciar: 'Gerenciar conteúdo do site',
 };
 
 // ---------------------------------------------------------------- Dashboard

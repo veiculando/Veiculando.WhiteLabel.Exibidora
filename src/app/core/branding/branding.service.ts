@@ -15,6 +15,11 @@ export interface BrandingPublico {
   footerText?: string;
   seoTitle?: string;
   seoDescription?: string;
+  /**
+   * Módulo CMS ligado nesta instância (ADR-CMS-004). Ausente = `false`: o BFF só
+   * passa a enviar o campo no TP-3, e até lá nenhuma exibidora vê Marketing.
+   */
+  cmsHabilitado?: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -62,6 +67,8 @@ export class BrandingService {
       footerText: this.optional(value, 'footerText'),
       seoTitle: this.optional(value, 'seoTitle'),
       seoDescription: this.optional(value, 'seoDescription'),
+      // Só o booleano true liga: "true", 1 ou ausente mantêm o módulo desligado.
+      cmsHabilitado: value['cmsHabilitado'] === true,
     };
   }
 
