@@ -1,6 +1,6 @@
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, Routes, provideRouter } from '@angular/router';
 import { PermissionService } from '../core/auth/permission.service';
 import { BrandingService } from '../core/branding/branding.service';
 import { SidebarComponent } from './sidebar.component';
@@ -24,11 +24,11 @@ describe('SidebarComponent', () => {
     }
   });
 
-  function configurar(permissoes: string[]): void {
+  function configurar(permissoes: string[], rotas: Routes = []): void {
     TestBed.configureTestingModule({
       imports: [SidebarComponent],
       providers: [
-        provideRouter([]),
+        provideRouter(rotas),
         {
           provide: PermissionService,
           useValue: { has: (perm: string) => permissoes.includes(perm), getAfiliadaId: () => '4821' },
@@ -228,5 +228,62 @@ describe('SidebarComponent', () => {
     const itens = root.querySelector('.nav-section__itens') as HTMLElement;
     expect(itens.hidden).toBe(false);
     expect(itens.textContent).toContain('Usuários');
+  });
+
+  // Destaque: o item ativo é o de rota mais longa que casa com a URL.
+  describe('item ativo', () => {
+    const PERMISSOES = ['ClienteGerenciar', 'PecaGerenciar'];
+
+    async function abrir(url: string): Promise<string[]> {
+      configurar(PERMISSOES, [{ path: '**', children: [] }]);
+      await TestBed.inject(Router).navigateByUrl(url);
+      await fixture.whenStable();
+      fixture.detectChanges();
+      return Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('a.active')).map(
+        (el) => el.textContent?.trim() ?? ''
+      );
+    }
+
+    it('/kyc/app acende só Cadastros do App', async () => {
+      expect(await abrir('/kyc/app')).toEqual(['Cadastros do App']);
+    });
+
+    it('/kyc acende só Análises KYC', async () => {
+      expect(await abrir('/kyc')).toEqual(['Análises KYC']);
+    });
+
+    it('/kyc/123 (detalhe) mantém só Análises KYC ativo', async () => {
+      expect(await abrir('/kyc/123')).toEqual(['Análises KYC']);
+    });
+
+    it('query string não atrapalha: /kyc/app?pagina=2 acende só Cadastros do App', async () => {
+      expect(await abrir('/kyc/app?pagina=2')).toEqual(['Cadastros do App']);
+    });
+
+    it('/dashboard acende só Dashboard', async () => {
+      expect(await abrir('/dashboard')).toEqual(['Dashboard']);
+    });
+
+    it('aria-current marca o mesmo item que a classe active', async () => {
+      await abrir('/kyc/app');
+      const atual = (fixture.nativeElement as HTMLElement).querySelectorAll('a[aria-current="page"]');
+      expect(Array.from(atual).map((el) => el.textContent?.trim())).toEqual(['Cadastros do App']);
+    });
+  });
+
+  describe('subitens', () => {
+    it('não têm ícone, só o cabeçalho do grupo e o ícone externo de Prospecção', () => {
+      configurar(['ClienteGerenciar', 'PedidoCriar']);
+      fixture.detectChanges();
+      const root = fixture.nativeElement as HTMLElement;
+      const filhos = Array.from(root.querySelectorAll('.nav-item--filho'));
+      expect(filhos.length).toBeGreaterThan(0);
+      for (const filho of filhos) {
+        const icones = Array.from(filho.querySelectorAll('.sb-ico'));
+        expect(icones.every((el) => el.classList.contains('sb-ico--externo'))).toBe(true);
+      }
+      expect(root.querySelector('a[href="/prospeccao"] .sb-ico--externo')).not.toBeNull();
+      expect(root.querySelector('.section-title .sb-ico--chevron')).not.toBeNull();
+    });
   });
 });
