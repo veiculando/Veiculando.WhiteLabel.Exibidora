@@ -31,6 +31,14 @@ import {
   PedidosInsercaoResumo,
   PeriodoVeiculacao,
 } from '../../app/core/models/wl.models';
+import {
+  CmsBanner,
+  CmsDepoimento,
+  CmsDepoimentosResumo,
+  CmsErro,
+  CmsMarca,
+  CmsSalvo,
+} from '../../app/core/models/cms.models';
 import { LocalListItem } from '../../app/pages/locais/models/local.model';
 import agenciaDetalhe from './agencia-detalhe.json';
 import agenciaPorCnpj from './agencia-por-cnpj.json';
@@ -39,6 +47,15 @@ import cadastroAcesso from './cadastro-acesso.json';
 import campanhaDetalhe from './campanha-detalhe.json';
 import campanhasLista from './campanhas-lista.json';
 import checkingLista from './checking-lista.json';
+import cmsBannerDetalhe from './cms-banner-detalhe.json';
+import cmsBannerSalvoAvisos from './cms-banner-salvo-avisos.json';
+import cmsBannersLista from './cms-banners-lista.json';
+import cmsDepoimentoDetalhe from './cms-depoimento-detalhe.json';
+import cmsDepoimentosLista from './cms-depoimentos-lista.json';
+import cmsDepoimentosResumo from './cms-depoimentos-resumo.json';
+import cmsErro from './cms-erro.json';
+import cmsMarcaDetalhe from './cms-marca-detalhe.json';
+import cmsMarcasLista from './cms-marcas-lista.json';
 import kycFila from './kyc-fila.json';
 import kycResumo from './kyc-resumo.json';
 import locaisLista from './locais-lista.json';
@@ -69,6 +86,32 @@ export const locaisListaReal = () => copia<LocalListItem[]>(locaisLista);
 export const pedidosInsercaoListaReal = () => copia<PaginaPedidosInsercao>(pedidosInsercaoLista);
 /** `GET /api/wl/checking?pageSize=100` */
 export const checkingListaReal = () => copia<Pagina<CheckoutListItem>>(checkingLista);
+
+/*
+ * CMS (TP-4): fixtures do BFF (`Veiculando.WhiteLabel.Api.Tests/Contratos/`,
+ * VEI-RD-19a), copiadas SEM edição. O `CmsContratoTests` do BFF faz ida e volta
+ * de cada uma pelo DTO, então renomear um campo lá quebra o teste de lá, e aqui
+ * o `contratos.spec.ts` quebra na próxima cópia. Todos os registros são
+ * fictícios e inativos, com host de Storage fictício.
+ */
+/** `GET /api/wl/cms/banners?page=2&pageSize=10` — um link e um html. */
+export const cmsBannersListaReal = () => copia<Pagina<CmsBanner>>(cmsBannersLista);
+/** `GET /api/wl/cms/banners/{id}` — tipo link. */
+export const cmsBannerDetalheReal = () => copia<CmsBanner>(cmsBannerDetalhe);
+/** `POST|PUT /api/wl/cms/banners` — html com um aviso de URL relativa. */
+export const cmsBannerSalvoAvisosReal = () => copia<CmsSalvo<CmsBanner>>(cmsBannerSalvoAvisos);
+/** `GET /api/wl/cms/marcas` — uma logo SVG e uma PNG. */
+export const cmsMarcasListaReal = () => copia<Pagina<CmsMarca>>(cmsMarcasLista);
+/** `GET /api/wl/cms/marcas/{id}` */
+export const cmsMarcaDetalheReal = () => copia<CmsMarca>(cmsMarcaDetalhe);
+/** `GET /api/wl/cms/depoimentos` — o segundo tem `company` e `avatarUrl` null. */
+export const cmsDepoimentosListaReal = () => copia<Pagina<CmsDepoimento>>(cmsDepoimentosLista);
+/** `GET /api/wl/cms/depoimentos/{id}` */
+export const cmsDepoimentoDetalheReal = () => copia<CmsDepoimento>(cmsDepoimentoDetalhe);
+/** `GET /api/wl/cms/depoimentos/resumo` */
+export const cmsDepoimentosResumoReal = () => copia<CmsDepoimentosResumo>(cmsDepoimentosResumo);
+/** Corpo de 400/404/503 — a mensagem do 503 é esta. */
+export const cmsErroReal = () => copia<CmsErro>(cmsErro);
 
 /**
  * Lista das chaves de um modelo. O `Record<keyof T, true>` obriga a listar TODAS —
@@ -132,6 +175,22 @@ export const CHAVES = {
   cadastroAcesso: chaves<CadastroAcessoConfig>({
     exigirEmailCorporativoNoCadastro: true, dominiosBloqueados: true, dominiosEditaveis: true, historico: true,
   }),
+  cmsBanner: chaves<CmsBanner>({
+    id: true, title: true, imageUrl: true, tipoDestino: true, destino: true, htmlPath: true,
+    displayOrder: true, ativo: true, createdAt: true, updatedAt: true,
+  }),
+  cmsMarca: chaves<CmsMarca>({
+    id: true, name: true, imageUrl: true, displayOrder: true, ativo: true, createdAt: true, updatedAt: true,
+  }),
+  cmsDepoimento: chaves<CmsDepoimento>({
+    id: true, author: true, role: true, company: true, content: true, avatarUrl: true,
+    displayOrder: true, ativo: true, createdAt: true, updatedAt: true,
+  }),
+  cmsDepoimentosResumo: chaves<CmsDepoimentosResumo>({
+    total: true, publicados: true, ocultos: true, novosNoMes: true, empresas: true,
+  }),
+  cmsSalvo: chaves<CmsSalvo<unknown>>({ item: true, avisos: true }),
+  cmsErro: chaves<CmsErro>({ message: true }),
 };
 
 /** Chaves presentes num objeto da fixture, ordenadas para comparar com `CHAVES`. */

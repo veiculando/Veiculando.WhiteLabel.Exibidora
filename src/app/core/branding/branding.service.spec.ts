@@ -106,6 +106,27 @@ describe('BrandingService', () => {
     expect(service.branding()?.cmsHabilitado).toBe(esperado);
   });
 
+  it.each([
+    ['https://site.exemplo', 'https://site.exemplo'],
+    ['https://site.exemplo/', 'https://site.exemplo'],
+    [null, null],
+    [undefined, null],
+    ['http://site.exemplo', null],
+    ['/ofertas', null],
+  ])('cmsSiteUrl %s vira %s: so https absoluta monta o link do hotsite', async (recebido, esperado) => {
+    const carregamento = service.load();
+    http.expectOne('/api/wl/config/branding').flush({
+      nomeExibicao: 'Marca A',
+      logoUrl: '/assets/marca-a.svg',
+      primaryColor: '#112233',
+      cmsHabilitado: true,
+      ...(recebido === undefined ? {} : { cmsSiteUrl: recebido }),
+    });
+    await carregamento;
+
+    expect(service.branding()?.cmsSiteUrl).toBe(esperado);
+  });
+
   it('limpa a identidade anterior quando o payload obrigatorio e invalido', async () => {
     document.documentElement.style.setProperty('--primary-color', '#abcdef');
 

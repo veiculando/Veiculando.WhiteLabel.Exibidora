@@ -1,0 +1,124 @@
+<aurum-page-header
+  titulo="Gestão de Banners"
+  [badge]="total() + (total() === 1 ? ' cadastrado' : ' cadastrados')"
+  subtitulo="Vitrine de campanhas exibida no site institucional — banners com link externo ou hotsite em HTML."
+>
+  <aurum-button aurumPageHeaderAcoes variante="wine" (click)="novo()">
+    <span class="aurum-ico mk-ico" style="--ico: url(/assets/aurum/icon-mais.svg)"></span>
+    Novo Banner
+  </aurum-button>
+</aurum-page-header>
+
+<aurum-filter-bar>
+  <aurum-text-input
+    [valor]="busca()"
+    (valorChange)="buscar($event)"
+    placeholder="Buscar por título do banner ou destino…"
+    rotulo="Buscar banners"
+  />
+  <aurum-chip-group rotulo="Status" [opcoes]="opcoesStatus" [valor]="status()" (valorChange)="selecionarStatus($event)" />
+</aurum-filter-bar>
+
+@if (carregando()) {
+  <p class="wl-estado wl-estado--carregando" role="status">Carregando banners…</p>
+} @else if (indisponivel()) {
+  <div class="wl-estado wl-estado--erro mk-indisponivel" role="alert">
+    <strong>CMS indisponível</strong>
+    <span>{{ erro() }}</span>
+    <aurum-button variante="outline" tamanho="sm" (click)="carregar()">Tentar novamente</aurum-button>
+  </div>
+} @else if (erro()) {
+  <div class="wl-estado wl-estado--erro mk-indisponivel" role="alert">
+    <span>{{ erro() }}</span>
+    <aurum-button variante="outline" tamanho="sm" (click)="carregar()">Tentar novamente</aurum-button>
+  </div>
+} @else if (itens().length === 0) {
+  <p class="wl-estado wl-estado--vazio">Nenhum banner encontrado para este filtro.</p>
+} @else {
+  <div class="mk-grid">
+    @for (banner of itens(); track banner.id) {
+      <article class="mk-card" [attr.data-banner]="banner.id">
+        <div class="mk-thumb">
+          @if (banner.imageUrl != null) {
+            <img [src]="banner.imageUrl" [alt]="'Miniatura de ' + banner.title" loading="lazy" />
+          } @else {
+            <span class="aurum-ico" style="--ico: url(/assets/aurum/icon-imagem.svg)"></span>
+          }
+        </div>
+        <div class="mk-topo">
+          <div>
+            <h3 class="mk-titulo">{{ banner.title }}</h3>
+            <p class="mk-sub">{{ banner.ativo ? 'Exibição ativa na vitrine de campanhas' : 'Banner desativado — fora da vitrine' }}</p>
+          </div>
+          <aurum-status-pill [rotulo]="banner.ativo ? 'Ativo' : 'Inativo'" [tom]="banner.ativo ? 'sucesso' : 'neutro'" compacto />
+        </div>
+        <span class="mk-chip">{{ rotuloTipo(banner) }}</span>
+        <div class="mk-info">
+          <span class="aurum-ico" style="--ico: url(/assets/aurum/icon-escudo.svg)"></span>
+          <span [attr.title]="linhaDestino(banner)">{{ linhaDestino(banner) }}</span>
+        </div>
+        <div class="mk-rodape">
+          <div>
+            <span class="mk-ordem-rotulo">Ordem de exibição</span>
+            <span class="mk-ordem">#{{ banner.displayOrder }}</span>
+          </div>
+          <div class="mk-acoes">
+            <a class="mk-acao" [routerLink]="['/marketing/banners', banner.id]" [attr.aria-label]="'Editar ' + banner.title">
+              <span class="aurum-ico" style="--ico: url(/assets/aurum/icon-editar-caixa.svg)"></span>
+            </a>
+            <button
+              type="button"
+              class="mk-acao"
+              [class.mk-acao--desligar]="banner.ativo"
+              [class.mk-acao--ligar]="!banner.ativo"
+              [attr.aria-label]="(banner.ativo ? 'Inativar ' : 'Ativar ') + banner.title"
+              (click)="pedirAlteracao(banner)"
+            >
+              <span class="aurum-ico" style="--ico: url(/assets/aurum/icon-power.svg)"></span>
+            </button>
+          </div>
+        </div>
+      </article>
+    }
+  </div>
+
+  <app-paginador
+    [page]="page()"
+    [pageSize]="pageSize"
+    [total]="total()"
+    [totalPaginas]="totalPaginas()"
+    [carregando]="carregando()"
+    (pagina)="irParaPagina($event)"
+  />
+}
+
+<aurum-modal
+  [aberto]="confirmando() != null"
+  [titulo]="confirmando()?.ativo ? 'Inativar banner?' : 'Ativar banner?'"
+  largura="sm"
+  (fechar)="cancelarAlteracao()"
+>
+  @if (confirmando(); as banner) {
+    <p class="mk-confirma">
+      @if (banner.ativo) {
+        <strong>{{ banner.title }}</strong> sai da vitrine do site institucional.
+      } @else {
+        <strong>{{ banner.title }}</strong> passa a aparecer na vitrine do site institucional.
+      }
+      O site é atualizado em até 5 minutos.
+    </p>
+    @if (erroStatus()) {
+      <p class="wl-estado wl-estado--erro" role="alert">{{ erroStatus() }}</p>
+    }
+  }
+  <aurum-button aurumModalRodape variante="ghost" tamanho="sm" (click)="cancelarAlteracao()">Cancelar</aurum-button>
+  <aurum-button
+    aurumModalRodape
+    [variante]="confirmando()?.ativo ? 'perigo' : 'sucesso'"
+    tamanho="sm"
+    [desabilitado]="alterando()"
+    (click)="confirmarAlteracao()"
+  >
+    {{ confirmando()?.ativo ? 'Inativar' : 'Ativar' }}
+  </aurum-button>
+</aurum-modal>

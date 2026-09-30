@@ -46,4 +46,19 @@ describe('BreadcrumbComponent', () => {
     const atual = (fixture.nativeElement as HTMLElement).querySelector('[aria-current="page"]');
     expect(atual?.textContent?.trim()).toBe('Operacional — Check out — Detalhe');
   });
+
+  // TP-4: navega ANTES da única detecção — o componente já assina os eventos
+  // do router no construtor (beforeEach), então não precisa de um detectChanges prévio.
+  it.each([
+    ['/marketing/banners', 'Marketing — Banners'],
+    ['/marketing/banners/novo', 'Marketing — Banners'],
+    ['/marketing/banners/00000000-0000-4000-8000-000000000101', 'Marketing — Banners'],
+    ['/marketing/marcas/nova', 'Marketing — Marcas Parceiras'],
+    ['/marketing/depoimentos/abc', 'Marketing — Depoimentos'],
+  ])('%s mostra "Painel › %s" (Figma 157:2 / 173:2)', async (url, rotulo) => {
+    await router.navigateByUrl(url);
+    fixture.detectChanges();
+    const atual = (fixture.nativeElement as HTMLElement).querySelector('[aria-current="page"]');
+    expect(atual?.textContent?.trim()).toBe(rotulo);
+  });
 });

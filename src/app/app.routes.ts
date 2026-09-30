@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/auth/auth.guard';
+import { cmsGuard } from './core/guards/cms.guard';
 
 /**
  * Rotas da Exibidora WL.
@@ -285,6 +286,84 @@ export const routes: Routes = [
         canActivate: [authGuard],
         loadComponent: () =>
           import('./pages/prospeccao/prospeccao.component').then((m) => m.ProspeccaoComponent),
+      },
+
+      // --- Marketing (CMS, TP-4) ---
+      //
+      // Duas condições, dois guards EM CADA FILHA: `authGuard` lê a permissão
+      // ConteudoGerenciar do `data`; `cmsGuard` exige o módulo ligado no branding
+      // (`cmsHabilitado === true`). Com permissão e sem CMS, acesso negado.
+      {
+        path: 'marketing/banners',
+        title: 'Banners',
+        data: { permission: 'ConteudoGerenciar' },
+        canActivate: [authGuard, cmsGuard],
+        loadComponent: () =>
+          import('./pages/marketing/banners/banners-lista.component').then((m) => m.BannersListaComponent),
+      },
+      {
+        path: 'marketing/banners/novo',
+        title: 'Novo banner',
+        data: { permission: 'ConteudoGerenciar' },
+        canActivate: [authGuard, cmsGuard],
+        loadComponent: () =>
+          import('./pages/marketing/banners/banners-form.component').then((m) => m.BannersFormComponent),
+      },
+      {
+        path: 'marketing/banners/:id',
+        title: 'Editar banner',
+        data: { permission: 'ConteudoGerenciar' },
+        canActivate: [authGuard, cmsGuard],
+        loadComponent: () =>
+          import('./pages/marketing/banners/banners-form.component').then((m) => m.BannersFormComponent),
+      },
+      {
+        path: 'marketing/marcas',
+        title: 'Marcas parceiras',
+        data: { permission: 'ConteudoGerenciar' },
+        canActivate: [authGuard, cmsGuard],
+        loadComponent: () =>
+          import('./pages/marketing/marcas/marcas-lista.component').then((m) => m.MarcasListaComponent),
+      },
+      {
+        path: 'marketing/marcas/nova',
+        title: 'Nova marca',
+        data: { permission: 'ConteudoGerenciar' },
+        canActivate: [authGuard, cmsGuard],
+        loadComponent: () =>
+          import('./pages/marketing/marcas/marcas-form.component').then((m) => m.MarcasFormComponent),
+      },
+      {
+        path: 'marketing/marcas/:id',
+        title: 'Editar marca',
+        data: { permission: 'ConteudoGerenciar' },
+        canActivate: [authGuard, cmsGuard],
+        loadComponent: () =>
+          import('./pages/marketing/marcas/marcas-form.component').then((m) => m.MarcasFormComponent),
+      },
+      {
+        path: 'marketing/depoimentos',
+        title: 'Depoimentos',
+        data: { permission: 'ConteudoGerenciar' },
+        canActivate: [authGuard, cmsGuard],
+        loadComponent: () =>
+          import('./pages/marketing/depoimentos/depoimentos-lista.component').then((m) => m.DepoimentosListaComponent),
+      },
+      {
+        path: 'marketing/depoimentos/novo',
+        title: 'Novo depoimento',
+        data: { permission: 'ConteudoGerenciar' },
+        canActivate: [authGuard, cmsGuard],
+        loadComponent: () =>
+          import('./pages/marketing/depoimentos/depoimentos-form.component').then((m) => m.DepoimentosFormComponent),
+      },
+      {
+        path: 'marketing/depoimentos/:id',
+        title: 'Editar depoimento',
+        data: { permission: 'ConteudoGerenciar' },
+        canActivate: [authGuard, cmsGuard],
+        loadComponent: () =>
+          import('./pages/marketing/depoimentos/depoimentos-form.component').then((m) => m.DepoimentosFormComponent),
       },
 
       // --- Configurações ---
