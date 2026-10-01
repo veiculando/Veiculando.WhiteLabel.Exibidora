@@ -1,0 +1,114 @@
+<aurum-page-header
+  titulo="Marcas Parceiras"
+  [badge]="total() + (total() === 1 ? ' cadastrada' : ' cadastradas')"
+  [subtitulo]="subtitulo()"
+>
+  <aurum-button aurumPageHeaderAcoes variante="wine" (click)="nova()">
+    <span class="aurum-ico mk-ico" style="--ico: url(/assets/aurum/icon-mais.svg)"></span>
+    Nova Marca
+  </aurum-button>
+</aurum-page-header>
+
+<aurum-filter-bar>
+  <aurum-text-input [valor]="busca()" (valorChange)="buscar($event)" placeholder="Buscar por nome da marca…" rotulo="Buscar marcas" />
+  <aurum-chip-group rotulo="Status" [opcoes]="opcoesStatus" [valor]="status()" (valorChange)="selecionarStatus($event)" />
+</aurum-filter-bar>
+
+@if (carregando()) {
+  <p class="wl-estado wl-estado--carregando" role="status">Carregando marcas…</p>
+} @else if (indisponivel()) {
+  <div class="wl-estado wl-estado--erro mk-indisponivel" role="alert">
+    <strong>CMS indisponível</strong>
+    <span>{{ erro() }}</span>
+    <aurum-button variante="outline" tamanho="sm" (click)="carregar()">Tentar novamente</aurum-button>
+  </div>
+} @else if (erro()) {
+  <div class="wl-estado wl-estado--erro mk-indisponivel" role="alert">
+    <span>{{ erro() }}</span>
+    <aurum-button variante="outline" tamanho="sm" (click)="carregar()">Tentar novamente</aurum-button>
+  </div>
+} @else if (itens().length === 0) {
+  <p class="wl-estado wl-estado--vazio">Nenhuma marca encontrada para este filtro.</p>
+} @else {
+  <div class="mk-grid">
+    @for (marca of itens(); track marca.id) {
+      <article class="mk-card" [attr.data-marca]="marca.id">
+        <div class="mc-logo">
+          @if (marca.imageUrl != null) {
+            <img [src]="marca.imageUrl" [alt]="'Logo de ' + marca.name" loading="lazy" />
+          } @else {
+            <span class="aurum-ico" style="--ico: url(/assets/aurum/icon-imagem.svg)"></span>
+          }
+        </div>
+        <div class="mk-topo mc-topo">
+          <div>
+            <h3 class="mk-titulo">{{ marca.name }}</h3>
+            <p class="mk-sub">{{ marca.ativo ? 'Logomarca exibida na vitrine de parceiros do site' : 'Marca desativada — fora do carrossel' }}</p>
+          </div>
+          <aurum-status-pill [rotulo]="marca.ativo ? 'Ativo' : 'Inativo'" [tom]="marca.ativo ? 'sucesso' : 'neutro'" compacto />
+        </div>
+        <div class="mk-rodape">
+          <div>
+            <span class="mk-ordem-rotulo">Ordem de exibição</span>
+            <span class="mk-ordem">#{{ marca.displayOrder }}</span>
+          </div>
+          <div class="mk-acoes">
+            <a class="mk-acao" [routerLink]="['/marketing/marcas', marca.id]" [attr.aria-label]="'Editar ' + marca.name">
+              <span class="aurum-ico" style="--ico: url(/assets/aurum/icon-editar-caixa.svg)"></span>
+            </a>
+            <button
+              type="button"
+              class="mk-acao"
+              [class.mk-acao--desligar]="marca.ativo"
+              [class.mk-acao--ligar]="!marca.ativo"
+              [attr.aria-label]="(marca.ativo ? 'Inativar ' : 'Ativar ') + marca.name"
+              (click)="pedirAlteracao(marca)"
+            >
+              <span class="aurum-ico" style="--ico: url(/assets/aurum/icon-power.svg)"></span>
+            </button>
+          </div>
+        </div>
+      </article>
+    }
+  </div>
+
+  <app-paginador
+    [page]="page()"
+    [pageSize]="pageSize"
+    [total]="total()"
+    [totalPaginas]="totalPaginas()"
+    [carregando]="carregando()"
+    (pagina)="irParaPagina($event)"
+  />
+}
+
+<aurum-modal
+  [aberto]="confirmando() != null"
+  [titulo]="confirmando()?.ativo ? 'Inativar marca?' : 'Ativar marca?'"
+  largura="sm"
+  (fechar)="cancelarAlteracao()"
+>
+  @if (confirmando(); as marca) {
+    <p class="mk-confirma">
+      @if (marca.ativo) {
+        <strong>{{ marca.name }}</strong> sai do carrossel de parceiros do site institucional.
+      } @else {
+        <strong>{{ marca.name }}</strong> passa a aparecer no carrossel de parceiros do site institucional.
+      }
+      O site é atualizado em até 5 minutos.
+    </p>
+    @if (erroStatus()) {
+      <p class="wl-estado wl-estado--erro" role="alert">{{ erroStatus() }}</p>
+    }
+  }
+  <aurum-button aurumModalRodape variante="ghost" tamanho="sm" (click)="cancelarAlteracao()">Cancelar</aurum-button>
+  <aurum-button
+    aurumModalRodape
+    [variante]="confirmando()?.ativo ? 'perigo' : 'sucesso'"
+    tamanho="sm"
+    [desabilitado]="alterando()"
+    (click)="confirmarAlteracao()"
+  >
+    {{ confirmando()?.ativo ? 'Inativar' : 'Ativar' }}
+  </aurum-button>
+</aurum-modal>
