@@ -87,6 +87,25 @@ describe('BrandingService', () => {
     expect(title.getTitle()).toBe('Portal Marca A');
   });
 
+  it.each([
+    [true, true],
+    [undefined, false],
+    [false, false],
+    ['true', false],
+    [1, false],
+  ])('cmsHabilitado %s vira %s: so o booleano true liga o modulo CMS', async (recebido, esperado) => {
+    const carregamento = service.load();
+    http.expectOne('/api/wl/config/branding').flush({
+      nomeExibicao: 'Marca A',
+      logoUrl: '/assets/marca-a.svg',
+      primaryColor: '#112233',
+      ...(recebido === undefined ? {} : { cmsHabilitado: recebido }),
+    });
+    await carregamento;
+
+    expect(service.branding()?.cmsHabilitado).toBe(esperado);
+  });
+
   it('limpa a identidade anterior quando o payload obrigatorio e invalido', async () => {
     document.documentElement.style.setProperty('--primary-color', '#abcdef');
 
