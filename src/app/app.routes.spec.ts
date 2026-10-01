@@ -1,5 +1,6 @@
 import { Route } from '@angular/router';
 import { authGuard } from './core/auth/auth.guard';
+import { cmsGuard } from './core/guards/cms.guard';
 import { routes } from './app.routes';
 import { PERMISSOES_WL } from './core/models/wl.models';
 
@@ -51,6 +52,7 @@ describe('app.routes', () => {
         // uma tela. Permissao de acao dentro de tela nao tem rota para declarar,
         // e e exatamente para esses casos que esta lista existe.
         'RelatorioExportar', // VEI-RD-92 (acao de exportar, nao tela)
+        // ConteudoGerenciar saiu: o TP-4 (card 6fcc4aa2) roteou /marketing/*.
     ] as const;
 
     it('toda permissao da whitelist esta roteada aqui OU e reserva documentada de outro card', () => {
@@ -73,6 +75,38 @@ describe('app.routes', () => {
                 `O guard no pai recebe o snapshot do pai, cujo data nao tem permission — ` +
                 `a checagem nao acontece.`).toContain(authGuard);
         });
+    });
+
+    describe('Marketing (TP-4, VEI-RD-14)', () => {
+        const MARKETING = [
+            'marketing/banners', 'marketing/banners/novo', 'marketing/banners/:id',
+            'marketing/marcas', 'marketing/marcas/nova', 'marketing/marcas/:id',
+            'marketing/depoimentos', 'marketing/depoimentos/novo', 'marketing/depoimentos/:id',
+        ];
+
+        it('todas as rotas de Marketing existem ja na fundacao, para Marcas e Depoimentos nao tocarem em rotas', () => {
+            const caminhos = filhos.map((r) => r.path);
+            for (const caminho of MARKETING) expect(caminhos).toContain(caminho);
+        });
+
+        MARKETING.forEach((caminho) => {
+            it(`/${caminho} exige ConteudoGerenciar E o CMS ligado, com os dois guards na propria rota`, () => {
+                const rota = filhos.find((r) => r.path === caminho)!;
+                expect(rota.data?.['permission']).toBe('ConteudoGerenciar');
+                expect(rota.canActivate).toEqual([authGuard, cmsGuard]);
+            });
+        });
+
+        it('/novo e /nova vem antes de /:id, senao "novo" vira id', () => {
+            const caminhos = filhos.map((r) => r.path!);
+            expect(caminhos.indexOf('marketing/banners/novo')).toBeLessThan(caminhos.indexOf('marketing/banners/:id'));
+            expect(caminhos.indexOf('marketing/marcas/nova')).toBeLessThan(caminhos.indexOf('marketing/marcas/:id'));
+            expect(caminhos.indexOf('marketing/depoimentos/novo')).toBeLessThan(caminhos.indexOf('marketing/depoimentos/:id'));
+        });
+    });
+
+    it('ConteudoGerenciar esta na whitelist, espelhando WlPermissoesValidas (VEI-RD-106)', () => {
+        expect(PERMISSOES_WL as readonly string[]).toContain('ConteudoGerenciar');
     });
 
     it('toda permissao declarada nas rotas existe na whitelist do dominio', () => {

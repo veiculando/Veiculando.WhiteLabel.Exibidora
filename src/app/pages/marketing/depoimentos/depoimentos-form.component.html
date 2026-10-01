@@ -1,0 +1,125 @@
+<header class="mkf-cabecalho">
+  <h1>{{ edicao() ? 'Editar Depoimento' : 'Novo Depoimento' }}</h1>
+  <p>
+    {{ edicao() ? 'Altere o depoimento exibido como prova social no site institucional.' : 'Cadastre um depoimento de cliente ou parceiro exibido como prova social no site institucional.' }}
+  </p>
+</header>
+
+@if (carregando()) {
+  <p class="wl-estado wl-estado--carregando" role="status">Carregando depoimento…</p>
+} @else if (erroCarga()) {
+  <p class="wl-estado wl-estado--erro" role="alert">{{ erroCarga() }}</p>
+} @else {
+  <form class="mkf-card" novalidate (submit)="$event.preventDefault(); salvar()">
+    <div class="mkf-campo">
+      <span class="mkf-rotulo">Foto / avatar (opcional)</span>
+      <aurum-dropzone
+        accept="image/png,image/jpeg,image/webp"
+        [maxBytes]="limiteAvatar"
+        formatos="PNG, JPG ou WebP"
+        recomendacao="imagem quadrada"
+        rotulo="Clique para enviar ou arraste a foto"
+        rotuloAcessivel="Foto do autor"
+        [previewAtual]="existente()?.avatarUrl ?? null"
+        (arquivoChange)="avatar.set($event)"
+      />
+      <span class="mkf-ajuda">Sem foto, o site mostra as iniciais do autor.</span>
+    </div>
+
+    <label class="mkf-campo">
+      <span class="mkf-rotulo">Nome do autor</span>
+      <input
+        class="mkf-input"
+        name="autor"
+        type="text"
+        placeholder="Ex: Pessoa Exemplo"
+        [class.mkf-input--invalido]="tentouSalvar() && !!erros().autor"
+        [value]="autor()"
+        (input)="autor.set($any($event.target).value)"
+      />
+      @if (tentouSalvar() && erros().autor) {
+        <span class="mkf-erro">{{ erros().autor }}</span>
+      }
+    </label>
+
+    <div class="mkf-linha">
+      <label class="mkf-campo">
+        <span class="mkf-rotulo">Empresa</span>
+        <input class="mkf-input" name="empresa" type="text" placeholder="Ex: Empresa Exemplo" [value]="empresa()" (input)="empresa.set($any($event.target).value)" />
+      </label>
+      <label class="mkf-campo">
+        <span class="mkf-rotulo">Cargo</span>
+        <input class="mkf-input" name="cargo" type="text" placeholder="Ex: Gerente de Marketing" [value]="cargo()" (input)="cargo.set($any($event.target).value)" />
+      </label>
+    </div>
+
+    <label class="mkf-campo">
+      <span class="mkf-rotulo">Relato / depoimento</span>
+      <textarea
+        class="mkf-input"
+        name="relato"
+        placeholder="Escreva aqui o depoimento do cliente..."
+        [class.mkf-input--invalido]="tentouSalvar() && !!erros().relato || caracteres() > limiteRelato"
+        [attr.aria-describedby]="'contador-relato'"
+        [value]="relato()"
+        (input)="relato.set($any($event.target).value)"
+      ></textarea>
+      <span id="contador-relato" class="dpf-contador" [class.dpf-contador--excesso]="caracteres() > limiteRelato" aria-live="polite">
+        {{ caracteres() }}/{{ limiteRelato }}
+      </span>
+      @if ((tentouSalvar() || caracteres() > limiteRelato) && erros().relato) {
+        <span class="mkf-erro">{{ erros().relato }}</span>
+      }
+    </label>
+
+    <label class="mkf-campo">
+      <span class="mkf-rotulo">Ordem de exibição</span>
+      <input
+        class="mkf-input mkf-input--curto"
+        name="ordem"
+        type="number"
+        min="0"
+        step="1"
+        placeholder="Fim da fila"
+        [class.mkf-input--invalido]="tentouSalvar() && !!erros().ordem"
+        [value]="ordem() ?? ''"
+        (input)="lerOrdem($any($event.target).value)"
+      />
+      <span class="mkf-ajuda">Menor número aparece primeiro. Em branco, o depoimento entra no fim da fila.</span>
+      @if (tentouSalvar() && erros().ordem) {
+        <span class="mkf-erro">{{ erros().ordem }}</span>
+      }
+    </label>
+
+    @if (erroServidor()) {
+      <p class="wl-estado wl-estado--erro" role="alert">{{ erroServidor() }}</p>
+    }
+
+    <div class="mkf-rodape">
+      <div class="mkf-campo">
+        <span class="mkf-rotulo" id="rotulo-status-depoimento">Status</span>
+        <span class="mkf-status">
+          <button
+            type="button"
+            class="mkf-toggle"
+            role="switch"
+            aria-labelledby="rotulo-status-depoimento"
+            [attr.aria-checked]="publicado()"
+            (click)="publicado.set(!publicado())"
+          ></button>
+          <span class="mkf-pill" [class.mkf-pill--ligado]="publicado()">{{ publicado() ? 'Publicado' : 'Oculto' }}</span>
+        </span>
+      </div>
+      <div class="mkf-acoes">
+        <aurum-button variante="outline" (click)="cancelar()">CANCELAR</aurum-button>
+        <aurum-button variante="wine" tipo="submit" [desabilitado]="salvando() || caracteres() > limiteRelato">
+          {{ salvando() ? 'SALVANDO…' : 'SALVAR DEPOIMENTO' }}
+        </aurum-button>
+      </div>
+    </div>
+  </form>
+}
+
+@if (toast()) {
+  <div class="mkf-toast" role="status">{{ toast() }}</div>
+}

@@ -1,0 +1,164 @@
+<header class="mkf-cabecalho">
+  <h1>{{ edicao() ? 'Editar Banner' : 'Novo Banner' }}</h1>
+  <p>
+    {{ edicao() ? 'Altere imagem, destino, ordem e status do banner da vitrine de campanhas do site institucional.' : 'Cadastre um banner para a vitrine de campanhas do site institucional — defina imagem, destino e status.' }}
+  </p>
+</header>
+
+@if (carregando()) {
+  <p class="wl-estado wl-estado--carregando" role="status">Carregando banner…</p>
+} @else if (erroCarga()) {
+  <p class="wl-estado wl-estado--erro" role="alert">{{ erroCarga() }}</p>
+} @else {
+  @if (salvo(); as item) {
+    <section class="mkf-resultado" aria-label="Resultado do salvamento">
+      @if (avisos().length > 0) {
+        <div class="wl-estado mkf-aviso" role="status">
+          <strong>O banner foi salvo, mas o hotsite tem pontos de atenção:</strong>
+          <ul class="mkf-avisos">
+            @for (aviso of avisos(); track $index) {
+              <li>{{ aviso }}</li>
+            }
+          </ul>
+        </div>
+      }
+      @if (linkHotsite(); as link) {
+        <p class="wl-estado wl-estado--sucesso">
+          <a class="mkf-hotsite" [href]="link" target="_blank" rel="noopener">Abrir hotsite</a>
+        </p>
+      }
+    </section>
+  }
+
+  <form class="mkf-card" novalidate (submit)="$event.preventDefault(); salvar()">
+    <div class="mkf-campo">
+      <span class="mkf-rotulo" id="rotulo-imagem">Imagem do banner</span>
+      <aurum-dropzone
+        accept="image/png,image/jpeg,image/webp"
+        [maxBytes]="limiteImagem"
+        formatos="PNG, JPG ou WebP"
+        recomendacao="1200×600 px"
+        rotuloAcessivel="Imagem do banner"
+        [previewAtual]="existente()?.imageUrl ?? null"
+        (arquivoChange)="imagem.set($event)"
+      />
+      @if (tentouSalvar() && erros().imagem) {
+        <p class="mkf-erro">{{ erros().imagem }}</p>
+      }
+    </div>
+
+    <label class="mkf-campo">
+      <span class="mkf-rotulo">Nome do banner (interno)</span>
+      <input
+        class="mkf-input"
+        name="titulo"
+        type="text"
+        maxlength="150"
+        placeholder="Ex: Campanha de verão"
+        [class.mkf-input--invalido]="tentouSalvar() && !!erros().titulo"
+        [value]="titulo()"
+        (input)="titulo.set($any($event.target).value)"
+      />
+      @if (tentouSalvar() && erros().titulo) {
+        <span class="mkf-erro">{{ erros().titulo }}</span>
+      }
+    </label>
+
+    <div class="mkf-campo">
+      <span class="mkf-rotulo" id="rotulo-destino">Destino do banner</span>
+      <div class="mkf-segmentado" role="radiogroup" aria-labelledby="rotulo-destino">
+        <button type="button" role="radio" [attr.aria-checked]="tipo() === 'link'" (click)="trocarTipo('link')">Link Externo</button>
+        <button type="button" role="radio" [attr.aria-checked]="tipo() === 'html'" (click)="trocarTipo('html')">Arquivo HTML</button>
+      </div>
+      <p class="mkf-ajuda">
+        Arquivo HTML: hospede um mini-hotsite promocional (ex. gerado por IA) — a URL pública é criada automaticamente.
+      </p>
+    </div>
+
+    @if (tipo() === 'link') {
+      <label class="mkf-campo">
+        <span class="mkf-rotulo">URL de destino</span>
+        <input
+          class="mkf-input"
+          name="destino"
+          type="text"
+          inputmode="url"
+          placeholder="https://exemplo.com.br/campanha"
+          [class.mkf-input--invalido]="tentouSalvar() && !!erros().destino"
+          [value]="destino()"
+          (input)="destino.set($any($event.target).value)"
+        />
+        @if (tentouSalvar() && erros().destino) {
+          <span class="mkf-erro">{{ erros().destino }}</span>
+        }
+      </label>
+    } @else {
+      <div class="mkf-campo">
+        <span class="mkf-rotulo">Arquivo HTML do hotsite</span>
+        <aurum-dropzone
+          accept=".html,.htm,text/html"
+          [maxBytes]="limiteHtml"
+          formatos="arquivo .html (UTF-8)"
+          rotulo="Clique para enviar ou arraste o arquivo .html"
+          rotuloAcessivel="Arquivo HTML do hotsite"
+          [imagem]="false"
+          [nomeAtual]="nomeHotsite()"
+          (arquivoChange)="html.set($event)"
+        />
+        @if (tentouSalvar() && erros().html) {
+          <p class="mkf-erro">{{ erros().html }}</p>
+        }
+      </div>
+    }
+
+    <label class="mkf-campo">
+      <span class="mkf-rotulo">Ordem de exibição</span>
+      <input
+        class="mkf-input mkf-input--curto"
+        name="ordem"
+        type="number"
+        min="0"
+        step="1"
+        placeholder="Fim da fila"
+        [class.mkf-input--invalido]="tentouSalvar() && !!erros().ordem"
+        [value]="ordem() ?? ''"
+        (input)="lerOrdem($any($event.target).value)"
+      />
+      <span class="mkf-ajuda">Menor número aparece primeiro. Em branco, o banner entra no fim da fila.</span>
+      @if (tentouSalvar() && erros().ordem) {
+        <span class="mkf-erro">{{ erros().ordem }}</span>
+      }
+    </label>
+
+    @if (erroServidor()) {
+      <p class="wl-estado wl-estado--erro" role="alert">{{ erroServidor() }}</p>
+    }
+
+    <div class="mkf-rodape">
+      <div class="mkf-campo">
+        <span class="mkf-rotulo" id="rotulo-status">Status</span>
+        <span class="mkf-status">
+          <button
+            type="button"
+            class="mkf-toggle"
+            role="switch"
+            aria-labelledby="rotulo-status"
+            [attr.aria-checked]="ativo()"
+            (click)="ativo.set(!ativo())"
+          ></button>
+          <span class="mkf-pill" [class.mkf-pill--ligado]="ativo()">{{ ativo() ? 'Ativo' : 'Inativo' }}</span>
+        </span>
+      </div>
+      <div class="mkf-acoes">
+        <aurum-button variante="outline" (click)="cancelar()">CANCELAR</aurum-button>
+        <aurum-button variante="wine" tipo="submit" [desabilitado]="salvando()">
+          {{ salvando() ? 'SALVANDO…' : 'SALVAR BANNER' }}
+        </aurum-button>
+      </div>
+    </div>
+  </form>
+}
+
+@if (toast()) {
+  <div class="mkf-toast" role="status">{{ toast() }}</div>
+}

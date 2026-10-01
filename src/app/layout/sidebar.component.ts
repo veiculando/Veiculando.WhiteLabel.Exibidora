@@ -22,6 +22,8 @@ interface GrupoNav {
   titulo: string;
   icone: string;
   itens: ItemNav[];
+  /** Grupo do módulo CMS: só aparece com `cmsHabilitado === true` no branding. */
+  exigeCms?: boolean;
 }
 
 /**
@@ -75,6 +77,19 @@ const GRUPOS: GrupoNav[] = [
       { rotulo: 'Campanhas', rota: '/campanhas', icone: 'campanhas', permissao: 'ClienteGerenciar' },
       { rotulo: 'Solicitações de reserva', rota: '/pedidos-reserva', icone: 'reservas', permissao: 'PedidoReservaGerenciar' },
       { rotulo: 'Pedidos de inserção', rota: '/pedidos-insercao', icone: 'pedidos-insercao', permissao: 'PedidoInsercaoGerenciar' },
+    ],
+  },
+  {
+    // TP-4 (VEI-RD-14): Marketing entre Comercial e Operacional, como no Figma
+    // (`223:5360`). Depoimentos usa o mesmo escudo de Análises KYC — é o ícone
+    // que o Figma desenhou para o item.
+    titulo: 'Marketing',
+    icone: 'megafone',
+    exigeCms: true,
+    itens: [
+      { rotulo: 'Banners', rota: '/marketing/banners', icone: 'banners', permissao: 'ConteudoGerenciar' },
+      { rotulo: 'Marcas Parceiras', rota: '/marketing/marcas', icone: 'marcas', permissao: 'ConteudoGerenciar' },
+      { rotulo: 'Depoimentos', rota: '/marketing/depoimentos', icone: 'kyc', permissao: 'ConteudoGerenciar' },
     ],
   },
   {
@@ -546,6 +561,9 @@ export class SidebarComponent {
   }
 
   itensVisiveis(grupo: GrupoNav): ItemNav[] {
+    // Permissão sem o módulo ligado não basta: a exibidora sem CMS não tem o
+    // que gerenciar, e o cmsGuard negaria a rota de qualquer jeito.
+    if (grupo.exigeCms && this.brand()?.cmsHabilitado !== true) return [];
     return grupo.itens.filter((item) => !item.permissao || this.permissionService.has(item.permissao));
   }
 

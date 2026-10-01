@@ -35,12 +35,22 @@ const ROTULOS: Record<string, string> = {
   'configuracoes/cadastro-acesso': 'Cadastro e acesso',
   relatorios: 'Relatórios',
   usuarios: 'Usuários',
+  // Figma 157:2 e 173:2: lista e formulário trazem a mesma trilha.
+  'marketing/banners': 'Marketing — Banners',
+  'marketing/banners/novo': 'Marketing — Banners',
+  'marketing/banners/:id': 'Marketing — Banners',
+  'marketing/marcas': 'Marketing — Marcas Parceiras',
+  'marketing/marcas/nova': 'Marketing — Marcas Parceiras',
+  'marketing/marcas/:id': 'Marketing — Marcas Parceiras',
+  'marketing/depoimentos': 'Marketing — Depoimentos',
+  'marketing/depoimentos/novo': 'Marketing — Depoimentos',
+  'marketing/depoimentos/:id': 'Marketing — Depoimentos',
 };
 
 function rotuloDaUrl(url: string): string {
   const partes = url.split(/[?#]/)[0].split('/').filter(Boolean);
   if (partes.length === 0) return '';
-  const chave = partes.map((p, i) => (i > 0 && !['novo', 'nova', 'pecas', 'valores', 'cadastro-acesso', 'app'].includes(p) ? ':id' : p)).join('/');
+  const chave = partes.map((p, i) => (i > 0 && !['novo', 'nova', 'pecas', 'valores', 'cadastro-acesso', 'app', 'banners', 'marcas', 'depoimentos'].includes(p) ? ':id' : p)).join('/');
   return ROTULOS[chave] ?? partes[partes.length - 1].replace(/-/g, ' ');
 }
 

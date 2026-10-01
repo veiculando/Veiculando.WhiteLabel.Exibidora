@@ -1,6 +1,8 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { BrandingService } from '../../core/branding/branding.service';
 import { environment } from '../../../environments/environment';
 import { UsuariosComponent } from './usuarios.component';
 
@@ -132,5 +134,123 @@ describe('UsuariosComponent — convites', () => {
     expect(fixture.componentInstance.aviso).toBeNull();
     expect(fixture.nativeElement.textContent).toContain('convite não foi enviado');
     expect(fixture.nativeElement.textContent).toContain('Reenviar convite');
+  });
+});
+
+describe('UsuariosComponent — ConteudoGerenciar (VEI-RD-106)', () => {
+  const base = `${environment.bffUrl}/usuarios`;
+  const marketing = {
+    id: 21, nome: 'Marketing QA', email: 'mkt@example.com', statusConvite: 'Aceito',
+    permissoes: ['UsuarioAfiliadaGerenciar', 'ConteudoGerenciar'],
+  };
+
+  function configurar(cmsHabilitado: boolean | undefined): void {
+    TestBed.configureTestingModule({
+      imports: [UsuariosComponent],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        {
+          provide: BrandingService,
+          useValue: { branding: signal({ nomeExibicao: 'Aurum', cmsHabilitado }) },
+        },
+      ],
+    });
+  }
+
+  afterEach(() => TestBed.inject(HttpTestingController).verify());
+
+  function opcaoConteudo(raiz: HTMLElement): HTMLInputElement | null {
+    const label = Array.from(raiz.querySelectorAll('label.permissao'))
+      .find((l) => l.querySelector('code')?.textContent === 'ConteudoGerenciar');
+    return label?.querySelector('input[type="checkbox"]') ?? null;
+  }
+
+  // Estado montado antes da única detectChanges; o que vem do HTTP é lido
+  // depois de whenStable (scheduler coalescido do Angular 22).
+  async function abrirCriacao(usuarios: unknown[]) {
+    const fixture = TestBed.createComponent(UsuariosComponent);
+    fixture.componentInstance.abrirCriacao();
+    fixture.detectChanges();
+    TestBed.inject(HttpTestingController).expectOne(base).flush(usuarios);
+    await fixture.whenStable();
+    return fixture;
+  }
+
+  it('com CMS habilitado, oferece a permissão com o rótulo e a concede na criação', async () => {
+    configurar(true);
+    const http = TestBed.inject(HttpTestingController);
+    const fixture = await abrirCriacao([]);
+    const raiz = fixture.nativeElement as HTMLElement;
+
+    const opcao = opcaoConteudo(raiz);
+    expect(opcao).not.toBeNull();
+    expect(opcao!.closest('label')!.textContent).toContain('Gerenciar conteúdo do site');
+
+    opcao!.click();
+    fixture.componentInstance.formCriacao.patchValue({ nome: 'Marketing QA', email: 'mkt@example.com' });
+    fixture.componentInstance.criar();
+
+    const request = http.expectOne(base);
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body.permissoes).toEqual(['ConteudoGerenciar']);
+    request.flush({ id: 21, message: 'Operador cadastrado.' });
+    http.expectOne(base).flush([marketing]);
+    await fixture.whenStable();
+  });
+
+  it.each([false, undefined])('com cmsHabilitado %s, não oferece a permissão', async (cms) => {
+    configurar(cms);
+    const fixture = await abrirCriacao([]);
+    const raiz = fixture.nativeElement as HTMLElement;
+
+    expect(raiz.textContent).toContain('Gerenciar operadores');
+    expect(opcaoConteudo(raiz)).toBeNull();
+    expect(fixture.componentInstance.permissoes()).not.toContain('ConteudoGerenciar');
+  });
+
+  it('com CMS habilitado, revoga a permissão pela edição', async () => {
+    configurar(true);
+    const http = TestBed.inject(HttpTestingController);
+    const fixture = TestBed.createComponent(UsuariosComponent);
+    fixture.detectChanges();
+    http.expectOne(base).flush([marketing]);
+    await fixture.whenStable();
+
+    fixture.componentInstance.abrirEdicao(marketing as never);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const edicao = (fixture.nativeElement as HTMLElement).querySelectorAll('fieldset.permissoes');
+    const opcao = opcaoConteudo(edicao[edicao.length - 1] as HTMLElement);
+    expect(opcao).not.toBeNull();
+    expect(opcao!.checked).toBe(true);
+
+    opcao!.click();
+    fixture.componentInstance.salvarEdicao(marketing as never);
+
+    const request = http.expectOne(`${base}/21`);
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body.permissoes).toEqual(['UsuarioAfiliadaGerenciar']);
+    request.flush({ message: 'Operador atualizado.' });
+    http.expectOne(base).flush([{ ...marketing, permissoes: ['UsuarioAfiliadaGerenciar'] }]);
+    await fixture.whenStable();
+  });
+
+  it('sem CMS, editar quem já tem a permissão não a revoga em silêncio', async () => {
+    configurar(false);
+    const http = TestBed.inject(HttpTestingController);
+    const fixture = TestBed.createComponent(UsuariosComponent);
+    fixture.detectChanges();
+    http.expectOne(base).flush([marketing]);
+    await fixture.whenStable();
+
+    fixture.componentInstance.abrirEdicao(marketing as never);
+    fixture.componentInstance.salvarEdicao(marketing as never);
+
+    const request = http.expectOne(`${base}/21`);
+    expect(request.request.body.permissoes).toEqual(['UsuarioAfiliadaGerenciar', 'ConteudoGerenciar']);
+    request.flush({ message: 'Operador atualizado.' });
+    http.expectOne(base).flush([marketing]);
+    await fixture.whenStable();
   });
 });

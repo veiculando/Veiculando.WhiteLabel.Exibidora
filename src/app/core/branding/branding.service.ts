@@ -15,6 +15,17 @@ export interface BrandingPublico {
   footerText?: string;
   seoTitle?: string;
   seoDescription?: string;
+  /**
+   * Módulo CMS ligado nesta instância (ADR-CMS-004). Ausente = `false`: o BFF só
+   * passa a enviar o campo no TP-3, e até lá nenhuma exibidora vê Marketing.
+   */
+  cmsHabilitado?: boolean;
+  /**
+   * Site institucional que lê o CMS, sem barra final (o BFF normaliza). Monta o
+   * link "Abrir hotsite" (`{cmsSiteUrl}/ofertas/{id}`). `null` com o módulo
+   * desligado ou sem `Cms:SiteUrl` válido — nenhum domínio fica fixo no front.
+   */
+  cmsSiteUrl?: string | null;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -62,7 +73,16 @@ export class BrandingService {
       footerText: this.optional(value, 'footerText'),
       seoTitle: this.optional(value, 'seoTitle'),
       seoDescription: this.optional(value, 'seoDescription'),
+      // Só o booleano true liga: "true", 1 ou ausente mantêm o módulo desligado.
+      cmsHabilitado: value['cmsHabilitado'] === true,
+      cmsSiteUrl: this.siteHttps(this.optional(value, 'cmsSiteUrl')),
     };
+  }
+
+  /** Só https absoluta vira link; o resto (ausente, http, relativa) é `null`. */
+  private siteHttps(value: string | undefined): string | null {
+    if (!value || !/^https:\/\/[^/\s]/i.test(value)) return null;
+    return value.replace(/\/+$/, '');
   }
 
   private required(value: Record<string, unknown>, field: string): string {

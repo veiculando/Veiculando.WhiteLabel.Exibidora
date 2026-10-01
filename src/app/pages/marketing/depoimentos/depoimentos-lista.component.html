@@ -1,0 +1,208 @@
+<aurum-page-header titulo="Depoimentos" [subtitulo]="subtitulo()">
+  <aurum-button aurumPageHeaderAcoes variante="wine" (click)="novo()">
+    <span class="aurum-ico mk-ico" style="--ico: url(/assets/aurum/icon-mais.svg)"></span>
+    Novo Depoimento
+  </aurum-button>
+</aurum-page-header>
+
+<!-- Cinco KPIs de GET /resumo (Figma 157:1270). Resumo fora do ar não derruba a tabela. -->
+<section class="dp-kpis" aria-label="Resumo dos depoimentos">
+  @for (kpi of kpis; track kpi.chave) {
+    <div class="dp-kpi" [attr.data-kpi]="kpi.chave">
+      <span class="dp-kpi__topo">
+        <span class="aurum-ico dp-kpi__icone" [attr.data-chave]="kpi.chave" [style.--ico]="'url(/assets/aurum/icon-kyc-' + kpi.icone + '.svg)'"></span>
+        <span class="dp-kpi__numero">{{ valorKpi(kpi) }}</span>
+      </span>
+      <span class="dp-kpi__rotulo">{{ kpi.rotulo }}</span>
+      @if (resumoIndisponivel()) {
+        <span class="dp-kpi__aviso">indisponível</span>
+      }
+    </div>
+  }
+</section>
+
+<aurum-filter-bar>
+  <aurum-text-input
+    [valor]="busca()"
+    (valorChange)="digitar('busca', $event)"
+    placeholder="Buscar por autor, empresa ou depoimento…"
+    rotulo="Buscar depoimentos"
+  />
+  <select class="aurum-select" aria-label="Status" [value]="status()" (change)="selecionarStatus($any($event.target).value)">
+    <option value="todos">Status: Todos</option>
+    <option value="ativo">Publicado</option>
+    <option value="inativo">Oculto</option>
+  </select>
+  <input
+    class="dp-filtro"
+    type="text"
+    name="empresa"
+    aria-label="Empresa"
+    placeholder="Empresa: Todas"
+    [value]="empresa()"
+    (input)="digitar('empresa', $any($event.target).value)"
+  />
+  <input
+    class="dp-filtro"
+    type="date"
+    name="desde"
+    aria-label="Data de cadastro a partir de"
+    title="Data de cadastro a partir de"
+    [value]="desde()"
+    (change)="selecionarDesde($any($event.target).value)"
+  />
+</aurum-filter-bar>
+
+@if (carregando()) {
+  <p class="wl-estado wl-estado--carregando" role="status">Carregando depoimentos…</p>
+} @else if (indisponivel()) {
+  <div class="wl-estado wl-estado--erro mk-indisponivel" role="alert">
+    <strong>CMS indisponível</strong>
+    <span>{{ erro() }}</span>
+    <aurum-button variante="outline" tamanho="sm" (click)="carregar()">Tentar novamente</aurum-button>
+  </div>
+} @else if (erro()) {
+  <div class="wl-estado wl-estado--erro mk-indisponivel" role="alert">
+    <span>{{ erro() }}</span>
+    <aurum-button variante="outline" tamanho="sm" (click)="carregar()">Tentar novamente</aurum-button>
+  </div>
+} @else if (itens().length === 0) {
+  <p class="wl-estado wl-estado--vazio">Nenhum depoimento encontrado para este filtro.</p>
+} @else {
+  <div class="wl-tabela--rolavel">
+    <table aurumTable>
+      <thead>
+        <tr aurumTableRow>
+          <th aurumTableHeaderCell scope="col">Autor</th>
+          <th aurumTableHeaderCell scope="col">Nome / Cargo</th>
+          <th aurumTableHeaderCell scope="col">Empresa</th>
+          <th aurumTableHeaderCell scope="col">Depoimento</th>
+          <th aurumTableHeaderCell scope="col">Data</th>
+          <th aurumTableHeaderCell scope="col">Status</th>
+          <th aurumTableHeaderCell scope="col">Ordem</th>
+          <th aurumTableHeaderCell scope="col">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (depoimento of itens(); track depoimento.id) {
+          <tr aurumTableRow [attr.data-depoimento]="depoimento.id">
+            <td aurumTableCell>
+              <span class="dp-avatar">
+                @if (depoimento.avatarUrl != null) {
+                  <img [src]="depoimento.avatarUrl" [alt]="'Foto de ' + depoimento.author" loading="lazy" />
+                } @else {
+                  <span aria-hidden="true">{{ iniciais(depoimento.author) }}</span>
+                }
+              </span>
+            </td>
+            <td aurumTableCell>
+              <span class="dp-nome">
+                <strong>{{ depoimento.author }}</strong>
+                @if (depoimento.role != null) {
+                  <span>{{ depoimento.role }}</span>
+                }
+              </span>
+            </td>
+            <td aurumTableCell class="dp-cinza">{{ depoimento.company ?? '—' }}</td>
+            <td aurumTableCell class="dp-trecho">“{{ trecho(depoimento.content) }}”</td>
+            <td aurumTableCell>{{ depoimento.createdAt | date: 'dd/MM/yyyy' }}</td>
+            <td aurumTableCell>
+              <aurum-status-pill
+                [rotulo]="depoimento.ativo ? 'Publicado' : 'Oculto'"
+                [tom]="depoimento.ativo ? 'solido-verde' : 'solido-cinza'"
+                compacto
+              />
+            </td>
+            <td aurumTableCell class="mk-ordem">#{{ depoimento.displayOrder }}</td>
+            <td aurumTableCell>
+              <span class="mk-acoes">
+                <button type="button" class="mk-acao" [attr.aria-label]="'Ver ' + depoimento.author" (click)="ver(depoimento)">
+                  <span class="aurum-ico" style="--ico: url(/assets/aurum/icon-olho.svg)"></span>
+                </button>
+                <a class="mk-acao" [routerLink]="['/marketing/depoimentos', depoimento.id]" [attr.aria-label]="'Editar ' + depoimento.author">
+                  <span class="aurum-ico" style="--ico: url(/assets/aurum/icon-editar-caixa.svg)"></span>
+                </a>
+                <button
+                  type="button"
+                  class="mk-acao"
+                  [class.mk-acao--desligar]="depoimento.ativo"
+                  [class.mk-acao--ligar]="!depoimento.ativo"
+                  [attr.aria-label]="(depoimento.ativo ? 'Ocultar ' : 'Publicar ') + depoimento.author"
+                  (click)="pedirAlteracao(depoimento)"
+                >
+                  <span class="aurum-ico" style="--ico: url(/assets/aurum/icon-power.svg)"></span>
+                </button>
+              </span>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <app-paginador
+    [page]="page()"
+    [pageSize]="pageSize"
+    [total]="total()"
+    [totalPaginas]="totalPaginas()"
+    [carregando]="carregando()"
+    (pagina)="irParaPagina($event)"
+  />
+}
+
+<!-- "Ver": prévia de como o card aparece no site institucional. -->
+<aurum-modal [aberto]="vendo() != null" titulo="Prévia no site" largura="md" (fechar)="vendo.set(null)">
+  @if (vendo(); as depoimento) {
+    <article class="dp-previa">
+      <blockquote>“{{ depoimento.content }}”</blockquote>
+      <footer>
+        <span class="dp-avatar dp-avatar--grande">
+          @if (depoimento.avatarUrl != null) {
+            <img [src]="depoimento.avatarUrl" [alt]="'Foto de ' + depoimento.author" />
+          } @else {
+            <span aria-hidden="true">{{ iniciais(depoimento.author) }}</span>
+          }
+        </span>
+        <span class="dp-nome">
+          <strong>{{ depoimento.author }}</strong>
+          @if (assinatura(depoimento)) {
+            <span>{{ assinatura(depoimento) }}</span>
+          }
+        </span>
+      </footer>
+    </article>
+  }
+  <aurum-button aurumModalRodape variante="ghost" tamanho="sm" (click)="vendo.set(null)">Fechar</aurum-button>
+</aurum-modal>
+
+<aurum-modal
+  [aberto]="confirmando() != null"
+  [titulo]="confirmando()?.ativo ? 'Ocultar depoimento?' : 'Publicar depoimento?'"
+  largura="sm"
+  (fechar)="cancelarAlteracao()"
+>
+  @if (confirmando(); as depoimento) {
+    <p class="mk-confirma">
+      @if (depoimento.ativo) {
+        O depoimento de <strong>{{ depoimento.author }}</strong> sai do site institucional.
+      } @else {
+        O depoimento de <strong>{{ depoimento.author }}</strong> passa a aparecer no site institucional.
+        Confirme que a citação tem autorização de quem a assina.
+      }
+      O site é atualizado em até 5 minutos.
+    </p>
+    @if (erroStatus()) {
+      <p class="wl-estado wl-estado--erro" role="alert">{{ erroStatus() }}</p>
+    }
+  }
+  <aurum-button aurumModalRodape variante="ghost" tamanho="sm" (click)="cancelarAlteracao()">Cancelar</aurum-button>
+  <aurum-button
+    aurumModalRodape
+    [variante]="confirmando()?.ativo ? 'perigo' : 'sucesso'"
+    tamanho="sm"
+    [desabilitado]="alterando()"
+    (click)="confirmarAlteracao()"
+  >
+    {{ confirmando()?.ativo ? 'Ocultar' : 'Publicar' }}
+  </aurum-button>
+</aurum-modal>

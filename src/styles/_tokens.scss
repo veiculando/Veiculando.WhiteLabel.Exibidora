@@ -100,6 +100,11 @@
   --tone-solid-purple: #7c3aed;
   --tone-amber: #b45309;
   --tone-amber-bg: rgba(234, 179, 8, 0.12);
+  /* Marketing (TP-4, Figma 157:2 / 173:2): texto de apoio dos formulários e o
+     botão power de inativar. */
+  --muted-ink: #8c807a;
+  --power-off: #b91c1c;
+  --power-off-bg: rgba(239, 68, 68, 0.1);
   --row-hover: #faf9f6;
 
   --shadow-base: 0 8px 32px color-mix(in srgb, var(--shadow-tint) 10%, transparent);
