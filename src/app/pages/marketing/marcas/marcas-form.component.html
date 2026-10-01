@@ -1,0 +1,97 @@
+<header class="mkf-cabecalho">
+  <h1>{{ edicao() ? 'Editar Marca' : 'Nova Marca' }}</h1>
+  <p>
+    {{ edicao() ? 'Altere logo, nome, ordem e status da marca no carrossel de logotipos do site institucional.' : 'Cadastre uma marca parceira exibida no carrossel de logotipos do site institucional.' }}
+  </p>
+</header>
+
+@if (carregando()) {
+  <p class="wl-estado wl-estado--carregando" role="status">Carregando marca…</p>
+} @else if (erroCarga()) {
+  <p class="wl-estado wl-estado--erro" role="alert">{{ erroCarga() }}</p>
+} @else {
+  <form class="mkf-card" novalidate (submit)="$event.preventDefault(); salvar()">
+    <div class="mkf-campo">
+      <span class="mkf-rotulo">Logo da marca</span>
+      <aurum-dropzone
+        accept="image/png,image/jpeg,image/webp,image/svg+xml"
+        [maxBytes]="limiteLogo"
+        formatos="PNG, JPG, WebP ou SVG"
+        recomendacao="fundo transparente"
+        rotulo="Clique para enviar ou arraste o logotipo"
+        rotuloAcessivel="Logo da marca"
+        [previewAtual]="existente()?.imageUrl ?? null"
+        (arquivoChange)="logo.set($event)"
+      />
+      @if (tentouSalvar() && erros().logo) {
+        <p class="mkf-erro">{{ erros().logo }}</p>
+      }
+    </div>
+
+    <label class="mkf-campo">
+      <span class="mkf-rotulo">Nome da marca</span>
+      <input
+        class="mkf-input"
+        name="nome"
+        type="text"
+        placeholder="Ex: Marca parceira"
+        [class.mkf-input--invalido]="tentouSalvar() && !!erros().nome"
+        [value]="nome()"
+        (input)="nome.set($any($event.target).value)"
+      />
+      @if (tentouSalvar() && erros().nome) {
+        <span class="mkf-erro">{{ erros().nome }}</span>
+      }
+    </label>
+
+    <label class="mkf-campo">
+      <span class="mkf-rotulo">Ordem de exibição</span>
+      <input
+        class="mkf-input mkf-input--curto"
+        name="ordem"
+        type="number"
+        min="0"
+        step="1"
+        placeholder="Fim da fila"
+        [class.mkf-input--invalido]="tentouSalvar() && !!erros().ordem"
+        [value]="ordem() ?? ''"
+        (input)="lerOrdem($any($event.target).value)"
+      />
+      <span class="mkf-ajuda">Posição no carrossel: menor número aparece primeiro. Em branco, a marca entra no fim da fila.</span>
+      @if (tentouSalvar() && erros().ordem) {
+        <span class="mkf-erro">{{ erros().ordem }}</span>
+      }
+    </label>
+
+    @if (erroServidor()) {
+      <p class="wl-estado wl-estado--erro" role="alert">{{ erroServidor() }}</p>
+    }
+
+    <div class="mkf-rodape">
+      <div class="mkf-campo">
+        <span class="mkf-rotulo" id="rotulo-status-marca">Status</span>
+        <span class="mkf-status">
+          <button
+            type="button"
+            class="mkf-toggle"
+            role="switch"
+            aria-labelledby="rotulo-status-marca"
+            [attr.aria-checked]="ativo()"
+            (click)="ativo.set(!ativo())"
+          ></button>
+          <span class="mkf-pill" [class.mkf-pill--ligado]="ativo()">{{ ativo() ? 'Ativo' : 'Inativo' }}</span>
+        </span>
+      </div>
+      <div class="mkf-acoes">
+        <aurum-button variante="outline" (click)="cancelar()">CANCELAR</aurum-button>
+        <aurum-button variante="wine" tipo="submit" [desabilitado]="salvando()">
+          {{ salvando() ? 'SALVANDO…' : 'SALVAR MARCA' }}
+        </aurum-button>
+      </div>
+    </div>
+  </form>
+}
+
+@if (toast()) {
+  <div class="mkf-toast" role="status">{{ toast() }}</div>
+}
