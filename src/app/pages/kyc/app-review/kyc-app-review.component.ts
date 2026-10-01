@@ -90,6 +90,6 @@ export class KycAppReviewComponent implements OnInit {
     this.busy = true; this.error = ''; this.notice = '';
     this.service.decide(id, action, this.reason.trim()).subscribe({next: () => {
       this.busy = false; this.notice = 'Decisão registrada.'; this.load(); this.select({ id } as AppKycQueueItem);
-    }, error: () => { this.busy = false; this.error = 'Não foi possível registrar a decisão. Confira o estado do cadastro e tente novamente.'; }});
+    }, error: resposta => { this.busy = false; this.error = resposta?.error?.message ?? 'Não foi possível registrar a decisão. Confira o estado do cadastro e tente novamente.'; }});
   }
 }
