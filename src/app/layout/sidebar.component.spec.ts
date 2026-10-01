@@ -24,7 +24,7 @@ describe('SidebarComponent', () => {
     }
   });
 
-  function configurar(permissoes: string[]): void {
+  function configurar(permissoes: string[], branding: Record<string, unknown> = { nomeExibicao: 'Outdoor Premium' }): void {
     TestBed.configureTestingModule({
       imports: [SidebarComponent],
       providers: [
@@ -33,7 +33,7 @@ describe('SidebarComponent', () => {
           provide: PermissionService,
           useValue: { has: (perm: string) => permissoes.includes(perm), getAfiliadaId: () => '4821' },
         },
-        { provide: BrandingService, useValue: { branding: signal({ nomeExibicao: 'Outdoor Premium' }) } },
+        { provide: BrandingService, useValue: { branding: signal(branding) } },
       ],
     });
     fixture = TestBed.createComponent(SidebarComponent);
@@ -195,6 +195,53 @@ describe('SidebarComponent', () => {
     expect(textoGrupos()).toEqual(['Cadastros', 'Comercial']);
     const secao = (fixture.nativeElement as HTMLElement).querySelector('a[href="/kyc"]')?.closest('.nav-section');
     expect(secao?.querySelector('.section-title')?.textContent?.trim()).toBe('Cadastros');
+  });
+
+  // TP-4 (VEI-RD-14): o grupo Marketing exige as DUAS condições — a permissão
+  // ConteudoGerenciar e o módulo CMS ligado no branding. Cada lado em teste próprio.
+  const TODAS_ATUAIS = ['PecaGerenciar', 'ClienteGerenciar', 'PedidoCriar', 'PedidoReservaGerenciar', 'PedidoInsercaoGerenciar', 'ProgramacaoVisualizar', 'CheckingGerenciar', 'FinanceiroVisualizar', 'UsuarioAfiliadaGerenciar'];
+
+  it('Marketing aparece entre Comercial e Operacional com ConteudoGerenciar e cmsHabilitado true', () => {
+    configurar([...TODAS_ATUAIS, 'ConteudoGerenciar'], { nomeExibicao: 'Outdoor Premium', cmsHabilitado: true });
+    fixture.detectChanges();
+
+    expect(textoGrupos()).toEqual(['Inventário', 'Cadastros', 'Comercial', 'Marketing', 'Operacional', 'Financeiro', 'Configurações']);
+    const secao = (fixture.nativeElement as HTMLElement).querySelector('a[href="/marketing/banners"]')?.closest('.nav-section');
+    const itens = Array.from(secao?.querySelectorAll('a.nav-item') ?? []).map((a) => [a.textContent?.trim(), a.getAttribute('href')]);
+    expect(itens).toEqual([
+      ['Banners', '/marketing/banners'],
+      ['Marcas Parceiras', '/marketing/marcas'],
+      ['Depoimentos', '/marketing/depoimentos'],
+    ]);
+  });
+
+  it('os itens dos demais grupos nao mudam quando Marketing acende', () => {
+    configurar([...TODAS_ATUAIS, 'ConteudoGerenciar'], { nomeExibicao: 'Outdoor Premium', cmsHabilitado: true });
+    fixture.detectChanges();
+    const hrefs = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('a[href]'))
+      .map((a) => a.getAttribute('href'))
+      .filter((h) => !h?.startsWith('/marketing'));
+    expect(hrefs).toEqual([
+      '/dashboard', '/locais', '/pecas/valores', '/agencias', '/kyc', '/kyc/app', '/prospeccao', '/campanhas',
+      '/pedidos-reserva', '/pedidos-insercao', '/programacao', '/checkout', '/ordens-servico', '/relatorios',
+      '/configuracoes/cadastro-acesso', '/usuarios',
+    ]);
+  });
+
+  it.each([
+    ['cmsHabilitado false', { nomeExibicao: 'Outdoor Premium', cmsHabilitado: false }],
+    ['cmsHabilitado ausente', { nomeExibicao: 'Outdoor Premium' }],
+  ])('Marketing some com ConteudoGerenciar mas %s', (_, branding) => {
+    configurar(['ConteudoGerenciar'], branding);
+    fixture.detectChanges();
+    expect(textoGrupos()).not.toContain('Marketing');
+    expect((fixture.nativeElement as HTMLElement).querySelector('a[href^="/marketing"]')).toBeNull();
+  });
+
+  it('Marketing some sem ConteudoGerenciar, mesmo com o CMS ligado', () => {
+    configurar(TODAS_ATUAIS, { nomeExibicao: 'Outdoor Premium', cmsHabilitado: true });
+    fixture.detectChanges();
+    expect(textoGrupos()).not.toContain('Marketing');
   });
 
   it('mostra nome da exibidora e afiliada no topo', () => {

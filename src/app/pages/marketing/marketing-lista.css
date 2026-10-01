@@ -1,0 +1,27 @@
+/* Listas de Marketing (Figma 157:2, 157:636, 157:1270): compartilhado por
+   Banners, Marcas Parceiras e Depoimentos para as três não divergirem. */
+.mk-ico { width: 16px; height: 16px; }
+.mk-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; }
+.mk-card { display: flex; flex-direction: column; gap: 8px; padding: 16px 20px 20px; background: var(--white); border: 1px solid var(--line-subtle); border-radius: var(--radius-md); box-shadow: 0 8px 16px color-mix(in srgb, var(--shadow-tint) 10%, transparent); }
+.mk-thumb { display: flex; align-items: center; justify-content: center; height: 89px; overflow: hidden; border-radius: 12px; background: color-mix(in srgb, var(--secondary-color) 35%, transparent); color: var(--primary-color); }
+.mk-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.mk-thumb .aurum-ico { width: 28px; height: 28px; }
+.mk-topo { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.mk-titulo { margin: 0; font-family: var(--font-display); font-size: 1.0625rem; font-weight: 700; line-height: 25.5px; color: var(--primary-dark); overflow-wrap: anywhere; }
+.mk-sub { margin: 2px 0 0; font-size: 0.75rem; line-height: 18px; color: var(--on-surface); }
+.mk-chip { align-self: flex-start; margin-top: 8px; padding: 2px 8px; border-radius: 6px; background: color-mix(in srgb, var(--secondary-color) 18%, transparent); color: var(--gold-ink); font-size: 0.6875rem; font-weight: 600; line-height: 16.5px; }
+.mk-info { display: flex; align-items: center; gap: 6px; padding: 12px; border-radius: var(--radius-search); background: var(--paper-bg); font-size: 0.75rem; line-height: 18px; color: var(--on-surface); min-width: 0; }
+.mk-info .aurum-ico { width: 13px; height: 13px; color: var(--primary-color); }
+.mk-info span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-rodape { display: flex; align-items: center; justify-content: space-between; margin-top: auto; padding-top: 10px; border-top: 1px solid var(--line-subtle); }
+.mk-ordem-rotulo { display: block; font-size: 0.65625rem; letter-spacing: 0.525px; text-transform: uppercase; color: var(--on-surface); }
+.mk-ordem { font-family: var(--font-display); font-size: 0.9375rem; font-weight: 700; line-height: 22.5px; color: var(--primary-dark); }
+.mk-acoes { display: inline-flex; gap: 6px; }
+.mk-acao { display: inline-flex; align-items: center; justify-content: center; padding: 6px 10px; border: none; border-radius: 8px; background: rgba(0, 0, 0, 0.04); color: var(--primary-color); cursor: pointer; text-decoration: none; }
+.mk-acao .aurum-ico { width: 14px; height: 14px; }
+.mk-acao--desligar { background: var(--power-off-bg); color: var(--power-off); }
+.mk-acao--ligar { background: var(--tone-success-bg); color: var(--tone-success); }
+.mk-acao:focus-visible { outline: 2px solid var(--primary-color); outline-offset: 2px; }
+.mk-indisponivel { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.mk-indisponivel strong { font-family: var(--font-display); font-size: 1rem; }
+.mk-confirma { margin: 0; font-size: 0.875rem; line-height: 21px; color: var(--on-surface); }
