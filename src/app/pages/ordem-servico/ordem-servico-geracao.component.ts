@@ -93,10 +93,10 @@ const PAGE_SIZE_MAXIMO = 100;
 
     <div class="og-filtros">
       <aurum-filter-field rotulo="Colador" posicaoRotulo="acima">
-        <aurum-dropdown [opcoes]="opcoesColador" [valor]="idColador === null ? TODOS : String(idColador)" (valorChange)="idColador = $event === TODOS ? null : Number($event)" />
+        <aurum-dropdown [opcoes]="opcoesColador" [valor]="idColador === null ? TODOS : String(idColador)" (valorChange)="mudarAtribuido('colador', $event)" />
       </aurum-filter-field>
       <aurum-filter-field rotulo="Fiscal" posicaoRotulo="acima">
-        <aurum-dropdown [opcoes]="opcoesFiscal" [valor]="idFiscal === null ? TODOS : String(idFiscal)" (valorChange)="idFiscal = $event === TODOS ? null : Number($event)" />
+        <aurum-dropdown [opcoes]="opcoesFiscal" [valor]="idFiscal === null ? TODOS : String(idFiscal)" (valorChange)="mudarAtribuido('fiscal', $event)" />
       </aurum-filter-field>
     </div>
 
@@ -334,6 +334,12 @@ export class OrdemServicoGeracaoComponent implements OnInit {
 
   mudarPeriodo(valor: string): void {
     this.idPeriodo = valor === TODOS ? null : Number(valor);
+  }
+
+  mudarAtribuido(papel: 'colador' | 'fiscal', valor: string): void {
+    const id = valor === TODOS ? null : Number(valor);
+    if (papel === 'colador') this.idColador = id;
+    else this.idFiscal = id;
   }
 
   mudarFiltro(campo: 'idCidade' | 'status', valor: string): void {
