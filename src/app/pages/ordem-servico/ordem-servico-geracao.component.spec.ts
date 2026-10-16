@@ -37,6 +37,7 @@ describe('OrdemServicoGeracaoComponent', () => {
       .expectOne((r) => r.url === `${environment.bffUrl}/lookups/periodos` && r.params.get('periodicidade') === String(Periodicidade.Bissemanal))
       .flush([{ id: 10, nome: 'Bissemana 16', dataInicio: '2026-08-01', dataFim: '2026-08-14' }]);
     httpMock.expectOne((r) => r.url === `${environment.bffUrl}/lookups/cidades`).flush([]);
+    httpMock.expectOne(`${baseOs}/operadores`).flush([]);
 
     return componente;
   }
@@ -103,7 +104,32 @@ describe('OrdemServicoGeracaoComponent', () => {
     httpMock.expectNone(baseOs);
   });
 
-  it('gerar OS envia so idPeriodo/idPecas (sem opcoes) e abre o modal com o periodo conhecido localmente', () => {
+  it('mostra colador e fiscal na tela e envia os ids escolhidos, sem modal de escolha', () => {
+    const componente = criar();
+    componente.carregarOperadores();
+    const req = httpMock.expectOne(`${baseOs}/operadores`);
+    expect(req.request.method).toBe('GET');
+    req.flush([
+      { id: 9, nome: 'Ana', colador: true, fiscal: true },
+      { id: 4, nome: 'Bia', colador: false, fiscal: true },
+    ]);
+
+    expect(componente.opcoesColador.map((o) => o.rotulo)).toEqual(['Nenhum', 'Ana']);
+    expect(componente.opcoesFiscal.map((o) => o.rotulo)).toEqual(['Nenhum', 'Ana', 'Bia']);
+
+    componente.idPeriodo = 10;
+    componente.selecionadas.add(1);
+    componente.idColador = 9;
+    componente.idFiscal = 4;
+    componente.gerarOs();
+
+    const criarReq = httpMock.expectOne(baseOs);
+    expect(criarReq.request.body).toEqual({ idPeriodo: 10, idPecas: [1], idColador: 9, idFiscal: 4 });
+    criarReq.flush({ id: 99, numeroFormatado: 'OS #0042', pecasCount: 1, status: 'Pendente' });
+    expect(componente.modalAberto).toBe(true);
+  });
+
+  it('gerar OS envia idPeriodo/idPecas e atribuicao vazia, e abre o modal com o periodo conhecido localmente', () => {
     const componente = criar();
     componente.idPeriodo = 10;
     componente.selecionadas.add(1);
@@ -112,7 +138,7 @@ describe('OrdemServicoGeracaoComponent', () => {
 
     const req = httpMock.expectOne(baseOs);
     expect(req.request.method).toBe('POST');
-    expect(req.request.body).toEqual({ idPeriodo: 10, idPecas: [1] });
+    expect(req.request.body).toEqual({ idPeriodo: 10, idPecas: [1], idColador: null, idFiscal: null });
     req.flush({ id: 99, numeroFormatado: 'OS #0042', pecasCount: 1 });
 
     expect(componente.modalAberto).toBe(true);
