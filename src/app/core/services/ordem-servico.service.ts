@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { OsCriadaResultado, OsCriarPayload, OsDetalhe, OsFiltro, PaginaFiltro, PaginaWl, OsListItem } from '../models/wl.models';
+import { OperadorCampo, OsCriadaResultado, OsCriarPayload, OsDetalhe, OsFiltro, PaginaFiltro, PaginaWl, OsListItem } from '../models/wl.models';
 import { paramsDePagina } from './pedidos.service';
 
 /**
@@ -50,7 +50,10 @@ export class OrdemServicoService {
     return this.http.get<OsDetalhe>(`${this.base}/${id}`);
   }
 
-  /** Espelha `OrdemServicoCriarRequest` — só `idPeriodo`/`idPecas`, sem campo de opções (o backend não as recebe). */
+  operadores(): Observable<OperadorCampo[]> {
+    return this.http.get<OperadorCampo[]>(`${this.base}/operadores`);
+  }
+
   criar(payload: OsCriarPayload): Observable<OsCriadaResultado> {
     return this.http.post<OsCriadaResultado>(this.base, payload);
   }

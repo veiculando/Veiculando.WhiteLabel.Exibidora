@@ -5,6 +5,7 @@ import { mensagemDeErro } from '../../core/http/api-error';
 import {
   CidadeLookup,
   LEGENDA_STATUS_PROGRAMACAO,
+  OperadorCampo,
   Periodicidade,
   PERIODICIDADE_ROTULOS,
   PeriodoLookup,
@@ -88,6 +89,15 @@ const PAGE_SIZE_MAXIMO = 100;
         <aurum-dropdown [opcoes]="opcoesStatus" [valor]="status === null ? TODOS : String(status)" (valorChange)="mudarFiltro('status', $event)" />
       </aurum-filter-field>
       <aurum-button variante="outline" tamanho="sm" [desabilitado]="!idPeriodo" (click)="buscarPecas()">Buscar peças</aurum-button>
+    </div>
+
+    <div class="og-filtros">
+      <aurum-filter-field rotulo="Colador" posicaoRotulo="acima">
+        <aurum-dropdown [opcoes]="opcoesColador" [valor]="idColador === null ? TODOS : String(idColador)" (valorChange)="idColador = $event === TODOS ? null : Number($event)" />
+      </aurum-filter-field>
+      <aurum-filter-field rotulo="Fiscal" posicaoRotulo="acima">
+        <aurum-dropdown [opcoes]="opcoesFiscal" [valor]="idFiscal === null ? TODOS : String(idFiscal)" (valorChange)="idFiscal = $event === TODOS ? null : Number($event)" />
+      </aurum-filter-field>
     </div>
 
     <div class="og-opcoes">
@@ -247,6 +257,10 @@ export class OrdemServicoGeracaoComponent implements OnInit {
   ];
   opcoesPeriodo: AurumDropdownOpcao[] = [{ valor: TODOS, rotulo: 'Todos' }];
   opcoesCidade: AurumDropdownOpcao[] = [{ valor: TODOS, rotulo: 'Todas' }];
+  opcoesColador: AurumDropdownOpcao[] = [{ valor: TODOS, rotulo: 'Nenhum' }];
+  opcoesFiscal: AurumDropdownOpcao[] = [{ valor: TODOS, rotulo: 'Nenhum' }];
+  idColador: number | null = null;
+  idFiscal: number | null = null;
 
   private periodosCarregados: PeriodoLookup[] = [];
   private cidadesCarregadas: CidadeLookup[] = [];
@@ -272,6 +286,7 @@ export class OrdemServicoGeracaoComponent implements OnInit {
 
   ngOnInit(): void {
     this.carregarPeriodos();
+    this.carregarOperadores();
     this.lookups.cidades().subscribe({
       next: (cidades) => {
         this.cidadesCarregadas = cidades;
@@ -279,6 +294,26 @@ export class OrdemServicoGeracaoComponent implements OnInit {
       },
       error: () => (this.cidadesCarregadas = []),
     });
+  }
+
+  carregarOperadores(): void {
+    this.ordemServicoService.operadores().subscribe({
+      next: (operadores) => {
+        this.opcoesColador = this.opcoesDe(operadores, (o) => o.colador);
+        this.opcoesFiscal = this.opcoesDe(operadores, (o) => o.fiscal);
+      },
+      error: () => {
+        this.opcoesColador = [{ valor: TODOS, rotulo: 'Nenhum' }];
+        this.opcoesFiscal = [{ valor: TODOS, rotulo: 'Nenhum' }];
+      },
+    });
+  }
+
+  private opcoesDe(operadores: OperadorCampo[], papel: (o: OperadorCampo) => boolean): AurumDropdownOpcao[] {
+    return [
+      { valor: TODOS, rotulo: 'Nenhum' },
+      ...operadores.filter(papel).map((o) => ({ valor: String(o.id), rotulo: o.nome })),
+    ];
   }
 
   private carregarPeriodos(): void {
@@ -371,7 +406,7 @@ export class OrdemServicoGeracaoComponent implements OnInit {
 
     this.ordemServicoService
       // Só `idPeriodo`/`idPecas` — `OrdemServicoCriarRequest` não tem campo de opções.
-      .criar({ idPeriodo, idPecas: [...this.selecionadas] })
+      .criar({ idPeriodo, idPecas: [...this.selecionadas], idColador: this.idColador, idFiscal: this.idFiscal })
       .subscribe({
         next: (resultado) => {
           this.gerando = false;

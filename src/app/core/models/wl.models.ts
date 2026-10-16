@@ -823,6 +823,15 @@ export interface OsListItem {
 export interface OsCriarPayload {
   idPeriodo: number;
   idPecas: number[];
+  idColador: number | null;
+  idFiscal: number | null;
+}
+
+export interface OperadorCampo {
+  id: number;
+  nome: string;
+  colador: boolean;
+  fiscal: boolean;
 }
 
 /** Resposta de `POST /api/wl/ordens-servico`. Sem `periodo`: quem chama já conhece o período escolhido (é o mesmo enviado no payload). */
