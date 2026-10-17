@@ -27,6 +27,7 @@ import {
   AurumTableRowComponent,
 } from '../../shared/aurum/aurum-table.component';
 import { OrdemServicoEntregaModalComponent, OsEntregaContexto } from './ordem-servico-entrega-modal.component';
+import { PapelIconeComponent } from './papel-icone.component';
 
 const TODOS = '';
 /** Teto do servidor por página (`WlPaginacao.PageSizeMaximo`) — ver aviso quando o filtro tem mais peças do que isso. */
@@ -67,6 +68,7 @@ const PAGE_SIZE_MAXIMO = 100;
     AurumTableCellComponent,
     AurumTableHeaderCellComponent,
     OrdemServicoEntregaModalComponent,
+    PapelIconeComponent,
   ],
   template: `
     <aurum-page-header
@@ -94,9 +96,11 @@ const PAGE_SIZE_MAXIMO = 100;
     <div class="og-filtros">
       <aurum-filter-field rotulo="Colador" posicaoRotulo="acima">
         <aurum-dropdown [opcoes]="opcoesColador" [valor]="idColador === null ? TODOS : String(idColador)" (valorChange)="mudarAtribuido('colador', $event)" />
+        <app-papel-icone papel="colador" />
       </aurum-filter-field>
       <aurum-filter-field rotulo="Fiscal" posicaoRotulo="acima">
         <aurum-dropdown [opcoes]="opcoesFiscal" [valor]="idFiscal === null ? TODOS : String(idFiscal)" (valorChange)="mudarAtribuido('fiscal', $event)" />
+        <app-papel-icone papel="fiscal" />
       </aurum-filter-field>
     </div>
 

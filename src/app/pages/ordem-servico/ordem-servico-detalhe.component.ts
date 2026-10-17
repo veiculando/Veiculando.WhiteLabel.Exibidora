@@ -6,6 +6,7 @@ import { OperadorCampo, OsDetalhe, STATUS_OS_ROTULOS } from '../../core/models/w
 import { OrdemServicoService } from '../../core/services/ordem-servico.service';
 import { AurumButtonComponent } from '../../shared/aurum/aurum-button.component';
 import { AurumDropdownComponent, AurumDropdownOpcao } from '../../shared/aurum/aurum-dropdown.component';
+import { PapelIconeComponent } from './papel-icone.component';
 import { AurumCardComponent } from '../../shared/aurum/aurum-card.component';
 import { AurumHistoryCardComponent, AurumHistoryEvento } from '../../shared/aurum/aurum-history-card.component';
 import { AurumPageHeaderComponent } from '../../shared/aurum/aurum-page-header.component';
@@ -44,6 +45,7 @@ import {
     AurumPageHeaderComponent,
     AurumButtonComponent,
     AurumDropdownComponent,
+    PapelIconeComponent,
     AurumCardComponent,
     AurumStatusPillComponent,
     AurumHistoryCardComponent,
@@ -105,10 +107,10 @@ import {
       <section class="od-bloco">
         <h2 class="od-secao-titulo">Responsáveis</h2>
         <div class="od-info">
-          <label>Colador
+          <label>Colador <app-papel-icone papel="colador" />
             <aurum-dropdown [opcoes]="opcoesColador" [valor]="idColador === null ? '' : String(idColador)" (valorChange)="escolher('colador', $event)" />
           </label>
-          <label>Fiscal
+          <label>Fiscal <app-papel-icone papel="fiscal" />
             <aurum-dropdown [opcoes]="opcoesFiscal" [valor]="idFiscal === null ? '' : String(idFiscal)" (valorChange)="escolher('fiscal', $event)" />
           </label>
           <aurum-button tamanho="sm" [desabilitado]="salvando" (click)="salvarAtribuicao()">{{ salvando ? 'Salvando…' : 'Salvar atribuição' }}</aurum-button>

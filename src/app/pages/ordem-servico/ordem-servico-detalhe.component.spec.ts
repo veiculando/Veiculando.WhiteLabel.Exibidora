@@ -89,6 +89,8 @@ describe('OrdemServicoDetalheComponent', () => {
     expect(texto).toContain('Colador');
     expect(texto).toContain('Fiscal');
     expect(texto).toContain('Ana');
+    expect(fixture.nativeElement.querySelector('[title="Colagem realizada"]')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('[title="Foto enviada"]')).toBeTruthy();
 
     fixture.componentInstance.idFiscal = 4;
     fixture.componentInstance.salvarAtribuicao();
