@@ -299,7 +299,7 @@ export class OrdemServicoDetalheComponent implements OnInit {
   }
 
   tomStatus(status: string): AurumStatusPillTom {
-    return ({ Aberta: 'solido-cinza', Atribuida: 'solido-azul', EmExecucao: 'solido-laranja', Concluida: 'solido-verde' } as Record<string, AurumStatusPillTom>)[status] ?? 'neutro';
+    return ({ Rascunho: 'solido-cinza', Pendente: 'solido-azul', Colagem: 'solido-laranja', AguardandoFoto: 'solido-azul', FotoEmAndamento: 'solido-laranja', Concluida: 'solido-verde', Cancelada: 'solido-cinza', Aberta: 'solido-cinza', Atribuida: 'solido-azul', EmExecucao: 'solido-laranja' } as Record<string, AurumStatusPillTom>)[status] ?? 'neutro';
   }
 
   rotuloStatus(status: string): string {

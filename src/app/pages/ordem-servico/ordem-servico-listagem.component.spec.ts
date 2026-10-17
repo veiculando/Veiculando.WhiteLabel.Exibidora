@@ -93,6 +93,13 @@ describe('OrdemServicoListagemComponent', () => {
     expect(link?.textContent?.trim()).toContain('Nova ordem de serviço');
   });
 
+  it('o filtro do painel inclui Cancelada e Rascunho', () => {
+    const fixture = criar();
+    const rotulos = fixture.componentInstance.opcoesStatus.map((o) => o.rotulo);
+    expect(rotulos).toContain('Cancelada');
+    expect(rotulos).toContain('Rascunho');
+  });
+
   it('acao Entregar abre o modal com o contexto da OS (numeroFormatado pronto, sem POST de entrega)', () => {
     const fixture = criar();
     fixture.componentInstance.abrirEntrega(fixture.componentInstance.ordens[0]);
