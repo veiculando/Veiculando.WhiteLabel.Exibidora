@@ -39,6 +39,16 @@ describe('OrdemServicoDetalheComponent', () => {
 
   afterEach(() => httpMock.verify());
 
+  function abrir(fixture: { detectChanges(): void }) {
+    fixture.detectChanges();
+    httpMock.expectOne(`${base}/42`).flush(detalhePadrao());
+    httpMock.expectOne(`${base}/operadores`).flush([
+      { id: 9, nome: 'Ana', colador: true, fiscal: true },
+      { id: 4, nome: 'Bia', colador: false, fiscal: true },
+    ]);
+    fixture.detectChanges();
+  }
+
   function detalhePadrao() {
     return {
       id: 42,
@@ -47,6 +57,10 @@ describe('OrdemServicoDetalheComponent', () => {
       periodo: 'Bissemana 16 — 2026',
       cidades: ['Bertioga', 'São Sebastião'],
       responsavel: null,
+      idColador: 9,
+      idFiscal: null,
+      colador: 'Ana',
+      fiscal: null,
       criadaPor: 'Operador X',
       dataCadastro: '2026-08-10T09:20:00',
       pecas: [
@@ -59,9 +73,7 @@ describe('OrdemServicoDetalheComponent', () => {
   it('renderiza numeroFormatado direto, sem zero-padding no cliente', () => {
     configurar();
     const fixture = TestBed.createComponent(OrdemServicoDetalheComponent);
-    fixture.detectChanges();
-    httpMock.expectOne(`${base}/42`).flush(detalhePadrao());
-    fixture.detectChanges();
+    abrir(fixture);
 
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('OS #0042');
   });
@@ -71,24 +83,25 @@ describe('OrdemServicoDetalheComponent', () => {
     const fixture = TestBed.createComponent(OrdemServicoDetalheComponent);
     // Um unico detectChanges() dispara o ngOnInit — nunca chamar ngOnInit()
     // manualmente E TAMBEM detectChanges(): dispararia a requisicao em dobro.
-    fixture.detectChanges();
-    httpMock.expectOne(`${base}/42`).flush(detalhePadrao());
+    abrir(fixture);
 
-    fixture.detectChanges();
+    const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(texto).toContain('Colador');
+    expect(texto).toContain('Fiscal');
+    expect(texto).toContain('Ana');
 
-    const texto = ((fixture.nativeElement as HTMLElement).textContent ?? '').toUpperCase();
-    expect(texto).not.toContain('RESPONSÁVEL (COLADOR)');
-    expect(texto).not.toContain('REATRIBUIR');
-    expect(texto).not.toContain('COLADOR');
+    fixture.componentInstance.idFiscal = 4;
+    fixture.componentInstance.salvarAtribuicao();
+    const req = httpMock.expectOne(`${base}/42/atribuicao`);
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.body).toEqual({ idColador: 9, idFiscal: 4 });
+    req.flush({ idColador: 9, idFiscal: 4, historicoAtribuicaoIds: '' });
   });
 
   it('nunca renderiza o contador "N de M pecas confirmadas na tela de Colagem"', () => {
     configurar();
     const fixture = TestBed.createComponent(OrdemServicoDetalheComponent);
-    fixture.detectChanges();
-    httpMock.expectOne(`${base}/42`).flush(detalhePadrao());
-
-    fixture.detectChanges();
+    abrir(fixture);
 
     // "Colagem" sozinho NAO e proibido: os cabecalhos "Data Colagem"/"Status
     // Colagem" sao colunas exigidas pelo card. O que nao pode existir e o
@@ -102,10 +115,7 @@ describe('OrdemServicoDetalheComponent', () => {
   it('data colagem e status colagem sao sempre "—"/"Pendente"', () => {
     configurar();
     const fixture = TestBed.createComponent(OrdemServicoDetalheComponent);
-    fixture.detectChanges();
-    httpMock.expectOne(`${base}/42`).flush(detalhePadrao());
-
-    fixture.detectChanges();
+    abrir(fixture);
 
     const linhas = (fixture.nativeElement as HTMLElement).querySelectorAll('td');
     const textos = Array.from(linhas).map((td) => td.textContent?.trim());
@@ -115,10 +125,7 @@ describe('OrdemServicoDetalheComponent', () => {
   it('info card mostra STATUS, PEÇAS NA OS (a partir de pecas.length) e CRIADA POR', () => {
     configurar();
     const fixture = TestBed.createComponent(OrdemServicoDetalheComponent);
-    fixture.detectChanges();
-    httpMock.expectOne(`${base}/42`).flush(detalhePadrao());
-
-    fixture.detectChanges();
+    abrir(fixture);
 
     const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
     expect(texto).toContain('Peças na OS');
@@ -130,9 +137,7 @@ describe('OrdemServicoDetalheComponent', () => {
   it('mapeia historico {evento,dataHora,usuario} para o formato do aurum-history-card {evento,timestamp,autor}', () => {
     configurar();
     const fixture = TestBed.createComponent(OrdemServicoDetalheComponent);
-    fixture.detectChanges();
-    httpMock.expectOne(`${base}/42`).flush(detalhePadrao());
-    fixture.detectChanges();
+    abrir(fixture);
 
     const eventos = fixture.componentInstance.eventosHistorico(fixture.componentInstance.detalhe!);
     expect(eventos).toEqual([
@@ -143,9 +148,7 @@ describe('OrdemServicoDetalheComponent', () => {
   it('baixa a planilha via GET {id}/pdf (nao /planilha-pdf), sem navegar para pagina quebrada em caso de erro', () => {
     configurar();
     const fixture = TestBed.createComponent(OrdemServicoDetalheComponent);
-    fixture.detectChanges();
-    httpMock.expectOne(`${base}/42`).flush(detalhePadrao());
-    fixture.detectChanges();
+    abrir(fixture);
 
     fixture.componentInstance.baixarPlanilha();
     httpMock.expectOne(`${base}/42/pdf`).flush(null, { status: 502, statusText: 'Bad Gateway' });

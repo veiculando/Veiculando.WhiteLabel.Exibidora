@@ -872,6 +872,10 @@ export interface OsDetalhe {
   periodo: string | null;
   cidades: string[];
   responsavel: string | null;
+  idColador: number | null;
+  idFiscal: number | null;
+  colador: string | null;
+  fiscal: string | null;
   criadaPor: string | null;
   dataCadastro: string;
   pecas: OsPecaIncluida[];
