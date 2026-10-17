@@ -24,10 +24,16 @@ const TODOS = '';
 
 /** Status da OS em pílula sólida, como no Figma `198:2`. */
 const TOM_STATUS_OS: Record<string, AurumStatusPillTom> = {
+  Rascunho: 'solido-cinza',
+  Pendente: 'solido-azul',
+  Colagem: 'solido-laranja',
+  AguardandoFoto: 'solido-azul',
+  FotoEmAndamento: 'solido-laranja',
+  Concluida: 'solido-verde',
+  Cancelada: 'solido-cinza',
   Aberta: 'solido-cinza',
   Atribuida: 'solido-azul',
   EmExecucao: 'solido-laranja',
-  Concluida: 'solido-verde',
 };
 
 /**

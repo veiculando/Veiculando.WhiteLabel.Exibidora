@@ -777,14 +777,20 @@ export interface CheckoutDetalhe {
  * decisão humana 2026-09-17). Nomes crus do enum (sem espaço/acento — é o
  * que `Status.ToString()` devolve: `EmExecucao`, não `Em execução`).
  */
-export const STATUS_OS = ['Aberta', 'Atribuida', 'EmExecucao', 'Concluida'] as const;
+export const STATUS_OS = ['Rascunho', 'Pendente', 'Colagem', 'AguardandoFoto', 'FotoEmAndamento', 'Concluida', 'Cancelada'] as const;
 export type StatusOs = (typeof STATUS_OS)[number];
 
 export const STATUS_OS_ROTULOS: Record<string, string> = {
-  Aberta: 'Aberta',
-  Atribuida: 'Atribuída',
-  EmExecucao: 'Em execução',
+  Rascunho: 'Rascunho',
+  Pendente: 'Pendente',
+  Colagem: 'Colagem',
+  AguardandoFoto: 'Aguardando foto',
+  FotoEmAndamento: 'Foto em andamento',
   Concluida: 'Concluída',
+  Cancelada: 'Cancelada',
+  Aberta: 'Rascunho',
+  Atribuida: 'Pendente',
+  EmExecucao: 'Colagem',
 };
 
 /** Lido em `OrdensServicoController.GetAll` (workspace irmão do BFF, 2026-09-22). */
