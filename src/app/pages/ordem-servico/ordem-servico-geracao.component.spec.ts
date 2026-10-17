@@ -142,6 +142,8 @@ describe('OrdemServicoGeracaoComponent', () => {
     req.flush({ id: 99, numeroFormatado: 'OS #0042', pecasCount: 1 });
 
     expect(componente.modalAberto).toBe(true);
+    componente.imprimirPlanilha();
+    httpMock.expectOne(`${baseOs}/99/pdf`).flush(new Blob(['%PDF']));
     expect(componente.contextoEntrega).toEqual({
       id: 99,
       numeroFormatado: 'OS #0042',
