@@ -114,6 +114,10 @@ import {
             <aurum-dropdown [opcoes]="opcoesFiscal" [valor]="idFiscal === null ? '' : String(idFiscal)" (valorChange)="escolher('fiscal', $event)" />
           </label>
           <aurum-button tamanho="sm" [desabilitado]="salvando" (click)="salvarAtribuicao()">{{ salvando ? 'Salvando…' : 'Salvar atribuição' }}</aurum-button>
+          <aurum-button tamanho="sm" variante="outline" [desabilitado]="!podeBaixarColagem()" (click)="baixarColagem()">Marcar colagem</aurum-button>
+          <label>Foto da galeria
+            <input type="file" accept="image/*" [disabled]="!podeEnviarFoto()" (change)="enviarFoto($event)" />
+          </label>
         </div>
       </section>
 
@@ -277,6 +281,33 @@ export class OrdemServicoDetalheComponent implements OnInit {
     const id = valor === '' ? null : Number(valor);
     if (papel === 'colador') this.idColador = id;
     else this.idFiscal = id;
+  }
+
+  podeBaixarColagem(): boolean {
+    const os = this.detalhe;
+    return !!os && os.idColador == null && (os.status === 'Pendente' || os.status === 'Colagem');
+  }
+
+  podeEnviarFoto(): boolean {
+    const os = this.detalhe;
+    return !!os && os.idFiscal == null && os.status === 'AguardandoFoto';
+  }
+
+  baixarColagem(): void {
+    if (!this.detalhe || !this.podeBaixarColagem()) return;
+    this.service.baixaColagem(this.detalhe.id).subscribe({
+      next: (res) => { if (this.detalhe) this.detalhe.status = res.status; },
+      error: (erro: unknown) => { this.erro = mensagemDeErro(erro, 'Não foi possível marcar a colagem.'); },
+    });
+  }
+
+  enviarFoto(evento: Event): void {
+    const arquivo = (evento.target as HTMLInputElement).files?.[0];
+    if (!arquivo || !this.detalhe || !this.podeEnviarFoto()) return;
+    this.service.fotoGaleria(this.detalhe.id, arquivo).subscribe({
+      next: (res) => { if (this.detalhe) this.detalhe.status = res.status; },
+      error: (erro: unknown) => { this.erro = mensagemDeErro(erro, 'Não foi possível enviar a foto.'); },
+    });
   }
 
   salvarAtribuicao(): void {
