@@ -174,6 +174,9 @@ const PAGE_SIZE_MAXIMO = 100;
       </div>
 
       <div class="og-rodape">
+        <aurum-button variante="outline" [desabilitado]="!osGeradaId || baixando" (click)="imprimirPlanilha()">
+          {{ baixando ? 'Abrindo…' : 'Imprimir planilha' }}
+        </aurum-button>
         <aurum-button [desabilitado]="selecionadas.size === 0 || gerando" (click)="gerarOs()">
           {{ gerando ? 'Gerando…' : 'Gerar ordem de serviço (' + selecionadas.size + (selecionadas.size === 1 ? ' selecionado)' : ' selecionados)') }}
         </aurum-button>
@@ -228,6 +231,7 @@ const PAGE_SIZE_MAXIMO = 100;
       .og-rodape {
         display: flex;
         justify-content: flex-end;
+        gap: 12px;
         padding: 20px 0;
       }
     `,
@@ -279,6 +283,8 @@ export class OrdemServicoGeracaoComponent implements OnInit {
   buscou = false;
   carregandoPecas = false;
   gerando = false;
+  baixando = false;
+  osGeradaId: number | null = null;
   erro: string | null = null;
 
   modalAberto = false;
@@ -401,6 +407,24 @@ export class OrdemServicoGeracaoComponent implements OnInit {
     else this.selecionadas.delete(pecaId);
   }
 
+  imprimirPlanilha(): void {
+    if (!this.osGeradaId || this.baixando) return;
+    this.baixando = true;
+    this.erro = null;
+    this.ordemServicoService.pdf(this.osGeradaId).subscribe({
+      next: (blob) => {
+        this.baixando = false;
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
+        setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      },
+      error: (erro: unknown) => {
+        this.baixando = false;
+        this.erro = mensagemDeErro(erro, 'Não foi possível imprimir a planilha.');
+      },
+    });
+  }
+
   gerarOs(): void {
     if (this.selecionadas.size === 0 || this.gerando || !this.idPeriodo) return;
 
@@ -416,6 +440,7 @@ export class OrdemServicoGeracaoComponent implements OnInit {
       .subscribe({
         next: (resultado) => {
           this.gerando = false;
+          this.osGeradaId = resultado.id;
           this.contextoEntrega = {
             id: resultado.id,
             numeroFormatado: resultado.numeroFormatado,
