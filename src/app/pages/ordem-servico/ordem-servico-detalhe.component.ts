@@ -2,9 +2,10 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { mensagemDeErro } from '../../core/http/api-error';
-import { OsDetalhe, STATUS_OS_ROTULOS } from '../../core/models/wl.models';
+import { OperadorCampo, OsDetalhe, STATUS_OS_ROTULOS } from '../../core/models/wl.models';
 import { OrdemServicoService } from '../../core/services/ordem-servico.service';
 import { AurumButtonComponent } from '../../shared/aurum/aurum-button.component';
+import { AurumDropdownComponent, AurumDropdownOpcao } from '../../shared/aurum/aurum-dropdown.component';
 import { AurumCardComponent } from '../../shared/aurum/aurum-card.component';
 import { AurumHistoryCardComponent, AurumHistoryEvento } from '../../shared/aurum/aurum-history-card.component';
 import { AurumPageHeaderComponent } from '../../shared/aurum/aurum-page-header.component';
@@ -42,6 +43,7 @@ import {
     RouterLink,
     AurumPageHeaderComponent,
     AurumButtonComponent,
+    AurumDropdownComponent,
     AurumCardComponent,
     AurumStatusPillComponent,
     AurumHistoryCardComponent,
@@ -99,6 +101,19 @@ import {
           <span class="od-info__valor">{{ os.criadaPor || '—' }}</span>
         </div>
       </aurum-card>
+
+      <section class="od-bloco">
+        <h2 class="od-secao-titulo">Responsáveis</h2>
+        <div class="od-info">
+          <label>Colador
+            <aurum-dropdown [opcoes]="opcoesColador" [valor]="idColador === null ? '' : String(idColador)" (valorChange)="escolher('colador', $event)" />
+          </label>
+          <label>Fiscal
+            <aurum-dropdown [opcoes]="opcoesFiscal" [valor]="idFiscal === null ? '' : String(idFiscal)" (valorChange)="escolher('fiscal', $event)" />
+          </label>
+          <aurum-button tamanho="sm" [desabilitado]="salvando" (click)="salvarAtribuicao()">{{ salvando ? 'Salvando…' : 'Salvar atribuição' }}</aurum-button>
+        </div>
+      </section>
 
       <section class="od-bloco">
       <h2 class="od-secao-titulo">Peças incluídas nesta OS</h2>
@@ -204,6 +219,7 @@ import {
   ],
 })
 export class OrdemServicoDetalheComponent implements OnInit {
+  readonly String = String;
   private service = inject(OrdemServicoService);
   private route = inject(ActivatedRoute);
 
@@ -213,6 +229,11 @@ export class OrdemServicoDetalheComponent implements OnInit {
 
   baixando = false;
   erroPlanilha: string | null = null;
+  salvando = false;
+  idColador: number | null = null;
+  idFiscal: number | null = null;
+  opcoesColador: AurumDropdownOpcao[] = [{ valor: '', rotulo: 'Nenhum' }];
+  opcoesFiscal: AurumDropdownOpcao[] = [{ valor: '', rotulo: 'Nenhum' }];
 
   ngOnInit(): void {
     this.carregar();
@@ -229,9 +250,18 @@ export class OrdemServicoDetalheComponent implements OnInit {
     this.carregando = true;
     this.erro = null;
 
+    this.service.operadores().subscribe({
+      next: (operadores) => {
+        this.opcoesColador = this.opcoesDe(operadores, (o) => o.colador);
+        this.opcoesFiscal = this.opcoesDe(operadores, (o) => o.fiscal);
+      },
+    });
+
     this.service.obter(id).subscribe({
       next: (detalhe) => {
         this.detalhe = detalhe;
+        this.idColador = detalhe.idColador;
+        this.idFiscal = detalhe.idFiscal;
         this.carregando = false;
       },
       error: (erro: unknown) => {
@@ -239,6 +269,31 @@ export class OrdemServicoDetalheComponent implements OnInit {
         this.erro = mensagemDeErro(erro, 'Não foi possível carregar esta ordem de serviço.');
       },
     });
+  }
+
+  escolher(papel: 'colador' | 'fiscal', valor: string): void {
+    const id = valor === '' ? null : Number(valor);
+    if (papel === 'colador') this.idColador = id;
+    else this.idFiscal = id;
+  }
+
+  salvarAtribuicao(): void {
+    if (!this.detalhe || this.salvando) return;
+    this.salvando = true;
+    this.erro = null;
+    this.service.reatribuir(this.detalhe.id, this.idColador, this.idFiscal).subscribe({
+      next: () => {
+        this.salvando = false;
+      },
+      error: (erro: unknown) => {
+        this.salvando = false;
+        this.erro = mensagemDeErro(erro, 'Não foi possível reatribuir.');
+      },
+    });
+  }
+
+  private opcoesDe(operadores: OperadorCampo[], papel: (o: OperadorCampo) => boolean): AurumDropdownOpcao[] {
+    return [{ valor: '', rotulo: 'Nenhum' }, ...operadores.filter(papel).map((o) => ({ valor: String(o.id), rotulo: o.nome }))];
   }
 
   tomStatus(status: string): AurumStatusPillTom {

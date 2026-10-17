@@ -59,6 +59,10 @@ export class OrdemServicoService {
   }
 
   /** `GET /api/wl/ordens-servico/{id}/pdf` — mesmo padrão do PDF de PI: sai do BFF, em mesma origem, como blob. */
+  reatribuir(id: number, idColador: number | null, idFiscal: number | null): Observable<{ idColador: number | null; idFiscal: number | null; historicoAtribuicaoIds: string }> {
+    return this.http.put<{ idColador: number | null; idFiscal: number | null; historicoAtribuicaoIds: string }>(`${this.base}/${id}/atribuicao`, { idColador, idFiscal });
+  }
+
   pdf(id: number): Observable<Blob> {
     return this.http.get(`${this.base}/${id}/pdf`, { responseType: 'blob' });
   }
