@@ -63,6 +63,16 @@ export class OrdemServicoService {
     return this.http.put<{ idColador: number | null; idFiscal: number | null; historicoAtribuicaoIds: string }>(`${this.base}/${id}/atribuicao`, { idColador, idFiscal });
   }
 
+  baixaColagem(id: number): Observable<{ status: string }> {
+    return this.http.post<{ status: string }>(`${this.base}/${id}/baixa-colagem`, {});
+  }
+
+  fotoGaleria(id: number, foto: File): Observable<{ status: string }> {
+    const corpo = new FormData();
+    corpo.append('foto', foto);
+    return this.http.post<{ status: string }>(`${this.base}/${id}/foto-galeria`, corpo);
+  }
+
   pdf(id: number): Observable<Blob> {
     return this.http.get(`${this.base}/${id}/pdf`, { responseType: 'blob' });
   }
