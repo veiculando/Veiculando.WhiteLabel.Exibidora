@@ -113,7 +113,8 @@ const GRUPOS: GrupoNav[] = [
     icone: 'configuracoes',
     itens: [
       { rotulo: 'Cadastro e acesso', rota: '/configuracoes/cadastro-acesso', icone: 'cadastro-acesso', permissao: 'UsuarioAfiliadaGerenciar' },
-      { rotulo: 'Usuários', rota: '/usuarios', icone: 'usuarios', permissao: 'UsuarioAfiliadaGerenciar' },
+      { rotulo: 'Usuários Exibidora', rota: '/usuarios', icone: 'usuarios', permissao: 'UsuarioAfiliadaGerenciar' },
+      { rotulo: 'Usuários Operadores', rota: '/usuarios-operadores', icone: 'usuarios', permissao: 'UsuarioAfiliadaGerenciar' },
     ],
   },
 ];

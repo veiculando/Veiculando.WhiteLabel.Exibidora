@@ -390,8 +390,16 @@ export const routes: Routes = [
 
       // --- Administração ---
       {
+        path: 'usuarios-operadores',
+        title: 'Usuários Operadores',
+        data: { permission: 'UsuarioAfiliadaGerenciar' },
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./pages/usuarios-operadores/usuarios-operadores.component').then((m) => m.UsuariosOperadoresComponent),
+      },
+      {
         path: 'usuarios',
-        title: 'Operadores',
+        title: 'Usuários Exibidora',
         data: { permission: 'UsuarioAfiliadaGerenciar' },
         canActivate: [authGuard],
         loadComponent: () =>
