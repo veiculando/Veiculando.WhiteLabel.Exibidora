@@ -34,7 +34,8 @@ const ROTULOS: Record<string, string> = {
   prospeccao: 'Prospecção',
   'configuracoes/cadastro-acesso': 'Cadastro e acesso',
   relatorios: 'Relatórios',
-  usuarios: 'Usuários',
+  usuarios: 'Usuários Exibidora',
+  'usuarios-operadores': 'Usuários Operadores',
   // Figma 157:2 e 173:2: lista e formulário trazem a mesma trilha.
   'marketing/banners': 'Marketing — Banners',
   'marketing/banners/novo': 'Marketing — Banners',

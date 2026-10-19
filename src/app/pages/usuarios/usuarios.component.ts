@@ -60,7 +60,7 @@ import {
       AurumTableHeaderCellComponent,
     ],
     template: `
-    <aurum-page-header titulo="Usuários" subtitulo="Operadores da exibidora e suas permissões de acesso ao painel.">
+    <aurum-page-header titulo="Usuários Exibidora" subtitulo="Operadores da exibidora e suas permissões de acesso ao painel.">
       @if (!criando) {
         <aurum-button aurumPageHeaderAcoes (click)="abrirCriacao()">+ Novo operador</aurum-button>
       }

@@ -179,7 +179,7 @@ describe('SidebarComponent', () => {
     fixture.detectChanges();
     const rotasConhecidas = [
       '/dashboard', '/locais', '/programacao', '/checking', '/pedidos-reserva',
-      '/pedidos-insercao', '/usuarios',
+      '/pedidos-insercao', '/usuarios', '/usuarios-operadores',
       // Entregues pelo plano 3.
       '/agencias', '/kyc', '/prospeccao', '/campanhas', '/configuracoes/cadastro-acesso',
       // Entregues pelo plano 5.
@@ -228,7 +228,7 @@ describe('SidebarComponent', () => {
     expect(hrefs).toEqual([
       '/dashboard', '/locais', '/pecas/valores', '/agencias', '/kyc', '/kyc/app', '/prospeccao', '/campanhas',
       '/pedidos-reserva', '/pedidos-insercao', '/programacao', '/checkout', '/ordens-servico', '/relatorios',
-      '/configuracoes/cadastro-acesso', '/usuarios',
+      '/configuracoes/cadastro-acesso', '/usuarios', '/usuarios-operadores',
     ]);
   });
 
@@ -278,7 +278,8 @@ describe('SidebarComponent', () => {
     expect(root.textContent).not.toContain('Afiliada #4821');
     const itens = root.querySelector('.nav-section__itens') as HTMLElement;
     expect(itens.hidden).toBe(false);
-    expect(itens.textContent).toContain('Usuários');
+    expect(itens.textContent).toContain('Usuários Exibidora');
+    expect(itens.textContent).toContain('Usuários Operadores');
   });
 
   // Destaque: o item ativo é o de rota mais longa que casa com a URL.
