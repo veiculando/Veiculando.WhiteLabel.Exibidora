@@ -3,6 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { environment } from '../../../environments/environment';
+import { PermissionService } from '../../core/auth/permission.service';
 import { DashboardFinanceiroKpis } from '../../core/models/wl.models';
 import { DashboardComponent } from './dashboard.component';
 
@@ -34,11 +35,19 @@ const FINANCEIRO_PADRAO: DashboardFinanceiroKpis = {
 describe('DashboardComponent', () => {
     let fixture: ComponentFixture<DashboardComponent>;
     let http: HttpTestingController;
+    /** Lido pelo stub do `PermissionService` quando o componente é criado. */
+    let temFinanceiro: boolean;
 
     beforeEach(() => {
+        temFinanceiro = true;
         TestBed.configureTestingModule({
             imports: [DashboardComponent],
-            providers: [provideHttpClient(withXhr()), provideHttpClientTesting(), provideRouter([])],
+            providers: [
+                provideHttpClient(withXhr()),
+                provideHttpClientTesting(),
+                provideRouter([]),
+                { provide: PermissionService, useValue: { has: (p: string) => p === 'FinanceiroVisualizar' && temFinanceiro } },
+            ],
         });
         fixture = TestBed.createComponent(DashboardComponent);
         http = TestBed.inject(HttpTestingController);
@@ -152,5 +161,34 @@ describe('DashboardComponent', () => {
 
         const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
         expect(texto).not.toContain('Receita mensal');
+    });
+
+    /**
+     * Sem `FinanceiroVisualizar` os endpoints financeiros devolvem 403, e o
+     * `authErrorInterceptor` mandaria a tela para `/acesso-negado` — de onde o
+     * "Ir para o Dashboard" volta para cá, em loop. O componente não chama
+     * esses endpoints (o `http.verify()` do `afterEach` acusa qualquer chamada
+     * a mais) e mostra só a visão operacional.
+     */
+    it('sem FinanceiroVisualizar mostra só a visão operacional, sem chamar os endpoints financeiros', async () => {
+        temFinanceiro = false;
+        fixture = TestBed.createComponent(DashboardComponent);
+        fixture.detectChanges();
+
+        http.expectOne(`${environment.bffUrl}/dashboard/kpis`).flush({
+            locaisAtivos: 3,
+            pecasEmExibicao: 5,
+            pedidosPendentes: 1,
+            alertasAprovaçãoPendente: 0,
+        });
+
+        await fixture.whenStable();
+        fixture.detectChanges();
+
+        const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
+        expect(texto).toContain('Visão operacional');
+        expect(texto).toContain('Locais ativos');
+        expect(texto).not.toContain('Período comercial');
+        expect(texto).not.toContain('Carregando painel financeiro');
     });
 });
