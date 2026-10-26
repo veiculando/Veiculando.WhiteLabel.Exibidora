@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { PermissionService } from '../../core/auth/permission.service';
 import { mensagemDeErro } from '../../core/http/api-error';
 import {
   DashboardFinanceiroKpis,
@@ -283,6 +284,15 @@ export class DashboardComponent implements OnInit {
   private service = inject(DashboardService);
   private lookups = inject(LookupsService);
 
+  /**
+   * `kpis-financeiro`, `reservas` e `pedidos-insercao` exigem a policy
+   * `FinanceiroVisualizar` no BFF. Sem ela o 403 vai para o
+   * `authErrorInterceptor`, que leva a tela inteira para `/acesso-negado` —
+   * e o "Ir para o Dashboard" de lá volta para cá, em loop. Quem não tem a
+   * permissão vê só a visão operacional.
+   */
+  readonly podeVerFinanceiro = inject(PermissionService).has('FinanceiroVisualizar');
+
   kpis: DashboardKpis | null = null;
   carregando = false;
   erro: string | null = null;
@@ -299,6 +309,7 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit(): void {
     this.carregar();
+    if (!this.podeVerFinanceiro) return;
     this.lookups.periodos().subscribe({ next: (p) => (this.periodos = p), error: () => (this.periodos = []) });
     this.carregarFinanceiro();
   }

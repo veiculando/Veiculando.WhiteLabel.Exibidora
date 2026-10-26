@@ -1,3 +1,6 @@
+<!-- Período e painel financeiro só para quem tem FinanceiroVisualizar: os
+endpoints exigem a policy, e o 403 levaria a tela inteira para /acesso-negado. -->
+@if (podeVerFinanceiro) {
 <section class="periodo">
   <div class="periodo__titulo">
     <span class="aurum-ico periodo__icone" style="--ico: url(/assets/aurum/icon-calendario.svg)"></span>
@@ -129,6 +132,8 @@
       }
     </aurum-card>
   </div>
+}
+
 }
 
 <!-- Visão operacional pré-existente: o Figma não a desenha, mas o PRD §5.1
