@@ -15,6 +15,7 @@ import {
   AurumTableRowComponent,
 } from '../../shared/aurum/aurum-table.component';
 import { RelatoriosService } from './services/relatorios.service';
+import { PedidosPorVendedoraComponent } from './pedidos-por-vendedora.component';
 
 /**
  * Relatórios (Financeiro) — VEI-RD-92, Figma `286:11255`.
@@ -43,6 +44,7 @@ import { RelatoriosService } from './services/relatorios.service';
     AurumTableRowComponent,
     AurumTableCellComponent,
     AurumTableHeaderCellComponent,
+    PedidosPorVendedoraComponent,
   ],
   templateUrl: './relatorios.component.html',
   styles: [
