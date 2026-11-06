@@ -79,7 +79,7 @@ export function formatarCnpj(digitos: string | null | undefined): string {
               <label for="carteira-vendedora">Nova vendedora</label>
               <select id="carteira-vendedora" [(ngModel)]="novaVendedora">
                 <option [ngValue]="null">Selecione</option>
-                @for(v of vendedoras;track v.id){@if(v.id!==detail.vendedorId){<option [ngValue]="v.id">{{v.email}}</option>}}
+                @for(v of vendedoras;track v.id){@if(v.id!==detail.vendedorId){<option [ngValue]="v.id">{{v.nome ? v.nome + ' (' + v.email + ')' : v.email}}</option>}}
               </select>
               <label for="carteira-motivo-troca">Motivo</label><input id="carteira-motivo-troca" [(ngModel)]="motivoTroca" />
               <div class="actions">
@@ -105,7 +105,7 @@ export class CarteiraReviewComponent implements OnInit {
   filtro: CarteiraStatus = 'PendenteAnalise';
   fila: CarteiraFilaItem[] = [];
   detail: CarteiraDetalhe | null = null;
-  vendedoras: Array<{ id: number; email: string }> = [];
+  vendedoras: Array<{ id: number; nome?: string | null; email: string }> = [];
   search = '';
   reason = '';
   novaVendedora: number | null = null;

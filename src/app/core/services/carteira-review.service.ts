@@ -61,7 +61,7 @@ export class CarteiraReviewService {
   }
   aprovar(id: string) { return this.http.post(`${this.base}/${id}/aprovar`, {}); }
   decidir(id: string, acao: 'ajustes' | 'reprovar', reason: string) { return this.http.post(`${this.base}/${id}/${acao}`, { reason }); }
-  vendedoras() { return this.http.get<Array<{ id: number; email: string }>>(`${this.base}/vendedoras`); }
+  vendedoras() { return this.http.get<Array<{ id: number; nome?: string | null; email: string }>>(`${this.base}/vendedoras`); }
   trocarResponsavel(id: string, vendedorId: number, reason: string) {
     return this.http.post(`${this.base}/${id}/responsavel`, { vendedorId, reason });
   }
