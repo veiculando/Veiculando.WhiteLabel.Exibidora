@@ -13,7 +13,7 @@ export const statusCarteira: Record<string, string> = {
 const eventos: Record<string, string> = {
   Enviado: 'Enviado pela vendedora', AjustesSolicitados: 'Ajustes pedidos', Reenviado: 'Reenviado pela vendedora',
   Aprovado: 'Aprovado', Reprovado: 'Reprovado', ResponsavelTrocado: 'Responsável trocado', ResponsavelRemovido: 'Removido da carteira',
-  Reaberto: 'Retomado por outra vendedora', Criado: 'Criado',
+  Reaberto: 'Cadastro retomado', Criado: 'Criado',
 };
 
 export function formatarCnpj(digitos: string | null | undefined): string {
@@ -64,29 +64,34 @@ export function formatarCnpj(digitos: string | null | undefined): string {
           <h3>Histórico</h3><ol class="history">@for(e of detail.historico;track $index){<li><strong>{{evento(e.evento)}}</strong> · {{e.em | date:'dd/MM/yyyy HH:mm'}} · {{e.usuario || '—'}}
             @if(e.vendedoraDe || e.vendedoraPara){<span>{{e.vendedoraDe || 'sem vendedora'}} → {{e.vendedoraPara || 'sem vendedora'}}</span>}
             @if(e.motivo){<span>{{e.motivo}}</span>}</li>}</ol>
-          @if(detail.status==='PendenteAnalise'){
-            <label for="carteira-motivo">Motivo para ajustes ou reprovação</label><textarea id="carteira-motivo" [(ngModel)]="reason" rows="3"></textarea>
+          @if(detail.status==='PendenteAnalise' || detail.status==='AjustesSolicitados'){
+            <label for="carteira-motivo">{{detail.status==='PendenteAnalise' ? 'Motivo para ajustes ou reprovação' : 'Motivo da reprovação'}}</label><textarea id="carteira-motivo" [(ngModel)]="reason" rows="3"></textarea>
             <div class="actions">
-              <button class="primary" type="button" (click)="aprovar()" [disabled]="busy">Aprovar cliente</button>
-              <button type="button" (click)="decidir('ajustes')" [disabled]="busy || !reason.trim()">Pedir ajustes</button>
+              @if(detail.status==='PendenteAnalise'){
+                <button class="primary" type="button" (click)="aprovar()" [disabled]="busy">Aprovar cliente</button>
+                <button type="button" (click)="decidir('ajustes')" [disabled]="busy || !reason.trim()">Pedir ajustes</button>
+              }
               <button type="button" (click)="decidir('reprovar')" [disabled]="busy || !reason.trim()">Reprovar</button>
             </div>
-            <p class="hint">Aprovar cria o contrato de venda direta com comissão de agência zero. Quem enviou o cadastro não pode aprovar.</p>
+            @if(detail.status==='PendenteAnalise'){<p class="hint">Aprovar cria o contrato de venda direta com comissão de agência zero. Quem enviou o cadastro não pode aprovar.</p>}
+            @else{<p class="hint">Aguardando a vendedora reenviar. Reprove se ela não for corrigir.</p>}
           }
-          @if(podeTrocar){
-            <h3>Trocar responsável</h3>
+          @if(podeTrocar && (detail.status==='Aprovado' || detail.vendedorId)){
+            <h3>{{detail.status==='Aprovado' ? 'Trocar responsável' : 'Tirar da carteira'}}</h3>
             <div class="troca">
-              <label for="carteira-vendedora">Nova vendedora</label>
-              <select id="carteira-vendedora" [(ngModel)]="novaVendedora">
-                <option [ngValue]="null">Selecione</option>
-                @for(v of vendedoras;track v.id){@if(v.id!==detail.vendedorId){<option [ngValue]="v.id">{{v.nome ? v.nome + ' (' + v.email + ')' : v.email}}</option>}}
-              </select>
+              @if(detail.status==='Aprovado'){
+                <label for="carteira-vendedora">Nova vendedora</label>
+                <select id="carteira-vendedora" [(ngModel)]="novaVendedora">
+                  <option [ngValue]="null">Selecione</option>
+                  @for(v of vendedoras;track v.id){@if(v.id!==detail.vendedorId){<option [ngValue]="v.id">{{v.nome ? v.nome + ' (' + v.email + ')' : v.email}}</option>}}
+                </select>
+              }
               <label for="carteira-motivo-troca">Motivo</label><input id="carteira-motivo-troca" [(ngModel)]="motivoTroca" />
               <div class="actions">
-                <button type="button" (click)="trocar()" [disabled]="busy || !novaVendedora || !motivoTroca.trim()">Trocar responsável</button>
+                @if(detail.status==='Aprovado'){<button type="button" (click)="trocar()" [disabled]="busy || !novaVendedora || !motivoTroca.trim()">Trocar responsável</button>}
                 @if(detail.vendedorId){<button type="button" (click)="remover()" [disabled]="busy || !motivoTroca.trim()">Tirar da carteira</button>}
               </div>
-              <p class="hint">Pedidos já feitos continuam com a vendedora que vendeu.</p>
+              <p class="hint">{{detail.status==='Aprovado' ? 'Pedidos já feitos continuam com a vendedora que vendeu.' : 'Só cliente aprovado troca de vendedora. Tirar da carteira libera o CNPJ para outra vendedora.'}}</p>
             </div>
           }
         } @else {<div class="empty"><h2>Selecione um cliente</h2><p>Dados, documentos e decisões aparecem aqui.</p></div>}

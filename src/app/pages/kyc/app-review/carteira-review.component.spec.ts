@@ -33,9 +33,9 @@ describe('CarteiraReviewComponent — clientes das vendedoras (VEI-RD-157d)', ()
     http.expectOne(r => r.url === base && r.params.get('status') === 'PendenteAnalise').flush([item]);
   }
 
-  function abrir() {
+  function abrir(extra: Partial<typeof detalhe> = {}) {
     fixture.componentInstance.select('c1');
-    http.expectOne(`${base}/c1`).flush(detalhe);
+    http.expectOne(`${base}/c1`).flush({ ...detalhe, ...extra });
     fixture.detectChanges();
   }
 
@@ -78,7 +78,7 @@ describe('CarteiraReviewComponent — clientes das vendedoras (VEI-RD-157d)', ()
   it('troca de responsável só com UsuarioAfiliadaGerenciar', () => {
     montar(['ClienteGerenciar', 'UsuarioAfiliadaGerenciar']);
     http.expectOne(`${base}/vendedoras`).flush([{ id: 7, nome: 'Ana', email: 'ana@aurum.com' }, { id: 8, nome: 'Bia', email: 'bia@aurum.com' }]);
-    abrir();
+    abrir({ status: 'Aprovado' });
     expect(root().textContent).toContain('Trocar responsável');
     expect(root().textContent).toContain('Bia (bia@aurum.com)');
     const page = fixture.componentInstance;
@@ -91,5 +91,24 @@ describe('CarteiraReviewComponent — clientes das vendedoras (VEI-RD-157d)', ()
     montar(['ClienteGerenciar']);
     abrir();
     expect(root().textContent).not.toContain('Trocar responsável');
+  });
+
+  it('fora de Aprovado não oferece troca, só tirar da carteira (VEI-SUP-40)', () => {
+    montar(['ClienteGerenciar', 'UsuarioAfiliadaGerenciar']);
+    http.expectOne(`${base}/vendedoras`).flush([{ id: 8, nome: 'Bia', email: 'bia@aurum.com' }]);
+    abrir();
+    expect(root().textContent).not.toContain('Trocar responsável');
+    expect(root().textContent).toContain('Tirar da carteira');
+  });
+
+  it('com ajustes pedidos permite reprovar, mas não aprovar (VEI-SUP-40)', () => {
+    montar(['ClienteGerenciar']);
+    abrir({ status: 'AjustesSolicitados' });
+    expect(root().textContent).toContain('Reprovar');
+    expect(root().textContent).not.toContain('Aprovar cliente');
+    const page = fixture.componentInstance;
+    page.reason = 'Vendedora não respondeu';
+    page.decidir('reprovar');
+    expect(http.expectOne(`${base}/c1/reprovar`).request.body).toEqual({ reason: 'Vendedora não respondeu' });
   });
 });
