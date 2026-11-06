@@ -77,9 +77,10 @@ describe('CarteiraReviewComponent — clientes das vendedoras (VEI-RD-157d)', ()
 
   it('troca de responsável só com UsuarioAfiliadaGerenciar', () => {
     montar(['ClienteGerenciar', 'UsuarioAfiliadaGerenciar']);
-    http.expectOne(`${base}/vendedoras`).flush([{ id: 7, email: 'ana@aurum.com' }, { id: 8, email: 'bia@aurum.com' }]);
+    http.expectOne(`${base}/vendedoras`).flush([{ id: 7, nome: 'Ana', email: 'ana@aurum.com' }, { id: 8, nome: 'Bia', email: 'bia@aurum.com' }]);
     abrir();
     expect(root().textContent).toContain('Trocar responsável');
+    expect(root().textContent).toContain('Bia (bia@aurum.com)');
     const page = fixture.componentInstance;
     page.novaVendedora = 8; page.motivoTroca = 'Ana saiu';
     page.trocar();
