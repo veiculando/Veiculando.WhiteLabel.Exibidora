@@ -13,7 +13,7 @@ export const statusCarteira: Record<string, string> = {
 const eventos: Record<string, string> = {
   Enviado: 'Enviado pela vendedora', AjustesSolicitados: 'Ajustes pedidos', Reenviado: 'Reenviado pela vendedora',
   Aprovado: 'Aprovado', Reprovado: 'Reprovado', ResponsavelTrocado: 'Responsável trocado', ResponsavelRemovido: 'Removido da carteira',
-  Reaberto: 'Retomado por outra vendedora', Criado: 'Criado',
+  Reaberto: 'Cadastro retomado', Criado: 'Criado',
 };
 
 export function formatarCnpj(digitos: string | null | undefined): string {
