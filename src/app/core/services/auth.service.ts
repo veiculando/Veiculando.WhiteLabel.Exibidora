@@ -116,10 +116,16 @@ export class AuthService {
     }
 
     return this.http.post<LoginResponse>(`${this.base}/refresh`, {}).pipe(
-      tap((resposta) => SecureStorage.setToken(tokenKey, resposta.token)),
-      map(() => true),
+      map((resposta) => {
+        const atual = SecureStorage.getToken(tokenKey);
+        // A sessão pode ter sido encerrada ou trocada enquanto o refresh estava em trânsito.
+        if (atual !== token) return !!atual;
+
+        SecureStorage.setToken(tokenKey, resposta.token);
+        return true;
+      }),
       catchError(() => {
-        SecureStorage.clear(tokenKey);
+        if (SecureStorage.getToken(tokenKey) === token) SecureStorage.clear(tokenKey);
         return of(false);
       })
     );

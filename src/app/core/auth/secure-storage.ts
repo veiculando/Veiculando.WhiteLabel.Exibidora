@@ -1,12 +1,29 @@
 import * as CryptoJS from 'crypto-js';
+import { Subject, distinctUntilChanged, filter, fromEvent, map, merge, startWith } from 'rxjs';
 
 export class SecureStorage {
   private static readonly SECRET_KEY = 'Veiculando_Wl_Exibidora_Secret_CSR';
+
+  private static readonly tokenAlterado = new Subject<string>();
+
+  static observarToken(tokenKey: string) {
+    return merge(
+      this.tokenAlterado.pipe(filter((chave) => chave === tokenKey)),
+      fromEvent<StorageEvent>(window, 'storage').pipe(
+        filter((evento) => evento.key === tokenKey || evento.key === null),
+      ),
+    ).pipe(
+      startWith(null),
+      map(() => this.getToken(tokenKey)),
+      distinctUntilChanged(),
+    );
+  }
 
   static setToken(tokenKey: string, rawToken: string): void {
     if (!rawToken) return;
     const encryptedToken = CryptoJS.AES.encrypt(rawToken, this.SECRET_KEY).toString();
     localStorage.setItem(tokenKey, encryptedToken);
+    this.tokenAlterado.next(tokenKey);
   }
 
   static getToken(tokenKey: string): string | null {
@@ -25,5 +42,6 @@ export class SecureStorage {
 
   static clear(tokenKey: string): void {
     localStorage.removeItem(tokenKey);
+    this.tokenAlterado.next(tokenKey);
   }
 }

@@ -101,6 +101,7 @@ const GRUPOS: GrupoNav[] = [
       // o escudo de verificação e a chave do grupo Operacional.
       { rotulo: 'Check out', rota: '/checkout', icone: 'kyc', permissao: 'CheckingGerenciar' },
       { rotulo: 'Ordem de serviço', rota: '/ordens-servico', icone: 'operacional', permissao: 'PecaGerenciar' },
+      { rotulo: 'Suporte', rota: '/suporte', icone: 'operacional', permissao: 'SuporteGerenciar' },
     ],
   },
   {
