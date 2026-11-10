@@ -3,21 +3,23 @@ import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/cor
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { CarteiraReviewComponent } from './carteira-review.component';
+import { RepresentacaoReviewComponent } from './representacao-review.component';
 import { AppKycDetail, AppKycQueueItem, KycAppReviewService } from '../../../core/services/kyc-app-review.service';
 
 const statuses = ['Rascunho', 'Pendente', 'Em análise', 'Ajustes solicitados', 'Aprovado', 'Rejeitado', 'Suspenso'];
 
 @Component({
   selector: 'app-kyc-app-review',
-  imports: [CarteiraReviewComponent, DatePipe, FormsModule, RouterLink],
+  imports: [CarteiraReviewComponent, RepresentacaoReviewComponent, DatePipe, FormsModule, RouterLink],
   changeDetection: ChangeDetectionStrategy.Default,
   template: `
     <header class="review-head"><div><h1>Cadastros do App</h1><p>Confira os dados e documentos antes de liberar a compra.</p></div><a routerLink="/kyc">Análises tradicionais</a></header>
     <div class="tabs" role="tablist" aria-label="Origem do cadastro">
       <button type="button" role="tab" [attr.aria-selected]="aba==='app'" [class.active]="aba==='app'" (click)="aba='app'">Cadastros do App</button>
       <button type="button" role="tab" [attr.aria-selected]="aba==='carteira'" [class.active]="aba==='carteira'" (click)="aba='carteira'">Clientes das vendedoras</button>
+      <button type="button" role="tab" [attr.aria-selected]="aba==='agencias'" [class.active]="aba==='agencias'" (click)="aba='agencias'">Anunciantes das agências</button>
     </div>
-    @if(aba==='carteira'){<app-carteira-review />} @else {
+    @if(aba==='carteira'){<app-carteira-review />} @else if(aba==='agencias'){<app-representacao-review />} @else {
     @if(error){<p class="feedback error" role="alert">{{error}}</p>}
     @if(notice){<p class="feedback" role="status">{{notice}}</p>}
     <div class="review-layout">
@@ -60,7 +62,8 @@ const statuses = ['Rascunho', 'Pendente', 'Em análise', 'Ajustes solicitados', 
 export class KycAppReviewComponent implements OnInit {
   private readonly service = inject(KycAppReviewService);
   /** VEI-RD-157d: a mesma tela analisa os clientes que as vendedoras cadastram na Prospecção. */
-  aba: 'app' | 'carteira' = 'app';
+  /** VEI-RD-67i: e os anunciantes que as agências pedem para representar. */
+  aba: 'app' | 'carteira' | 'agencias' = 'app';
   queue: AppKycQueueItem[] = [];
   detail: AppKycDetail | null = null;
   search = '';
