@@ -76,6 +76,14 @@ describe('SidebarComponent', () => {
     expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('Check out');
   });
 
+  it.each([true, false])('Suporte acompanha SuporteGerenciar (%s)', async (permitido) => {
+    configurar(permitido ? ['SuporteGerenciar'] : []);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const suporte = (fixture.nativeElement as HTMLElement).querySelector('a[href="/suporte"]');
+    expect(suporte?.textContent?.trim() ?? null).toBe(permitido ? 'Suporte' : null);
+  });
+
   it('Dashboard aparece fora de qualquer grupo, sempre visivel', () => {
     configurar([]);
     fixture.detectChanges();

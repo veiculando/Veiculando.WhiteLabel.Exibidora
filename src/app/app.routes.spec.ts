@@ -105,6 +105,14 @@ describe('app.routes', () => {
         });
     });
 
+    it('Suporte é lazy e exige SuporteGerenciar na própria rota', () => {
+        const suporte = filhos.find((rota) => rota.path === 'suporte');
+        expect(suporte?.loadComponent).toEqual(expect.any(Function));
+        expect(suporte?.canActivate).toEqual([authGuard]);
+        expect(suporte?.data?.['permission']).toBe('SuporteGerenciar');
+        expect(PERMISSOES_WL as readonly string[]).toContain('SuporteGerenciar');
+    });
+
     it('ConteudoGerenciar esta na whitelist, espelhando WlPermissoesValidas (VEI-RD-106)', () => {
         expect(PERMISSOES_WL as readonly string[]).toContain('ConteudoGerenciar');
     });

@@ -116,6 +116,7 @@ export const PERMISSOES_WL = [
   'FinanceiroVisualizar',
   'RelatorioExportar',
   'ConteudoGerenciar',
+  'SuporteGerenciar',
 ] as const;
 
 export type PermissaoWl = (typeof PERMISSOES_WL)[number];
@@ -132,6 +133,7 @@ export const PERMISSOES_WL_ROTULOS: Record<PermissaoWl, string> = {
   FinanceiroVisualizar: 'Visualizar financeiro',
   RelatorioExportar: 'Exportar relatórios',
   ConteudoGerenciar: 'Gerenciar conteúdo do site',
+  SuporteGerenciar: 'Gerenciar suporte',
 };
 
 // ---------------------------------------------------------------- Dashboard

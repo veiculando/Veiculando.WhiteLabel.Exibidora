@@ -118,6 +118,17 @@ describe('AuthService', () => {
         expect(SecureStorage.getToken(environment.tokenKey)).toBeNull();
     });
 
+    it('uma resposta de refresh em trânsito não restaura a sessão após o logout', () => {
+        SecureStorage.setToken(environment.tokenKey, tokenQueExpiraEm(5));
+        service.garantirTokenValido().subscribe();
+        const refresh = http.expectOne(`${environment.bffUrl}/auth/refresh`);
+
+        service.logout();
+        refresh.flush({ token: tokenQueExpiraEm(60) });
+
+        expect(SecureStorage.getToken(environment.tokenKey)).toBeNull();
+    });
+
     it('logout limpa o token', () => {
         SecureStorage.setToken(environment.tokenKey, tokenQueExpiraEm(60));
 

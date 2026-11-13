@@ -288,6 +288,15 @@ export const routes: Routes = [
           import('./pages/prospeccao/prospeccao.component').then((m) => m.ProspeccaoComponent),
       },
 
+      {
+        path: 'suporte',
+        title: 'Suporte',
+        data: { permission: 'SuporteGerenciar' },
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./pages/suporte/suporte.component').then((m) => m.SuporteComponent),
+      },
+
       // --- Marketing (CMS, TP-4) ---
       //
       // Duas condições, dois guards EM CADA FILHA: `authGuard` lê a permissão
