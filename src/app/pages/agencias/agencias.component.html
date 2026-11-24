@@ -193,7 +193,7 @@
   @if (edicao) {
     <div class="agencias__form aurum-form">
       <fieldset>
-        <label>Bonificação por volume (%)<input type="number" min="0" max="50" step="0.01" [(ngModel)]="edicao.bonificacaoPercentual" /></label>
+        <label>Bonificação por volume (%)<input type="number" min="0" max="50" step="1" [(ngModel)]="edicao.bonificacaoPercentual" /></label>
         <!-- VEI-SUP-57f: o Core não grava Observações da agência; campo fora até o Roadmap decidir. -->
       </fieldset>
     </div>

@@ -272,6 +272,12 @@ export class AgenciasComponent implements OnInit {
       this.edicaoErro = 'A bonificação por volume deve ficar entre 0% e 50%.';
       return;
     }
+    // Agencia.BonificacaoVolume é decimal(18,2) em fração: só cabe % inteiro. 7,5% virava 7%
+    // sem aviso (preview, 24/11).
+    if (!Number.isInteger(percentual)) {
+      this.edicaoErro = 'Use um número inteiro para a bonificação (ex.: 7 ou 8).';
+      return;
+    }
     const bonificacaoVolume = Math.round(percentual * 100) / 10000;
     this.serv.atualizar(id, { bonificacaoVolume, observacoesAfiliada }).subscribe({
       next: () => {
