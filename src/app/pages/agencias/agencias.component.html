@@ -81,7 +81,7 @@
             <td aurumTableCell class="agencias__campanhas"><strong>{{ agencia.campanhas }}</strong> campanhas</td>
             <td aurumTableCell>
               <span class="agencias__acoes">
-                <aurum-button variante="suave" tamanho="xs">Editar</aurum-button>
+                <aurum-button variante="suave" tamanho="xs" (click)="abrirEdicao(agencia)">Editar</aurum-button>
                 <!-- Inativação, não exclusão: o rótulo diz o que o sistema faz. -->
                 <aurum-button [variante]="agencia.status === 1 ? 'perigo' : 'sucesso'" tamanho="xs" (click)="alternarStatus(agencia)">
                   {{ rotuloDaAcaoDeStatus(agencia) }}
@@ -111,7 +111,7 @@
         <div class="agencias__card-rodape">
           <span class="agencias__campanhas"><strong>{{ agencia.campanhas }}</strong> campanhas vinculadas</span>
           <span class="agencias__acoes">
-            <aurum-button variante="suave" tamanho="xs">Editar</aurum-button>
+            <aurum-button variante="suave" tamanho="xs" (click)="abrirEdicao(agencia)">Editar</aurum-button>
             <aurum-button [variante]="agencia.status === 1 ? 'perigo' : 'sucesso'" tamanho="xs" (click)="alternarStatus(agencia)">
               {{ rotuloDaAcaoDeStatus(agencia) }}
             </aurum-button>
@@ -140,6 +140,10 @@
 
   @if (consultaMensagem) {
     <p class="wl-estado wl-estado--sucesso">{{ consultaMensagem }}</p>
+  }
+
+  @if (formErro) {
+    <p role="alert" class="wl-estado wl-estado--erro">{{ formErro }}</p>
   }
 
   @if (form) {
@@ -177,4 +181,23 @@
   @if (form) {
     <aurum-button aurumModalRodape variante="wine" tamanho="sm" (click)="salvar()">Cadastrar agência</aurum-button>
   }
+</aurum-modal>
+
+<aurum-modal [aberto]="!!edicao" [titulo]="'Editar ' + (edicao?.nome ?? 'agência')" largura="md" (fechar)="fecharEdicao()">
+  <p aurumModalSubtitulo class="agencias__modal-sub">
+    Condições comerciais desta agência com a exibidora. Os dados cadastrais (CNPJ, razão social, endereço) não são alterados aqui.
+  </p>
+  @if (edicaoErro) {
+    <p role="alert" class="wl-estado wl-estado--erro">{{ edicaoErro }}</p>
+  }
+  @if (edicao) {
+    <div class="agencias__form aurum-form">
+      <fieldset>
+        <label>Bonificação por volume (%)<input type="number" min="0" max="50" step="0.01" [(ngModel)]="edicao.bonificacaoPercentual" /></label>
+        <label>Observações<textarea [(ngModel)]="edicao.observacoesAfiliada"></textarea></label>
+      </fieldset>
+    </div>
+  }
+  <aurum-button aurumModalRodape variante="ghost" tamanho="sm" (click)="fecharEdicao()">Cancelar</aurum-button>
+  <aurum-button aurumModalRodape variante="wine" tamanho="sm" (click)="salvarEdicao()">Salvar</aurum-button>
 </aurum-modal>

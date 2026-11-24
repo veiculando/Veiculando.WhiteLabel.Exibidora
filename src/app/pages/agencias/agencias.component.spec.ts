@@ -199,6 +199,82 @@ describe('AgenciasComponent — VEI-RD-79', () => {
     expect(fixture.componentInstance.form?.cnpj).toBe('99999999000199');
   });
 
+  describe('VEI-SUP-57', () => {
+    function botao(fixture: { nativeElement: HTMLElement }, rotulo: string) {
+      return Array.from(fixture.nativeElement.querySelectorAll('button')).find((b) => b.textContent?.trim() === rotulo)!;
+    }
+
+    it('Editar abre o modal com as condições comerciais e salva via PUT, com bonificação em %', () => {
+      const { fixture, http, texto } = montar();
+      botao(fixture, 'Editar').click();
+      http.expectOne(`${base}/1`).flush({ ...impar, bonificacaoVolume: 0.05, observacoesAfiliada: 'Paga em 30 dias' });
+      fixture.detectChanges();
+
+      expect(texto()).toContain('Editar Ímpar Propaganda');
+      expect(fixture.componentInstance.edicao?.bonificacaoPercentual).toBe(5);
+
+      fixture.componentInstance.edicao!.bonificacaoPercentual = 7.5;
+      botao(fixture, 'Salvar').click();
+      const put = http.expectOne(`${base}/1`);
+      expect(put.request.method).toBe('PUT');
+      // O Core guarda fração (0 a 0,5): 7,5% vira 0,075.
+      expect(put.request.body).toEqual({ bonificacaoVolume: 0.075, observacoesAfiliada: 'Paga em 30 dias' });
+      put.flush({});
+      http.expectOne((r) => r.url === base).flush(pagina([impar]));
+      fixture.detectChanges();
+      expect(fixture.componentInstance.edicao).toBeNull();
+    });
+
+    it('bonificação acima de 50% não vai ao servidor', () => {
+      const { fixture, http } = montar();
+      botao(fixture, 'Editar').click();
+      http.expectOne(`${base}/1`).flush({ ...impar, bonificacaoVolume: 0, observacoesAfiliada: '' });
+      fixture.componentInstance.edicao!.bonificacaoPercentual = 60;
+      fixture.componentInstance.salvarEdicao();
+      http.expectNone(`${base}/1`);
+      expect(fixture.componentInstance.edicaoErro).toContain('entre 0% e 50%');
+    });
+
+    it('CNPJ digitado com máscara é consultado só com dígitos', () => {
+      const { fixture, http } = montar();
+      fixture.componentInstance.formAberto = true;
+      fixture.componentInstance.cnpjConsulta = '04.889.908/0001-59';
+      fixture.componentInstance.consultarCnpj();
+      http.expectOne(`${base}/por-cnpj/04889908000159`).flush({}, { status: 404, statusText: 'Not Found' });
+      expect(fixture.componentInstance.form?.cnpj).toBe('04889908000159');
+    });
+
+    it('recusa do Core ao cadastrar aparece dentro do modal, com a mensagem de validação', () => {
+      const { fixture, http, texto } = montar();
+      fixture.componentInstance.formAberto = true;
+      fixture.componentInstance.cnpjConsulta = '99999999000199';
+      fixture.componentInstance.consultarCnpj();
+      http.expectOne(`${base}/por-cnpj/99999999000199`).flush({}, { status: 404, statusText: 'Not Found' });
+      fixture.detectChanges();
+
+      fixture.componentInstance.salvar();
+      http.expectOne(base).flush(
+        { message: 'A operação foi recusada pelo Veiculando Core.', detalhe: JSON.stringify({ data: [{ message: 'CNPJ já cadastrado.' }] }) },
+        { status: 400, statusText: 'Bad Request' }
+      );
+      fixture.detectChanges();
+
+      expect(fixture.componentInstance.formErro).toBe('CNPJ já cadastrado.');
+      expect(texto()).toContain('CNPJ já cadastrado.');
+    });
+
+    it('erro diferente de 404 na consulta não libera o formulário', () => {
+      const { fixture, http } = montar();
+      fixture.componentInstance.formAberto = true;
+      fixture.componentInstance.cnpjConsulta = '99999999000199';
+      fixture.componentInstance.consultarCnpj();
+      http.expectOne(`${base}/por-cnpj/99999999000199`).flush({}, { status: 500, statusText: 'Erro' });
+
+      expect(fixture.componentInstance.form).toBeNull();
+      expect(fixture.componentInstance.formErro).toBe('Não foi possível consultar o CNPJ.');
+    });
+  });
+
   it('o formulário não tem campo de prazo de pagamento', () => {
     // PRD §5.5: o campo não existe em AgenciaCadastroCommand nem na entidade Agencia.
     // Um campo aqui não teria onde ser gravado.
