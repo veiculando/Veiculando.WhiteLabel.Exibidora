@@ -213,12 +213,12 @@ describe('AgenciasComponent — VEI-RD-79', () => {
       expect(texto()).toContain('Editar Ímpar Propaganda');
       expect(fixture.componentInstance.edicao?.bonificacaoPercentual).toBe(5);
 
-      fixture.componentInstance.edicao!.bonificacaoPercentual = 7.5;
+      fixture.componentInstance.edicao!.bonificacaoPercentual = 8;
       botao(fixture, 'Salvar').click();
       const put = http.expectOne(`${base}/1`);
       expect(put.request.method).toBe('PUT');
-      // O Core guarda fração (0 a 0,5): 7,5% vira 0,075.
-      expect(put.request.body).toEqual({ bonificacaoVolume: 0.075, observacoesAfiliada: 'Paga em 30 dias' });
+      // O Core guarda fração (0 a 0,5): 8% vira 0,08.
+      expect(put.request.body).toEqual({ bonificacaoVolume: 0.08, observacoesAfiliada: 'Paga em 30 dias' });
       put.flush({});
       http.expectOne((r) => r.url === base).flush(pagina([impar]));
       fixture.detectChanges();
@@ -233,6 +233,16 @@ describe('AgenciasComponent — VEI-RD-79', () => {
       fixture.componentInstance.salvarEdicao();
       http.expectNone(`${base}/1`);
       expect(fixture.componentInstance.edicaoErro).toContain('entre 0% e 50%');
+    });
+
+    it('bonificação com casas decimais não vai ao servidor (o banco só guarda % inteiro)', () => {
+      const { fixture, http } = montar();
+      botao(fixture, 'Editar').click();
+      http.expectOne(`${base}/1`).flush({ ...impar, bonificacaoVolume: 0, observacoesAfiliada: '' });
+      fixture.componentInstance.edicao!.bonificacaoPercentual = 7.5;
+      fixture.componentInstance.salvarEdicao();
+      http.expectNone(`${base}/1`);
+      expect(fixture.componentInstance.edicaoErro).toContain('número inteiro');
     });
 
     it('CNPJ digitado com máscara é consultado só com dígitos', () => {
