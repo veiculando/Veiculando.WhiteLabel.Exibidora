@@ -94,6 +94,12 @@ export class AgenciasComponent implements OnInit {
   consultaCnpj: AgenciaPorCnpj | null = null;
   consultaMensagem = '';
   form: AgenciaForm | null = null;
+  /** Erro do modal de cadastro: mostrado DENTRO do modal, não atrás dele (VEI-SUP-57). */
+  formErro = '';
+
+  /** Edição das condições comerciais — os únicos campos que o BFF aceita no PUT. */
+  edicao: { id: number; nome: string; bonificacaoVolume: number; observacoesAfiliada: string } | null = null;
+  edicaoErro = '';
 
   ngOnInit(): void {
     this.carregar();
@@ -175,6 +181,7 @@ export class AgenciasComponent implements OnInit {
   consultarCnpj(): void {
     this.consultaCnpj = null;
     this.consultaMensagem = '';
+    this.formErro = '';
     this.serv.porCnpj(this.cnpjConsulta).subscribe({
       next: (achada) => {
         // CNPJ existente propõe VÍNCULO — nunca uma segunda Agencia (PRD §8.14).
@@ -183,8 +190,13 @@ export class AgenciasComponent implements OnInit {
           ? `${achada.nome} já está vinculada a esta exibidora.`
           : `${achada.nome} já existe no sistema. Vincule em vez de cadastrar.`;
       },
-      error: () => {
+      error: (resposta) => {
         // 404 aqui é o caminho feliz: não há agência com este CNPJ, o cadastro segue.
+        // Qualquer outro erro NÃO libera o formulário.
+        if (resposta?.status !== 404) {
+          this.formErro = resposta?.error?.message ?? 'Não foi possível consultar o CNPJ.';
+          return;
+        }
         this.form = this.formVazio(this.cnpjConsulta);
         this.consultaMensagem = 'Nenhuma agência com este CNPJ. Preencha o cadastro.';
       },
@@ -199,7 +211,7 @@ export class AgenciasComponent implements OnInit {
         this.carregar();
       },
       error: (resposta) => {
-        this.consultaMensagem = resposta?.error?.message ?? 'Não foi possível vincular.';
+        this.formErro = mensagemDeErro(resposta, 'Não foi possível vincular.');
       },
     });
   }
@@ -212,7 +224,7 @@ export class AgenciasComponent implements OnInit {
         this.carregar();
       },
       error: (resposta) => {
-        this.erro = resposta?.error?.message ?? 'Não foi possível salvar a agência.';
+        this.formErro = mensagemDeErro(resposta, 'Não foi possível salvar a agência.');
       },
     });
   }
@@ -222,6 +234,43 @@ export class AgenciasComponent implements OnInit {
     this.form = null;
     this.consultaCnpj = null;
     this.consultaMensagem = '';
+    this.formErro = '';
+  }
+
+  abrirEdicao(agencia: AgenciaListItem): void {
+    this.edicaoErro = '';
+    this.serv.obter(agencia.id).subscribe({
+      next: (d) => {
+        this.edicao = {
+          id: d.id,
+          nome: d.nome,
+          bonificacaoVolume: d.bonificacaoVolume ?? 0,
+          observacoesAfiliada: d.observacoesAfiliada ?? '',
+        };
+      },
+      error: (resposta) => {
+        this.erro = mensagemDeErro(resposta, 'Não foi possível abrir a agência.');
+      },
+    });
+  }
+
+  salvarEdicao(): void {
+    if (!this.edicao) return;
+    const { id, bonificacaoVolume, observacoesAfiliada } = this.edicao;
+    this.serv.atualizar(id, { bonificacaoVolume: Number(bonificacaoVolume) || 0, observacoesAfiliada }).subscribe({
+      next: () => {
+        this.fecharEdicao();
+        this.carregar();
+      },
+      error: (resposta) => {
+        this.edicaoErro = mensagemDeErro(resposta, 'Não foi possível salvar as alterações.');
+      },
+    });
+  }
+
+  fecharEdicao(): void {
+    this.edicao = null;
+    this.edicaoErro = '';
   }
 
   private formVazio(cnpj: string): AgenciaForm {
@@ -245,4 +294,47 @@ export class AgenciasComponent implements OnInit {
       observacoesAfiliada: '',
     };
   }
+}
+
+/**
+ * Mensagem legível de um erro HTTP. O Core devolve 400 tanto com `{ message }`
+ * quanto com a lista de notificações de validação; sem isto a tela ficava calada.
+ */
+function mensagemDeErro(resposta: any, padrao: string): string {
+  const corpo = resposta?.error;
+  if (typeof corpo === 'string' && corpo.trim()) return corpo;
+  const doCore = mensagensDoCore(corpo?.detalhe);
+  if (doCore) return doCore;
+  if (corpo?.message) return corpo.message;
+  const lista = Array.isArray(corpo) ? corpo : corpo?.notifications ?? corpo?.erros ?? corpo?.errors;
+  if (Array.isArray(lista) && lista.length) {
+    return lista.map((n: any) => n?.message ?? n?.mensagem ?? String(n)).join(' ');
+  }
+  if (corpo?.errors && typeof corpo.errors === 'object') {
+    return Object.values(corpo.errors).flat().join(' ');
+  }
+  return padrao;
+}
+
+/** O BFF repassa a recusa do Core em `detalhe` (JSON em texto); extrai as mensagens de validação. */
+function mensagensDoCore(detalhe: unknown): string {
+  if (typeof detalhe !== 'string' || !detalhe.trim()) return '';
+  let json: unknown;
+  try {
+    json = JSON.parse(detalhe);
+  } catch {
+    return '';
+  }
+  const achadas: string[] = [];
+  const visitar = (no: any): void => {
+    if (Array.isArray(no)) no.forEach(visitar);
+    else if (no && typeof no === 'object') {
+      for (const [chave, valor] of Object.entries(no)) {
+        if (/^(message|mensagem)$/i.test(chave) && typeof valor === 'string') achadas.push(valor);
+        else visitar(valor);
+      }
+    }
+  };
+  visitar(json);
+  return [...new Set(achadas)].join(' ');
 }
