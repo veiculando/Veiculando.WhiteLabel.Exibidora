@@ -193,7 +193,7 @@
   @if (edicao) {
     <div class="agencias__form aurum-form">
       <fieldset>
-        <label>Bonificação por volume (%)<input type="number" min="0" step="0.01" [(ngModel)]="edicao.bonificacaoVolume" /></label>
+        <label>Bonificação por volume (%)<input type="number" min="0" max="50" step="0.01" [(ngModel)]="edicao.bonificacaoPercentual" /></label>
         <label>Observações<textarea [(ngModel)]="edicao.observacoesAfiliada"></textarea></label>
       </fieldset>
     </div>

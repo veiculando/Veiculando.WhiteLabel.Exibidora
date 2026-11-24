@@ -97,8 +97,11 @@ export class AgenciasComponent implements OnInit {
   /** Erro do modal de cadastro: mostrado DENTRO do modal, não atrás dele (VEI-SUP-57). */
   formErro = '';
 
-  /** Edição das condições comerciais — os únicos campos que o BFF aceita no PUT. */
-  edicao: { id: number; nome: string; bonificacaoVolume: number; observacoesAfiliada: string } | null = null;
+  /**
+   * Edição das condições comerciais — os únicos campos que o BFF aceita no PUT.
+   * A tela mostra a bonificação em PERCENTUAL; o Core guarda fração (0 a 0,5).
+   */
+  edicao: { id: number; nome: string; bonificacaoPercentual: number; observacoesAfiliada: string } | null = null;
   edicaoErro = '';
 
   ngOnInit(): void {
@@ -182,7 +185,14 @@ export class AgenciasComponent implements OnInit {
     this.consultaCnpj = null;
     this.consultaMensagem = '';
     this.formErro = '';
-    this.serv.porCnpj(this.cnpjConsulta).subscribe({
+    // Só dígitos na URL: com a máscara do placeholder, a barra de "0001/..." vira outro
+    // segmento de rota, o servidor responde 404 e a tela liberava o cadastro (VEI-SUP-57).
+    const cnpj = (this.cnpjConsulta ?? '').replace(/\D/g, '');
+    if (cnpj.length !== 14) {
+      this.formErro = 'Informe os 14 dígitos do CNPJ.';
+      return;
+    }
+    this.serv.porCnpj(cnpj).subscribe({
       next: (achada) => {
         // CNPJ existente propõe VÍNCULO — nunca uma segunda Agencia (PRD §8.14).
         this.consultaCnpj = achada;
@@ -197,7 +207,7 @@ export class AgenciasComponent implements OnInit {
           this.formErro = resposta?.error?.message ?? 'Não foi possível consultar o CNPJ.';
           return;
         }
-        this.form = this.formVazio(this.cnpjConsulta);
+        this.form = this.formVazio(cnpj);
         this.consultaMensagem = 'Nenhuma agência com este CNPJ. Preencha o cadastro.';
       },
     });
@@ -244,7 +254,7 @@ export class AgenciasComponent implements OnInit {
         this.edicao = {
           id: d.id,
           nome: d.nome,
-          bonificacaoVolume: d.bonificacaoVolume ?? 0,
+          bonificacaoPercentual: Math.round((d.bonificacaoVolume ?? 0) * 10000) / 100,
           observacoesAfiliada: d.observacoesAfiliada ?? '',
         };
       },
@@ -256,8 +266,14 @@ export class AgenciasComponent implements OnInit {
 
   salvarEdicao(): void {
     if (!this.edicao) return;
-    const { id, bonificacaoVolume, observacoesAfiliada } = this.edicao;
-    this.serv.atualizar(id, { bonificacaoVolume: Number(bonificacaoVolume) || 0, observacoesAfiliada }).subscribe({
+    const { id, bonificacaoPercentual, observacoesAfiliada } = this.edicao;
+    const percentual = Number(bonificacaoPercentual) || 0;
+    if (percentual < 0 || percentual > 50) {
+      this.edicaoErro = 'A bonificação por volume deve ficar entre 0% e 50%.';
+      return;
+    }
+    const bonificacaoVolume = Math.round(percentual * 100) / 10000;
+    this.serv.atualizar(id, { bonificacaoVolume, observacoesAfiliada }).subscribe({
       next: () => {
         this.fecharEdicao();
         this.carregar();

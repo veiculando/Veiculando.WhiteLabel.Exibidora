@@ -204,24 +204,44 @@ describe('AgenciasComponent — VEI-RD-79', () => {
       return Array.from(fixture.nativeElement.querySelectorAll('button')).find((b) => b.textContent?.trim() === rotulo)!;
     }
 
-    it('Editar abre o modal com as condições comerciais e salva via PUT', () => {
+    it('Editar abre o modal com as condições comerciais e salva via PUT, com bonificação em %', () => {
       const { fixture, http, texto } = montar();
       botao(fixture, 'Editar').click();
-      http.expectOne(`${base}/1`).flush({ ...impar, bonificacaoVolume: 5, observacoesAfiliada: 'Paga em 30 dias' });
+      http.expectOne(`${base}/1`).flush({ ...impar, bonificacaoVolume: 0.05, observacoesAfiliada: 'Paga em 30 dias' });
       fixture.detectChanges();
 
       expect(texto()).toContain('Editar Ímpar Propaganda');
-      expect(fixture.componentInstance.edicao?.observacoesAfiliada).toBe('Paga em 30 dias');
+      expect(fixture.componentInstance.edicao?.bonificacaoPercentual).toBe(5);
 
-      fixture.componentInstance.edicao!.bonificacaoVolume = 7;
+      fixture.componentInstance.edicao!.bonificacaoPercentual = 7.5;
       botao(fixture, 'Salvar').click();
       const put = http.expectOne(`${base}/1`);
       expect(put.request.method).toBe('PUT');
-      expect(put.request.body).toEqual({ bonificacaoVolume: 7, observacoesAfiliada: 'Paga em 30 dias' });
+      // O Core guarda fração (0 a 0,5): 7,5% vira 0,075.
+      expect(put.request.body).toEqual({ bonificacaoVolume: 0.075, observacoesAfiliada: 'Paga em 30 dias' });
       put.flush({});
       http.expectOne((r) => r.url === base).flush(pagina([impar]));
       fixture.detectChanges();
       expect(fixture.componentInstance.edicao).toBeNull();
+    });
+
+    it('bonificação acima de 50% não vai ao servidor', () => {
+      const { fixture, http } = montar();
+      botao(fixture, 'Editar').click();
+      http.expectOne(`${base}/1`).flush({ ...impar, bonificacaoVolume: 0, observacoesAfiliada: '' });
+      fixture.componentInstance.edicao!.bonificacaoPercentual = 60;
+      fixture.componentInstance.salvarEdicao();
+      http.expectNone(`${base}/1`);
+      expect(fixture.componentInstance.edicaoErro).toContain('entre 0% e 50%');
+    });
+
+    it('CNPJ digitado com máscara é consultado só com dígitos', () => {
+      const { fixture, http } = montar();
+      fixture.componentInstance.formAberto = true;
+      fixture.componentInstance.cnpjConsulta = '04.889.908/0001-59';
+      fixture.componentInstance.consultarCnpj();
+      http.expectOne(`${base}/por-cnpj/04889908000159`).flush({}, { status: 404, statusText: 'Not Found' });
+      expect(fixture.componentInstance.form?.cnpj).toBe('04889908000159');
     });
 
     it('recusa do Core ao cadastrar aparece dentro do modal, com a mensagem de validação', () => {
