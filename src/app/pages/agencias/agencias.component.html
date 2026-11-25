@@ -154,16 +154,16 @@
       <fieldset>
         <label>CNPJ (Obrigatório) *<input type="text" [(ngModel)]="form.cnpj" /></label>
         <label>Razão social *<input type="text" [(ngModel)]="form.razaoSocial" placeholder="Razão social completa" /></label>
-        <label>Nome fantasia<input type="text" [(ngModel)]="form.nome" placeholder="Nome de exibição" /></label>
-        <label>Telefone<input type="text" [(ngModel)]="form.telefone" placeholder="(12) 99999-0000" /></label>
-        <label>E-mail de contato<input type="email" [(ngModel)]="form.email" placeholder="midia@agencia.com.br" /></label>
+        <label>Nome fantasia *<input type="text" [(ngModel)]="form.nome" placeholder="Nome de exibição" /></label>
+        <label>Telefone *<input type="text" [(ngModel)]="form.telefone" placeholder="(12) 99999-0000" /></label>
+        <label>E-mail de contato *<input type="email" [(ngModel)]="form.email" placeholder="midia@agencia.com.br" /></label>
         <label>Site<input type="text" [(ngModel)]="form.site" /></label>
         <label>Logradouro<input type="text" [(ngModel)]="form.logradouro" /></label>
         <label>Número<input type="text" [(ngModel)]="form.numero" /></label>
         <label>Bairro<input type="text" [(ngModel)]="form.bairro" /></label>
-        <label>CEP<input type="text" [(ngModel)]="form.cep" /></label>
-        <label>Cidade<input type="text" [(ngModel)]="form.cidade" /></label>
-        <label>UF<input type="text" [(ngModel)]="form.uf" maxlength="2" /></label>
+        <label>CEP *<input type="text" [(ngModel)]="form.cep" placeholder="00000-000" /></label>
+        <label>Cidade *<input type="text" [(ngModel)]="form.cidade" /></label>
+        <label>UF *<input type="text" [(ngModel)]="form.uf" maxlength="2" /></label>
         <label>Inscrição estadual<input type="text" [(ngModel)]="form.inscricaoEstadual" /></label>
         <label>Inscrição municipal<input type="text" [(ngModel)]="form.inscricaoMunicipal" /></label>
         <!-- VEI-SUP-57f: o Core não grava Observações da agência; campo fora até o Roadmap decidir. -->
