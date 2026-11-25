@@ -432,6 +432,8 @@ export interface ProgramacaoGradeItem {
   periodoId: number;
   periodoNome: string;
   status: string;
+  /** Nome do cliente da campanha do pedido da célula (VEI-SUP-61); nulo em célula livre. */
+  cliente?: string | null;
 }
 
 // ---------------------------------------------------------------- Checking
