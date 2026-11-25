@@ -39,6 +39,8 @@ interface LinhaGrade {
   bairro: string | null;
   /** `periodoId` → status cru do BFF (nome do enum, ex. `Autorizada`). */
   statusPorPeriodo: Map<number, string>;
+  /** `periodoId` → cliente do pedido da célula (VEI-SUP-61). */
+  clientePorPeriodo: Map<number, string>;
 }
 
 const TODOS = '';
@@ -173,7 +175,7 @@ const TODOS = '';
                     [title]="'Código: ' + linha.pecaCodigo + ' · Cód. interno: ' + (linha.pecaCodigoInterno || '—')"
                   >
                     @if (linha.fotoUrl) {
-                      <img [src]="linha.fotoUrl" [alt]="'Foto da peça ' + linha.pecaCodigo" />
+                      <img [src]="linha.fotoUrl" [alt]="'Foto da peça ' + linha.pecaCodigo" (error)="linha.fotoUrl = null" />
                     } @else {
                       <span class="pg-foto__placeholder" aria-hidden="true">🖼</span>
                     }
@@ -187,6 +189,9 @@ const TODOS = '';
                   <td aurumTableCell class="pg-periodo" [class.pg-periodo--atual]="periodoAtual(periodo.id)">
                     @if (linha.statusPorPeriodo.get(periodo.id); as statusCru) {
                       <aurum-period-cell [status]="rotuloStatus(statusCru)" [atual]="periodoAtual(periodo.id)" />
+                      @if (linha.clientePorPeriodo.get(periodo.id); as cliente) {
+                        <span class="pg-cliente" [title]="cliente">{{ cliente }}</span>
+                      }
                     } @else {
                       <span class="vazio">—</span>
                     }
@@ -327,6 +332,15 @@ const TODOS = '';
       }
       .pg-foto {
         display: inline-flex;
+      }
+      .pg-cliente {
+        display: block;
+        max-width: 180px;
+        margin: 4px auto 0;
+        overflow: hidden;
+        font-size: 0.6875rem;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
       .pg-foto img {
         width: 24px;
@@ -561,10 +575,12 @@ export class ProgramacaoComponent implements OnInit {
           endereco: item.endereco ?? null,
           bairro: item.bairro ?? null,
           statusPorPeriodo: new Map<number, string>(),
+          clientePorPeriodo: new Map<number, string>(),
         };
         linhas.set(item.pecaId, linha);
       }
       linha.statusPorPeriodo.set(item.periodoId, item.status);
+      if (item.cliente) linha.clientePorPeriodo.set(item.periodoId, item.cliente);
     }
 
     // As colunas seguem a ordem dos periodos carregados (mais recente

@@ -111,6 +111,22 @@ describe('ProgramacaoComponent', () => {
     expect(p2.statusPorPeriodo.has(20)).toBe(false);
   });
 
+  it('guarda o cliente da celula e os dados do local (VEI-SUP-61)', () => {
+    const componente = criar([
+      { pecaId: 1, pecaCodigo: 'P1', localCodigo: 'L1', periodoId: 10, periodoNome: 'Bi-1', status: 'Reservada',
+        cliente: 'UMC', pecaCodigoInterno: '37', endereco: 'AV. X, 10', bairro: 'Centro', fotoUrl: '/api/wl/app/inventory/P1/photo' },
+      { pecaId: 1, pecaCodigo: 'P1', localCodigo: 'L1', periodoId: 20, periodoNome: 'Bi-2', status: 'Disponivel', cliente: null },
+    ]);
+
+    const p1 = componente.linhas[0];
+    expect(p1.clientePorPeriodo.get(10)).toBe('UMC');
+    expect(p1.clientePorPeriodo.has(20)).toBe(false);
+    expect(p1.pecaCodigoInterno).toBe('37');
+    expect(p1.endereco).toBe('AV. X, 10');
+    expect(p1.bairro).toBe('Centro');
+    expect(p1.fotoUrl).toBe('/api/wl/app/inventory/P1/photo');
+  });
+
   it('traduz o status cru do BFF para o rotulo oficial da legenda', () => {
     const componente = criar([]);
     expect(componente.rotuloStatus('Solicitada')).toBe('Solicitado');
